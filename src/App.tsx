@@ -4,6 +4,7 @@ import {
     NavbarDivider,
     NavbarItem,
     NavbarSection,
+    NavbarSpacer,
 } from "@/components/catalyst-ui-kit/navbar.tsx";
 import {
     Sidebar,
@@ -13,8 +14,8 @@ import {
     SidebarSection,
 } from "@/components/catalyst-ui-kit/sidebar.tsx";
 import { StackedLayout } from "@/components/catalyst-ui-kit/stacked-layout.tsx";
-import { Heading } from "@/components/catalyst-ui-kit/heading.tsx";
 import { Link, Outlet } from "react-router";
+import DarkModeToggle from "@/components/dark-mode-toggle/DarkModeToggle.tsx";
 
 const navItems = [
     { label: "Home", url: "/" },
@@ -30,7 +31,13 @@ export default function App() {
             navbar={
                 <Navbar>
                     <Link to={"/"}>
-                        <Heading>Bulgogi Billy's</Heading>
+                        <img
+                            src={
+                                "src/assets/Bulgogi Billy's Logo (Transparent PNG FINAL).png"
+                            }
+                            className={"w-25 h-10"}
+                        />
+                        {/*<Heading>Bulgogi Billy's</Heading>*/}
                     </Link>
                     <NavbarDivider className="max-lg:hidden" />
                     <NavbarSection className="max-lg:hidden">
@@ -40,12 +47,23 @@ export default function App() {
                             </NavbarItem>
                         ))}
                     </NavbarSection>
+                    <NavbarSpacer />
+                    <NavbarSection>
+                        <NavbarItem href={""}>
+                            <DarkModeToggle />
+                        </NavbarItem>
+                    </NavbarSection>
                 </Navbar>
             }
             sidebar={
                 <Sidebar>
                     <SidebarHeader>
-                        <Heading>Bulgogi Billy's</Heading>
+                        <img
+                            src={
+                                "src/assets/Bulgogi Billy's Logo (Transparent PNG FINAL).png"
+                            }
+                            className={"w-50 h-20"}
+                        />
                     </SidebarHeader>
                     <SidebarBody>
                         <SidebarSection>
