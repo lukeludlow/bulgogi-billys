@@ -35,6 +35,7 @@ export default function App() {
                             src={
                                 "src/assets/Bulgogi Billy's Logo (Transparent PNG FINAL).png"
                             }
+                            alt={"Bulgogi Billy's Logo"}
                             className={"w-25 h-10"}
                         />
                         {/*<Heading>Bulgogi Billy's</Heading>*/}
@@ -62,6 +63,7 @@ export default function App() {
                             src={
                                 "src/assets/Bulgogi Billy's Logo (Transparent PNG FINAL).png"
                             }
+                            alt={"Bulgogi Billy's Logo"}
                             className={"w-50 h-20"}
                         />
                     </SidebarHeader>

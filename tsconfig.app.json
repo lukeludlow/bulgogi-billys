@@ -23,7 +23,7 @@
 
         "noImplicitAny": false,
 
-        "baseUrl": ".",
+        //        "baseUrl": ".",
         "paths": {
             "@/*": ["src/*"]
         }
