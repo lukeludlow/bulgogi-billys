@@ -14,6 +14,7 @@ export default function MenuItem({ name, image, description }: Props) {
             <div className="sm:hidden divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
                 <div className="px-4 py-5 sm:px-6">
                     <Heading>{name}</Heading>
+                    <Text>(Beef or Pork)</Text>
                 </div>
                 <div className="px-4 py-5 sm:p-6">
                     <img src={image} alt={"Bulgogi Fries"} />
@@ -28,12 +29,13 @@ export default function MenuItem({ name, image, description }: Props) {
                         <img src={image} alt={"Bulgogi Fries"} />
                     </div>
                     <div className={"flex flex-col"}>
-                        <div className="px-4 py-5 sm:px-6">
-                            <Heading>{name}</Heading>
+                        <div className="px-4 py-5 sm:px-6 flex flex-row  items-center gap-2">
+                            <Heading className={"md:text-2xl"}>{name}</Heading>
+                            <Text>(Beef or Pork)</Text>
                         </div>
                         <Divider />
                         <div className="px-4 py-4 sm:px-6">
-                            <Text>{description}</Text>
+                            <Text className={"md:text-lg"}>{description}</Text>
                         </div>
                     </div>
                 </div>

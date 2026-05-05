@@ -38,7 +38,6 @@ export default function App() {
                             alt={"Bulgogi Billy's Logo"}
                             className={"w-25 h-10"}
                         />
-                        {/*<Heading>Bulgogi Billy's</Heading>*/}
                     </Link>
                     <NavbarDivider className="max-lg:hidden" />
                     <NavbarSection className="max-lg:hidden">

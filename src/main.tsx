@@ -8,6 +8,8 @@ import App from "@/App.tsx";
 import Menu from "@/pages/menu/Menu.tsx";
 import Home from "@/pages/home/Home.tsx";
 import NotFound from "@/pages/notfound/NotFound.tsx";
+import Schedule from "@/pages/schedule/Schedule.tsx";
+import { Analytics } from "@vercel/analytics/react";
 
 const router = createBrowserRouter([
     {
@@ -23,6 +25,10 @@ const router = createBrowserRouter([
                 element: <Menu />,
             },
             {
+                path: "/schedule",
+                element: <Schedule />,
+            },
+            {
                 path: "*",
                 element: <NotFound />,
             },
@@ -33,5 +39,6 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <RouterProvider router={router} />
+        <Analytics />
     </StrictMode>,
 );
