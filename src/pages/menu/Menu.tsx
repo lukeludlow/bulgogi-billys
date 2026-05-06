@@ -2,6 +2,7 @@ import { Heading } from "@/components/catalyst-ui-kit/heading.tsx";
 import { Divider } from "@/components/catalyst-ui-kit/divider.tsx";
 import { Text } from "@/components/catalyst-ui-kit/text";
 import MenuItem from "@/pages/menu/MenuItem.tsx";
+import { Button } from "@/components/catalyst-ui-kit/button.tsx";
 
 export default function Menu() {
     return (
@@ -33,6 +34,9 @@ export default function Menu() {
                     "Our signature bulgogi served on a corn tortilla with kimchi (Korean spicy pickled cabbage), pickled red cabbage, Seoul sauce (our house aioli sauce with a little kick to it), Sriracha sauce, and shredded cheddar-jack cheese."
                 }
             />
+            <Button href={"/order-now"} color={"orange"} className={"mb-13"}>
+                Order Now
+            </Button>
         </div>
     );
 }
