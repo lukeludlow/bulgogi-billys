@@ -7,11 +7,13 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import App from "@/App.tsx";
 import Menu from "@/pages/menu/Menu.tsx";
 import Home from "@/pages/home/Home.tsx";
-import NotFound from "@/pages/notfound/NotFound.tsx";
+import NotFound from "@/pages/not-found/NotFound.tsx";
 import Schedule from "@/pages/schedule/Schedule.tsx";
 import { Analytics } from "@vercel/analytics/react";
 import Order from "@/pages/order/Order.tsx";
 import OrderNow from "@/pages/order-now/OrderNow.tsx";
+import Contact from "@/pages/contact/Contact.tsx";
+import About from "@/pages/about/About.tsx";
 
 const router = createBrowserRouter([
     {
@@ -37,6 +39,14 @@ const router = createBrowserRouter([
             {
                 path: "/order-now",
                 element: <OrderNow />,
+            },
+            {
+                path: "/contact",
+                element: <Contact />,
+            },
+            {
+                path: "/about",
+                element: <About />,
             },
             {
                 path: "*",
