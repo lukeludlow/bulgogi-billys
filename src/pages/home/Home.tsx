@@ -78,8 +78,8 @@ export default function Home() {
                                 <Button href={"/menu"} color={"orange"}>
                                     Menu
                                 </Button>
-                                <Button href={"/schedule"} outline>
-                                    Schedule
+                                <Button href={"/about"} outline>
+                                    About
                                 </Button>
                             </div>
                         </div>
