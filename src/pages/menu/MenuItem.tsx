@@ -11,7 +11,7 @@ interface Props {
 export default function MenuItem({ name, image, description }: Props) {
     return (
         <>
-            <div className="sm:hidden divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+            <div className="sm:hidden divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
                 <div className="px-4 py-5 sm:px-6">
                     <Heading>{name}</Heading>
                     <Text>(Beef or Pork)</Text>
@@ -23,7 +23,7 @@ export default function MenuItem({ name, image, description }: Props) {
                     <Text>{description}</Text>
                 </div>
             </div>
-            <div className="max-sm:hidden divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+            <div className="max-sm:hidden divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
                 <div className={"grid grid-cols-2"}>
                     <div className="px-4 py-5 sm:p-6">
                         <img src={image} alt={"Bulgogi Fries"} />
