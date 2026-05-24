@@ -27,10 +27,11 @@ export default function EnterPassword() {
 
                 {/* Typography Header */}
                 <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance text-zinc-900 sm:text-5xl dark:text-white">
-                    Protected Website
+                    Pull up a chair!
                 </h1>
                 <p className="mt-3 text-base font-medium text-pretty text-zinc-500 dark:text-zinc-400">
-                    Please enter the secret password to gain access.
+                    We're just putting the finishing touches on our new online
+                    home. Enter the secret passcode below to head on in.
                 </p>
 
                 {/* Form Container mimicking Catalyst UI input structures */}
@@ -67,7 +68,7 @@ export default function EnterPassword() {
                         type="submit"
                         className="w-full rounded-lg bg-orange-600 px-4 py-3 text-sm font-semibold text-white shadow-xs hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:bg-orange-500 dark:hover:bg-orange-400 dark:focus-visible:outline-orange-500 cursor-pointer transition-colors duration-150"
                     >
-                        Unlock Site
+                        Head Inside
                     </button>
                 </form>
             </div>
