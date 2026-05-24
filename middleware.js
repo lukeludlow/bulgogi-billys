@@ -7,7 +7,7 @@ export const config = {
     ],
 };
 
-const SITE_PASSWORD = process.env.SITE_PASSWORD;
+const SITE_PASSWORD = process.env.VITE_SITE_PASSWORD;
 
 export default function middleware(request) {
     const url = new URL(request.url);
