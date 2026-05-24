@@ -9,7 +9,6 @@ export const config = {
 
 const SITE_PASSWORD = process.env.SITE_PASSWORD;
 
-// @ts-expect-error any is ok here
 export default function middleware(request) {
     const url = new URL(request.url);
 
