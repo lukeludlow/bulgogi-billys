@@ -4,9 +4,9 @@ import { Link } from "@/components/catalyst-ui-kit/link.tsx";
 
 export default function Home() {
     const images = [
-        "src/assets/fries_h_screen_small.png",
-        "src/assets/rice_h_screen_small.png",
-        "src/assets/tacos_h_screen_small.png",
+        "/images/fries_h_screen_small.png",
+        "/images/rice_h_screen_small.png",
+        "/images/tacos_h_screen_small.png",
     ];
 
     const [currentIndex, setCurrentIndex] = useState(0);

@@ -33,7 +33,7 @@ export default function About() {
                     </div>
                     <div className="p-6 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/20 order-1 md:order-2">
                         <img
-                            src="src/assets/billy-and-mom.jpeg"
+                            src="/images/billy-and-mom.jpeg"
                             className="rounded-lg object-cover h-auto w-auto shadow-sm"
                             alt="billy-and-mom"
                         />
@@ -162,7 +162,7 @@ export default function About() {
                 <div className="grid grid-cols-1 md:grid-cols-3">
                     <div className="p-6 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/20 md:col-span-1">
                         <img
-                            src="src/assets/cartoon-billy.jpeg"
+                            src="/images/cartoon-billy.jpeg"
                             className="rounded-lg object-contain max-h-48"
                             alt="cartoon-billy"
                         />

@@ -54,7 +54,7 @@ export default function Contact() {
             </div>
             <div className={"flex justify-center"}>
                 <img
-                    src={"src/assets/bulgogi-billys-socials.png"}
+                    src={"/images/bulgogi-billys-socials.png"}
                     className={"h-60"}
                     alt={"bulgogi-billys-socials"}
                 />

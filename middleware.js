@@ -23,8 +23,6 @@ export default function middleware(request) {
         `site_auth_token=${SITE_PASSWORD}`,
     );
 
-    console.log(`Is Authenticated: ${hasValidAuth}`);
-
     // If they don't have the cookie, silently rewrite the view to the password page
     if (!hasValidAuth) {
         url.pathname = "/enter-password";
