@@ -14,6 +14,7 @@ import Order from "@/pages/order/Order.tsx";
 import OrderNow from "@/pages/order-now/OrderNow.tsx";
 import Contact from "@/pages/contact/Contact.tsx";
 import About from "@/pages/about/About.tsx";
+import EnterPassword from "@/pages/enter-password/EnterPassword.tsx";
 
 const router = createBrowserRouter([
     {
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
             {
                 path: "/about",
                 element: <About />,
+            },
+            {
+                path: "/enter-password",
+                element: <EnterPassword />,
             },
             {
                 path: "*",
