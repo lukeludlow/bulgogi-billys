@@ -1,10 +1,11 @@
 import { Heading, Subheading } from "@/components/catalyst-ui-kit/heading.tsx";
-import { Divider } from "@/components/catalyst-ui-kit/divider.tsx";
 import { Text } from "@/components/catalyst-ui-kit/text.tsx";
 import { Link } from "@/components/catalyst-ui-kit/link.tsx";
 import InstagramIcon from "@/components/icons/InstagramIcon.tsx";
 import EmailIcon from "@/components/icons/EmailIcon.tsx";
 import FacebookIcon from "@/components/icons/FacebookIcon.tsx";
+import ContactForm from "@/pages/contact/ContactForm.tsx";
+import { Divider } from "@/components/catalyst-ui-kit/divider.tsx";
 
 export default function Contact() {
     return (
@@ -18,6 +19,9 @@ export default function Contact() {
                 From small gatherings to large celebrations, Bulgogi Billy's
                 brings the flavor. Reach out today for rates and availability.
             </Text>
+            <div>
+                <ContactForm />
+            </div>
             <div className={"flex flex-row justify-center gap-2 items-center"}>
                 <EmailIcon />
                 <Link
