@@ -1,5 +1,6 @@
 import { Button } from "@/components/catalyst-ui-kit/button.tsx";
 import { useEffect, useState } from "react";
+import { Link } from "@/components/catalyst-ui-kit/link.tsx";
 
 export default function Home() {
     const images = [
@@ -72,7 +73,13 @@ export default function Home() {
                                 Seoul food, Texas style.
                             </h1>
                             <p className="mt-8 text-lg font-medium text-pretty text-gray-900 sm:text-xl/8 dark:text-gray-100">
-                                As seen on TikTok!
+                                <Link
+                                    href={
+                                        "https://www.tiktok.com/@davidspov_/video/7568650366590504247"
+                                    }
+                                >
+                                    As seen on TikTok!
+                                </Link>
                             </p>
                             <div className="mt-10 flex items-center justify-center gap-x-6">
                                 <Button href={"/menu"} color={"orange"}>

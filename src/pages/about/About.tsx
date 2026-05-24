@@ -61,7 +61,7 @@ export default function About() {
                     </Text>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-white/5">
+                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-zinc-900/40 border border-gray-100 dark:border-white/5">
                             <Heading className="text-base mb-1">
                                 Bulgogi Fries
                             </Heading>
@@ -72,7 +72,7 @@ export default function About() {
                                 our signature Seoul Sauce.
                             </Text>
                         </div>
-                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-white/5">
+                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-zinc-900/40 border border-gray-100 dark:border-white/5">
                             <Heading className="text-base mb-1">
                                 Bulgogi Tacos
                             </Heading>
@@ -83,7 +83,7 @@ export default function About() {
                                 Sriracha, and Seoul Sauce.
                             </Text>
                         </div>
-                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-white/5">
+                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-zinc-900/40 border border-gray-100 dark:border-white/5">
                             <Heading className="text-base mb-1">
                                 Classic Rice Bowl
                             </Heading>
