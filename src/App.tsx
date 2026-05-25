@@ -1,5 +1,9 @@
 import "@/App.css";
-import { Navbar, NavbarItem, NavbarSection, } from "@/components/catalyst-ui-kit/navbar.tsx";
+import {
+    Navbar,
+    NavbarItem,
+    NavbarSection,
+} from "@/components/catalyst-ui-kit/navbar.tsx";
 import {
     Sidebar,
     SidebarBody,
@@ -14,10 +18,8 @@ import DarkModeToggle from "@/components/dark-mode-toggle/DarkModeToggle.tsx";
 const navItems = [
     { label: "Home", url: "/" },
     { label: "Menu", url: "/menu" },
-    { label: "Order", url: "/order" },
     { label: "Schedule", url: "/schedule" },
     { label: "Contact", url: "/contact" },
-    { label: "About", url: "/about" },
 ];
 
 export default function App() {

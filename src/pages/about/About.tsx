@@ -1,6 +1,8 @@
 import { Heading, Subheading } from "@/components/catalyst-ui-kit/heading.tsx";
 import { Divider } from "@/components/catalyst-ui-kit/divider.tsx";
 import { Text } from "@/components/catalyst-ui-kit/text.tsx";
+import { Button } from "@/components/catalyst-ui-kit/button.tsx";
+import MostPopularBadge from "@/pages/menu/MostPopularBadge.tsx";
 
 export default function About() {
     const cardClass =
@@ -62,9 +64,16 @@ export default function About() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                         <div className="p-4 rounded-lg bg-gray-50 dark:bg-zinc-900/40 border border-gray-100 dark:border-white/5">
-                            <Heading className="text-base mb-1">
-                                Bulgogi Fries
-                            </Heading>
+                            <div
+                                className={
+                                    "flex flex-row justify-between md:flex-col"
+                                }
+                            >
+                                <Heading className="text-base mb-1">
+                                    Bulgogi Fries
+                                </Heading>
+                                <MostPopularBadge />
+                            </div>
                             <Text className="text-sm">
                                 A mountain of crispy French fries piled high
                                 with your choice of beef or pork bulgogi, melted
@@ -95,6 +104,15 @@ export default function About() {
                             </Text>
                         </div>
                     </div>
+                </div>
+                <div className={"flex justify-center"}>
+                    <Button
+                        href={"/menu"}
+                        color={"orange"}
+                        className={"w-full"}
+                    >
+                        Menu
+                    </Button>
                 </div>
             </div>
 
@@ -155,6 +173,15 @@ export default function About() {
                         </Text>
                     </div>
                 </div>
+                <div className={"flex justify-center"}>
+                    <Button
+                        href={"/schedule"}
+                        color={"orange"}
+                        className={"w-full"}
+                    >
+                        Schedule
+                    </Button>
+                </div>
             </div>
 
             {/* Catering Section */}
@@ -179,6 +206,15 @@ export default function About() {
                             rates and availability!
                         </Text>
                     </div>
+                </div>
+                <div className={"flex justify-center"}>
+                    <Button
+                        href={"/contact"}
+                        color={"orange"}
+                        className={"w-full"}
+                    >
+                        Contact
+                    </Button>
                 </div>
             </div>
         </div>

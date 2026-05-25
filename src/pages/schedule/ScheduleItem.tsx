@@ -1,6 +1,5 @@
-import { Text } from "@/components/catalyst-ui-kit/text.tsx";
+import { Text, TextLink } from "@/components/catalyst-ui-kit/text.tsx";
 import { Subheading } from "@/components/catalyst-ui-kit/heading.tsx";
-import { Link } from "@/components/catalyst-ui-kit/link.tsx";
 
 interface Props {
     days: string;
@@ -22,13 +21,13 @@ export default function ScheduleItem({
     return (
         <div className={"flex flex-col"}>
             <Subheading className={"text-xl md:text-xl"}>{days}</Subheading>
-            <Text className={"text-lg md:text-lg"}>
-                <Link href={placeLink}>{place}</Link>
-            </Text>
+            <TextLink href={placeLink} className={"text-lg md:text-lg"}>
+                {place}
+            </TextLink>
             <Text className={"text-lg md:text-lg"}>{time}</Text>
-            <Link href={mapsLink}>
-                <Text className={"text-lg md:text-lg"}>{address}</Text>
-            </Link>
+            <TextLink href={mapsLink} className={"text-lg md:text-lg"}>
+                {address}
+            </TextLink>
         </div>
     );
 }

@@ -13,6 +13,9 @@ export default function Menu() {
                 marinated ribeye beef using my Mom's own recipe.
             </Text>
             <Divider className={"hidden"} />
+            <Button href={"/order-now"} color={"orange"}>
+                Order
+            </Button>
             <MenuItem
                 name={"Bulgogi Fries"}
                 image={"/images/fries_h_screen_small.png"}
@@ -35,7 +38,7 @@ export default function Menu() {
                 }
             />
             <Button href={"/order-now"} color={"orange"} className={"mb-13"}>
-                Order Now
+                Order
             </Button>
         </div>
     );

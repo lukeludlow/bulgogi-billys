@@ -1,6 +1,8 @@
 import { Button } from "@/components/catalyst-ui-kit/button.tsx";
 import { useEffect, useState } from "react";
-import { Link } from "@/components/catalyst-ui-kit/link.tsx";
+import About from "@/pages/about/About.tsx";
+import { TextLink } from "@/components/catalyst-ui-kit/text.tsx";
+import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
 
 export default function Home() {
     const images = [
@@ -27,7 +29,7 @@ export default function Home() {
     }, [currentIndex, images.length]);
 
     return (
-        <div className="bg-white dark:bg-gray-900">
+        <div className="bg-white dark:bg-zinc-900">
             <div className="relative isolate overflow-hidden pt-14">
                 {/* Images Container */}
                 <div
@@ -45,14 +47,39 @@ export default function Home() {
                 </div>
 
                 {/* Indicator Dots */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 flex-row items-center">
+                    <Button
+                        outline
+                        onClick={() => {
+                            let nextIndex = currentIndex - 1;
+                            if (nextIndex < 0) {
+                                nextIndex = images.length - 1;
+                            }
+                            setCurrentIndex(nextIndex);
+                        }}
+                    >
+                        <ArrowLeftIcon />
+                    </Button>
                     {images.map((_, i) => (
                         <div
                             key={i}
                             className={`size-2 transition-colors ${i === currentIndex ? "bg-white" : "bg-white/30"} rounded-lg`}
                         />
                     ))}
+                    <Button
+                        outline
+                        onClick={() =>
+                            setCurrentIndex((currentIndex + 1) % images.length)
+                        }
+                    >
+                        <ArrowRightIcon />
+                    </Button>
                 </div>
+                {/*<div className={"absolute bottom-15"}>*/}
+                {/*    <Button outline>*/}
+                {/*        <ArrowLeftIcon />*/}
+                {/*    </Button>*/}
+                {/*</div>*/}
                 <div className="absolute inset-0 -z-15 bg-white/20 dark:bg-black/40"></div>
                 <div
                     aria-hidden="true"
@@ -72,21 +99,22 @@ export default function Home() {
                             <h1 className="text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-7xl dark:text-white">
                                 Seoul food, Texas style.
                             </h1>
-                            <p className="mt-8 text-lg font-medium text-pretty text-gray-900 sm:text-xl/8 dark:text-gray-100">
-                                <Link
+                            <div className={"mt-8"}>
+                                <TextLink
                                     href={
                                         "https://www.tiktok.com/@davidspov_/video/7568650366590504247"
                                     }
+                                    className={"text-lg md:text-lg"}
                                 >
                                     As seen on TikTok!
-                                </Link>
-                            </p>
+                                </TextLink>
+                            </div>
                             <div className="mt-10 flex items-center justify-center gap-x-6">
                                 <Button href={"/menu"} color={"orange"}>
                                     Menu
                                 </Button>
-                                <Button href={"/about"} outline>
-                                    About
+                                <Button href={"/schedule"} outline>
+                                    Schedule
                                 </Button>
                             </div>
                         </div>
@@ -105,6 +133,7 @@ export default function Home() {
                     />
                 </div>
             </div>
+            <About />
         </div>
     );
 }
