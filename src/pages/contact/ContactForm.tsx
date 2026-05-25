@@ -89,12 +89,18 @@ export default function ContactForm() {
         setStatus({ loading: true, success: null, message: "" });
 
         const formData = new FormData(e.target);
+
+        formData.append("access_key", "e07279ae-8bec-40b4-894b-19aa0add3f0e");
+
         const payload = Object.fromEntries(formData.entries());
 
         try {
-            const response = await fetch("/api/submit-contact-form", {
+            const response = await fetch("https://api.web3forms.com/submit", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
                 body: JSON.stringify(payload),
             });
 
@@ -111,7 +117,9 @@ export default function ContactForm() {
                 setStatus({
                     loading: false,
                     success: false,
-                    message: result.message || "Something went wrong.",
+                    message:
+                        result.message ||
+                        "Something went wrong with the submission.",
                 });
             }
         } catch (error) {
