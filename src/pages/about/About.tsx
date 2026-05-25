@@ -27,10 +27,10 @@ export default function About() {
                         <Text className="text-lg md:text-lg">
                             Our story starts with family. In 2023, Billy founded
                             Bulgogi Billy’s to share his Mom’s legendary, secret
-                            recipe. After leaving North Korea to build a new
-                            life in America, she brought with her a passion for
-                            cooking that we now share with Lone Star State
-                            foodies every single weekend.
+                            recipe. After leaving Korea to build a new life in
+                            America, she brought with her a passion for cooking
+                            that we now share with Lone Star State foodies every
+                            single weekend.
                         </Text>
                     </div>
                     <div className="p-6 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/20 order-1 md:order-2">
