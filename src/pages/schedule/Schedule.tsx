@@ -18,7 +18,7 @@ export default function Schedule() {
             <ScheduleItem
                 days={"Saturdays"}
                 place={"Grogan's Mill Farmer's Market"}
-                time={"9am-1pm"}
+                time={"9am-12pm"}
                 address={"7 Switchbud Pl, The Woodlands, TX 77380"}
                 mapsLink={"https://maps.app.goo.gl/8wWytb9ojcdMv4d38"}
                 placeLink={"https://www.grogansmill.org/fmabout"}
