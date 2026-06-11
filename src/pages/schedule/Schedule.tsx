@@ -5,10 +5,15 @@ import { Link } from "@/components/catalyst-ui-kit/link.tsx";
 import InstagramIcon from "@/components/icons/InstagramIcon.tsx";
 import FacebookIcon from "@/components/icons/FacebookIcon.tsx";
 import ScheduleItem from "@/pages/schedule/ScheduleItem.tsx";
+import PageMeta from "@/components/PageMeta.tsx";
 
 export default function Schedule() {
     return (
         <div className={"flex flex-col gap-3 text-center"}>
+            <PageMeta
+                title="Find Us | Bulgogi Billy's – The Woodlands, Conroe & New Caney, TX"
+                description="Find Bulgogi Billy's Korean fusion food truck at Grogan's Mill (The Woodlands), Farmers Market at 1488 (Conroe), and New Caney Community Market every weekend."
+            />
             <Heading>Schedule</Heading>
             <Divider />
             <Text className={"text-lg md:text-lg"}>

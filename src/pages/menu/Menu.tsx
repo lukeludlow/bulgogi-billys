@@ -3,10 +3,15 @@ import { Divider } from "@/components/catalyst-ui-kit/divider.tsx";
 import { Text } from "@/components/catalyst-ui-kit/text";
 import MenuItem from "@/pages/menu/MenuItem.tsx";
 import { Button } from "@/components/catalyst-ui-kit/button.tsx";
+import PageMeta from "@/components/PageMeta.tsx";
 
 export default function Menu() {
     return (
         <div className={"flex flex-col gap-3"}>
+            <PageMeta
+                title="Menu | Bulgogi Billy's Korean Fusion"
+                description="Bulgogi fries, tacos, and rice bowls made with flame-grilled ribeye or pork bulgogi. Serving The Woodlands, Conroe, and New Caney, TX every weekend."
+            />
             <Heading className={"text-center md:text-2xl"}>Menu</Heading>
             <Text className={"text-center md:text-lg"}>
                 What is "bulgogi?" Bulgogi literally means "fire meat" and is

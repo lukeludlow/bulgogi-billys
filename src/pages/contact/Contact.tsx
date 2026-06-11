@@ -6,10 +6,15 @@ import EmailIcon from "@/components/icons/EmailIcon.tsx";
 import FacebookIcon from "@/components/icons/FacebookIcon.tsx";
 import ContactForm from "@/pages/contact/ContactForm.tsx";
 import { Divider } from "@/components/catalyst-ui-kit/divider.tsx";
+import PageMeta from "@/components/PageMeta.tsx";
 
 export default function Contact() {
     return (
         <div className={"flex flex-col gap-3 text-center"}>
+            <PageMeta
+                title="Contact & Catering | Bulgogi Billy's"
+                description="Book Bulgogi Billy's for your next event. We offer Korean fusion catering for gatherings of any size across the greater Houston, TX area."
+            />
             <Heading>Contact</Heading>
             <Divider />
             <Subheading className={"text-xl md:text-xl"}>
