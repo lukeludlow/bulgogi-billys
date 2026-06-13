@@ -18,7 +18,7 @@ export default function Schedule() {
             <div className="flex flex-col gap-3 text-center">
                 <Heading>Schedule</Heading>
                 <Divider />
-                <Text className="text-lg">
+                <Text className="text-lg md:text-lg">
                     Bulgogi Billy's is serving delicious Korean fusion every
                     weekend. Here's where you can find us.
                 </Text>
