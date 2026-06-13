@@ -1,11 +1,3 @@
 {
-    "redirects": [
-        {
-            "source": "/:path*",
-            "has": [{ "type": "host", "value": "bulgogibillys.com" }],
-            "destination": "https://www.bulgogibillys.com/:path*",
-            "permanent": true
-        }
-    ],
     "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
