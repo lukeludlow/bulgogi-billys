@@ -9,17 +9,29 @@ import PageMeta from "@/components/PageMeta.tsx";
 
 export default function Schedule() {
     return (
-        <div className={"flex flex-col gap-3 text-center"}>
+        <div className="flex flex-col gap-6 max-w-4xl mx-auto px-4 py-6">
             <PageMeta
                 title="Find Us | Bulgogi Billy's – The Woodlands, Conroe & New Caney, TX"
                 description="Find Bulgogi Billy's Korean fusion food truck at Grogan's Mill (The Woodlands), Farmers Market at 1488 (Conroe), and New Caney Community Market every weekend."
             />
-            <Heading>Schedule</Heading>
-            <Divider />
-            <Text className={"text-lg md:text-lg"}>
-                Bulgogi Billy's is serving delicious Korean fusion every
-                weekend. Here's where you can find us.
-            </Text>
+
+            <div className="flex flex-col gap-3 text-center">
+                <Heading>Schedule</Heading>
+                <Divider />
+                <Text className="text-lg">
+                    Bulgogi Billy's is serving delicious Korean fusion every
+                    weekend. Here's where you can find us.
+                </Text>
+            </div>
+
+            <div className="rounded-lg overflow-hidden shadow-sm">
+                <img
+                    src="/images/fries_h_screen_small.png"
+                    alt="Bulgogi Billy's fries"
+                    className="w-full h-40 object-cover object-center"
+                />
+            </div>
+
             <ScheduleItem
                 days={"Saturdays"}
                 place={"Grogan's Mill Farmer's Market"}
@@ -46,42 +58,40 @@ export default function Schedule() {
                 mapsLink={"https://maps.app.goo.gl/wXFQdr9vnM7CycVSA"}
                 placeLink={"https://www.instagram.com/farmersmarketat1488/"}
             />
-            <Divider />
-            <div className={"pb-20"}>
-                <Subheading className={"text-xl md:text-xl"}>
-                    Check for updates
+
+            <div className="p-6 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-100 dark:border-orange-900/30 flex flex-col gap-4 text-center">
+                <Subheading className="text-xl font-bold text-orange-800 dark:text-orange-300">
+                    Check for Updates
                 </Subheading>
-                <Text className={"text-lg md:text-lg"}>
-                    For latest updates, check Instagram or Facebook to find out
-                    where Bulgogi Billy will be!
+                <Text className="text-base text-orange-700 dark:text-orange-400">
+                    Schedules can change! Follow us on Instagram or Facebook for
+                    the latest location updates and pop-up alerts.
                 </Text>
-                <div
-                    className={
-                        "flex flex-row justify-center gap-2 items-center"
-                    }
-                >
-                    <InstagramIcon />
-                    <Link
-                        href={"https://www.instagram.com/bulgogibillys/"}
-                        className={"dark:text-white text-lg md:text-lg"}
-                    >
-                        @bulgogibillys
-                    </Link>
-                </div>
-                <div
-                    className={
-                        "flex flex-row justify-center gap-2 items-center"
-                    }
-                >
-                    <FacebookIcon />
-                    <Link
-                        href={
-                            "https://www.facebook.com/p/Bulgogi-Billys-LLC-61560725494736/"
-                        }
-                        className={"dark:text-white text-lg md:text-lg"}
-                    >
-                        Bulgogi Billy's LLC
-                    </Link>
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <div className="flex items-center justify-center gap-2">
+                        <InstagramIcon />
+                        <Link
+                            href={"https://www.instagram.com/bulgogibillys/"}
+                            className={
+                                "dark:text-white font-semibold text-base"
+                            }
+                        >
+                            @bulgogibillys
+                        </Link>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                        <FacebookIcon />
+                        <Link
+                            href={
+                                "https://www.facebook.com/p/Bulgogi-Billys-LLC-61560725494736/"
+                            }
+                            className={
+                                "dark:text-white font-semibold text-base"
+                            }
+                        >
+                            Bulgogi Billy's LLC
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>
