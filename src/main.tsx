@@ -13,6 +13,8 @@ import { Analytics } from "@vercel/analytics/react";
 import OrderNow from "@/pages/order-now/OrderNow.tsx";
 import Contact from "@/pages/contact/Contact.tsx";
 import EnterPassword from "@/pages/enter-password/EnterPassword.tsx";
+import Blog from "@/pages/blog/Blog.tsx";
+import BlogPost from "@/pages/blog/BlogPost.tsx";
 
 const router = createBrowserRouter([
     {
@@ -42,6 +44,14 @@ const router = createBrowserRouter([
             {
                 path: "/enter-password",
                 element: <EnterPassword />,
+            },
+            {
+                path: "/blog",
+                element: <Blog />,
+            },
+            {
+                path: "/blog/:slug",
+                element: <BlogPost />,
             },
             {
                 path: "*",
