@@ -68,6 +68,7 @@ Vercel and fully optimized for search engines and social sharing. All food photo
 - `sitemap.xml` and `robots.txt` for search engine crawlability
 - Vercel Analytics for traffic monitoring
 - SPA routing with Vercel rewrite rules (`vercel.json`)
+- Private, password-protected **admin profit-margin calculator** with interactive charts
 
 ---
 
@@ -118,6 +119,19 @@ public/
 
 ---
 
+## Admin Dashboard
+
+A private, owner-only **profit-margin calculator** lives behind password protection. It models the
+gross margin of every menu item and size, with live-editable ingredient costs, recipe amounts, and
+menu prices, a Beef/Pork toggle, at-a-glance KPI cards, and three interactive charts. Change any
+number and watch the margins and graphs update instantly.
+
+It's mobile-first, follows the site's light/dark theme, remembers your customized numbers between
+visits, and can optionally sync them to the cloud so they follow you across devices — all running on
+Vercel's free tier.
+
+---
+
 ## Running Locally
 
 ```bash
@@ -127,5 +141,5 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Requires Node 18+. No `.env` variables are needed to run the dev server — the Web3Forms
-access key is public by design.
+Open `http://localhost:5173`. Requires Node 18+. No `.env` variables are needed to run the public
+dev server — the Web3Forms access key is public by design.

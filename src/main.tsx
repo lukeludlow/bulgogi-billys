@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 // @ts-expect-error inter is CSS only
 import "@fontsource-variable/inter";
@@ -16,7 +16,9 @@ import EnterPassword from "@/pages/enter-password/EnterPassword.tsx";
 import Blog from "@/pages/blog/Blog.tsx";
 import BlogPost from "@/pages/blog/BlogPost.tsx";
 import AdminLogin from "@/pages/admin/AdminLogin.tsx";
-import AdminDashboard from "@/pages/admin/AdminDashboard.tsx";
+// Lazy-loaded so the charting library (recharts) only ships to the admin route,
+// keeping the public site bundle small.
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard.tsx"));
 
 const router = createBrowserRouter([
     {
@@ -67,7 +69,11 @@ const router = createBrowserRouter([
     },
     {
         path: "/admin",
-        element: <AdminDashboard />,
+        element: (
+            <Suspense fallback={null}>
+                <AdminDashboard />
+            </Suspense>
+        ),
     },
 ]);
 
