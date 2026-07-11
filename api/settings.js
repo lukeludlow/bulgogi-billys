@@ -36,7 +36,7 @@ async function isAuthorized(request) {
     return isValidSessionCookie(cookieValue, secret);
 }
 
-export default async function handler(request) {
+export async function handler(request) {
     if (!(await isAuthorized(request))) {
         return json({ error: "Unauthorized" }, 401);
     }
@@ -77,3 +77,10 @@ export default async function handler(request) {
 
     return json({ error: "Method not allowed" }, 405);
 }
+
+// Vercel's Node.js runtime only recognizes named per-method exports or the
+// `fetch` Web Standard object as a function's entry point; a bare default
+// export of a (request) => Response function is treated as the legacy Node
+// (req, res) => void signature, so its return value is silently dropped and
+// the request hangs until the function times out.
+export default { fetch: handler };

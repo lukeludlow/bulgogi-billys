@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { get, put } from "@vercel/blob";
-import handler from "./settings.js";
+import { handler } from "./settings.js";
 import {
     createSessionCookieHeader,
     expiredSessionCookieHeader,
