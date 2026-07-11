@@ -6,7 +6,7 @@ import {
     parseCookie,
 } from "../lib/adminSession.js";
 
-export const config = { runtime: "edge" };
+export const config = { runtime: "nodejs" };
 
 // Cloud sync for the admin calculator, guarded by the admin session cookie.
 // To enable: in the Vercel dashboard create a Blob store (Storage -> Create ->
