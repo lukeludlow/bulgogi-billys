@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS, SETTINGS_VERSION } from "./defaults.ts";
-import type { Settings } from "./types.ts";
+import type { Ingredient, MenuItem, Settings } from "./types.ts";
 
 const STORAGE_KEY = "bb_admin_settings";
 
@@ -9,15 +9,37 @@ function clone<T>(value: T): T {
         : JSON.parse(JSON.stringify(value));
 }
 
-/** Basic shape check so a stale/corrupt payload falls back to defaults. */
+/**
+ * Basic shape check so a corrupt payload falls back to defaults. Any version is
+ * accepted here — `migrateSettings` brings older payloads up to the current
+ * shape rather than discarding the owner's customizations.
+ */
 function isUsableSettings(value: unknown): value is Settings {
     if (typeof value !== "object" || value === null) return false;
     const candidate = value as Partial<Settings>;
     return (
-        candidate.version === SETTINGS_VERSION &&
-        Array.isArray(candidate.ingredients) &&
-        Array.isArray(candidate.items)
+        Array.isArray(candidate.ingredients) && Array.isArray(candidate.items)
     );
+}
+
+/**
+ * Normalize a stored payload to the current settings shape. New fields added in
+ * later versions get sensible defaults so a v1 save upgrades in place instead of
+ * being thrown away.
+ */
+export function migrateSettings(settings: Settings): Settings {
+    const ingredients: Ingredient[] = settings.ingredients.map((ingredient) => ({
+        ...ingredient,
+        pricing: ingredient.pricing ?? "direct",
+    }));
+    const items: MenuItem[] = settings.items.map((item) => ({
+        ...item,
+        variants: item.variants.map((variant) => ({
+            ...variant,
+            unitsSoldThisWeek: variant.unitsSoldThisWeek ?? 0,
+        })),
+    }));
+    return { ...settings, version: SETTINGS_VERSION, ingredients, items };
 }
 
 /** Read customized settings from localStorage, or a fresh copy of the defaults. */
@@ -27,7 +49,7 @@ export function loadSettings(): Settings {
         if (!raw) return clone(DEFAULT_SETTINGS);
         const parsed = JSON.parse(raw);
         if (!isUsableSettings(parsed)) return clone(DEFAULT_SETTINGS);
-        return parsed;
+        return migrateSettings(parsed);
     } catch {
         return clone(DEFAULT_SETTINGS);
     }
@@ -72,5 +94,5 @@ export async function loadFromCloud(): Promise<Settings | null> {
     }
     const data = await response.json();
     if (!isUsableSettings(data)) return null;
-    return data;
+    return migrateSettings(data);
 }

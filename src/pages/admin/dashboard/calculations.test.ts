@@ -1,9 +1,11 @@
 import { expect, test } from "vitest";
 import {
     allCombinations,
+    effectiveCostPerUnit,
     summaryStats,
     variantCost,
     variantMargin,
+    weeklyStats,
 } from "./calculations.ts";
 import { PROTEIN_INGREDIENT_ID, type Ingredient, type Settings, type Variant } from "./types.ts";
 import { DEFAULT_SETTINGS } from "./defaults.ts";
@@ -66,6 +68,109 @@ test("allCombinations covers every item and size in the defaults", () => {
     // Fries (4) + Rice (4) + Tacos (2) = 10
     expect(combos).toHaveLength(10);
     expect(combos.every((c) => c.label.length > 0)).toBe(true);
+});
+
+test("effectiveCostPerUnit returns the direct cost by default", () => {
+    const ingredient: Ingredient = {
+        id: "x",
+        name: "X",
+        unit: "oz",
+        costPerUnit: 0.5,
+    };
+    expect(effectiveCostPerUnit(ingredient)).toBe(0.5);
+});
+
+test("effectiveCostPerUnit derives cost from a batch's lines and yield", () => {
+    const seoul: Ingredient = {
+        id: "seoul",
+        name: "Seoul sauce",
+        unit: "oz",
+        costPerUnit: 999, // ignored while pricing by batch
+        pricing: "batch",
+        batch: {
+            yield: 80,
+            lines: [
+                { id: "a", name: "Soy", cost: 6 },
+                { id: "b", name: "Sugar", cost: 3 },
+                { id: "c", name: "Sesame", cost: 4 },
+                { id: "d", name: "Aromatics", cost: 3 },
+            ],
+        },
+    };
+    // (6 + 3 + 4 + 3) / 80 = 0.20
+    expect(effectiveCostPerUnit(seoul)).toBeCloseTo(0.2);
+});
+
+test("effectiveCostPerUnit falls back to direct cost for a zero-yield batch", () => {
+    const ingredient: Ingredient = {
+        id: "x",
+        name: "X",
+        unit: "oz",
+        costPerUnit: 0.4,
+        pricing: "batch",
+        batch: { yield: 0, lines: [{ id: "a", name: "n", cost: 5 }] },
+    };
+    expect(effectiveCostPerUnit(ingredient)).toBe(0.4);
+});
+
+test("a batch-priced ingredient flows through variantCost", () => {
+    const batchIngredients: Ingredient[] = [
+        {
+            id: "sauce",
+            name: "Sauce",
+            unit: "oz",
+            costPerUnit: 0,
+            pricing: "batch",
+            batch: { yield: 10, lines: [{ id: "a", name: "n", cost: 20 }] }, // $2/oz
+        },
+    ];
+    const sauced: Variant = {
+        id: "v",
+        label: "V",
+        sellPrice: 10,
+        recipe: [{ ingredientId: "sauce", amount: 2 }], // 2 oz * $2 = $4
+    };
+    expect(variantCost(sauced, batchIngredients, "beef", 0)).toBeCloseTo(4);
+});
+
+test("weeklyStats scales each combination by units sold and nets grocery spend", () => {
+    const settings: Settings = {
+        ...DEFAULT_SETTINGS,
+        groceryWeeklySpend: 100,
+        packagingCostPerOrder: 0,
+        ingredients: [],
+        items: [
+            {
+                id: "x",
+                name: "Test",
+                hasProtein: false,
+                variants: [
+                    {
+                        id: "a",
+                        label: "A",
+                        sellPrice: 10,
+                        recipe: [],
+                        unitsSoldThisWeek: 3,
+                    },
+                    {
+                        id: "b",
+                        label: "B",
+                        sellPrice: 5,
+                        recipe: [],
+                        unitsSoldThisWeek: 2,
+                    },
+                ],
+            },
+        ],
+    };
+    const stats = weeklyStats(settings);
+    // 3 sold @ $10 + 2 sold @ $5 = $40 revenue, no cost => $40 gross profit
+    expect(stats.unitsSold).toBe(5);
+    expect(stats.revenue).toBeCloseTo(40);
+    expect(stats.ingredientCost).toBeCloseTo(0);
+    expect(stats.grossProfit).toBeCloseTo(40);
+    expect(stats.net).toBeCloseTo(-60); // 40 - 100 grocery spend
+    expect(stats.lines).toHaveLength(2);
 });
 
 test("summaryStats picks the highest and lowest margin combinations", () => {

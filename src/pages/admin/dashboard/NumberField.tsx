@@ -36,6 +36,9 @@ export default function NumberField({
                 </span>
             )}
             <Input
+                // Keep a usable minimum so the value + spinner aren't clipped
+                // inside narrow table cells.
+                className="min-w-18"
                 type="number"
                 inputMode="decimal"
                 step={step}

@@ -1,8 +1,14 @@
-import { afterEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
 import { loadSettings, resetSettings, saveSettings } from "./storage.ts";
 import { DEFAULT_SETTINGS } from "./defaults.ts";
 
 const STORAGE_KEY = "bb_admin_settings";
+
+// Clear before and after so a save leaked from another suite in the same
+// browser origin can't turn a "nothing stored" assertion into a migration.
+beforeEach(() => {
+    localStorage.removeItem(STORAGE_KEY);
+});
 
 afterEach(() => {
     localStorage.removeItem(STORAGE_KEY);
@@ -24,12 +30,44 @@ test("saveSettings + loadSettings round-trips customized values", () => {
     expect(loaded.selectedProtein).toBe("pork");
 });
 
-test("loadSettings falls back to defaults for a version mismatch", () => {
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ ...DEFAULT_SETTINGS, version: 999 }),
-    );
-    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+test("loadSettings migrates a v1 payload instead of discarding it", () => {
+    // A pre-batch / pre-weekly-sales save: version 1, ingredients without a
+    // `pricing` field, variants without `unitsSoldThisWeek`.
+    const v1 = {
+        version: 1,
+        selectedProtein: "pork",
+        groceryWeeklySpend: 321,
+        packagingCostPerOrder: 0.33,
+        ingredients: [
+            { id: "beef", name: "Beef", unit: "lb", costPerUnit: 9 },
+        ],
+        items: [
+            {
+                id: "fries",
+                name: "Bulgogi Fries",
+                hasProtein: true,
+                variants: [
+                    {
+                        id: "small",
+                        label: "Small",
+                        sellPrice: 8,
+                        recipe: [{ ingredientId: "beef", amount: 0.2 }],
+                    },
+                ],
+            },
+        ],
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v1));
+
+    const loaded = loadSettings();
+    // Customizations survive.
+    expect(loaded.selectedProtein).toBe("pork");
+    expect(loaded.groceryWeeklySpend).toBe(321);
+    expect(loaded.ingredients[0].costPerUnit).toBe(9);
+    // New fields are filled in and the version is bumped.
+    expect(loaded.version).toBe(2);
+    expect(loaded.ingredients[0].pricing).toBe("direct");
+    expect(loaded.items[0].variants[0].unitsSoldThisWeek).toBe(0);
 });
 
 test("loadSettings falls back to defaults for corrupt JSON", () => {

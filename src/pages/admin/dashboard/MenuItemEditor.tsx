@@ -155,7 +155,7 @@ export default function MenuItemEditor({
                                     </span>
                                 </TableCell>
                                 {item.variants.map((variant) => (
-                                    <TableCell key={variant.id} className="w-28">
+                                    <TableCell key={variant.id} className="w-32">
                                         <NumberField
                                             aria-label={`${item.name} ${variant.label} ${name} amount`}
                                             value={amountFor(variant.id, ingredientId)}

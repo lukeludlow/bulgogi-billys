@@ -23,7 +23,7 @@ import { useIsDarkMode } from "./useIsDarkMode.ts";
 // Chart chrome + series colors from the validated dataviz palette. The two-hue
 // pair (blue revenue / orange cost) passes CVD in both modes with a legend and
 // direct labels as secondary encoding; single-series charts use brand orange.
-function chartTheme(isDark: boolean) {
+export function chartTheme(isDark: boolean) {
     return isDark
         ? {
               primary: "#ffffff",
@@ -47,7 +47,7 @@ function chartTheme(isDark: boolean) {
           };
 }
 
-type Theme = ReturnType<typeof chartTheme>;
+export type Theme = ReturnType<typeof chartTheme>;
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -60,7 +60,7 @@ interface TooltipProps {
     kind: "percent" | "currency";
 }
 
-function ChartTooltip({ active, label, payload, theme, kind }: TooltipProps) {
+export function ChartTooltip({ active, label, payload, theme, kind }: TooltipProps) {
     if (!active || !payload || payload.length === 0) return null;
     const format = (value: number) =>
         kind === "percent" ? formatPercent(value) : formatCurrency(value);
@@ -121,28 +121,46 @@ function ChartTooltip({ active, label, payload, theme, kind }: TooltipProps) {
     );
 }
 
-function ChartCard({
+/**
+ * A titled chart panel that fills the row width. The plot area keeps a minimum
+ * width (derived from the number of bars) so it uses the full width on a laptop
+ * but scrolls horizontally when the screen is too narrow to fit every bar. A
+ * right-edge fade and a small hint make that scroll obvious.
+ */
+export function ChartCard({
     title,
     description,
+    minWidth,
     children,
 }: {
     title: string;
     description: string;
+    minWidth: number;
     children: ReactNode;
 }) {
     return (
         <div className="rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
-            <Subheading>{title}</Subheading>
-            <Text className="mt-1 text-sm">{description}</Text>
-            {/* Horizontal scroll keeps 10 labelled bars readable on small screens. */}
-            <div className="mt-4 overflow-x-auto">
-                <div style={{ minWidth: 560, height: 320 }}>{children}</div>
+            <div className="flex items-baseline justify-between gap-3">
+                <div>
+                    <Subheading>{title}</Subheading>
+                    <Text className="mt-1 text-sm">{description}</Text>
+                </div>
+                <span className="shrink-0 text-xs text-zinc-400 sm:hidden dark:text-zinc-500">
+                    Scroll to see all →
+                </span>
+            </div>
+            <div className="relative mt-4">
+                <div className="overflow-x-auto pb-1">
+                    <div style={{ minWidth, height: 340 }}>{children}</div>
+                </div>
+                {/* Fade the right edge to signal more content off-screen. */}
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent sm:hidden dark:from-zinc-800/50" />
             </div>
         </div>
     );
 }
 
-const AXIS_TICK_STYLE = (theme: Theme) => ({
+export const AXIS_TICK_STYLE = (theme: Theme) => ({
     fill: theme.muted,
     fontSize: 11,
     fontVariantNumeric: "tabular-nums" as const,
@@ -160,6 +178,11 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
         grossProfit: round2(combination.grossProfit),
     }));
 
+    // Enough width to keep every labelled bar legible. On a laptop the row is
+    // wider than this so the chart fills it; on a phone it scrolls.
+    const singleMinWidth = Math.max(560, data.length * 64);
+    const groupedMinWidth = Math.max(560, data.length * 84);
+
     const xAxis = (
         <XAxis
             dataKey="name"
@@ -174,10 +197,11 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
     );
 
     return (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="flex flex-col gap-4">
             <ChartCard
                 title="Profit margin by item & size"
                 description="Gross margin as a percent of the menu price. Higher is healthier."
+                minWidth={singleMinWidth}
             >
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
@@ -222,6 +246,7 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
             <ChartCard
                 title="Menu price vs. ingredient cost"
                 description="What you charge (blue) against what each order costs to make (orange)."
+                minWidth={groupedMinWidth}
             >
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
@@ -267,6 +292,7 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
             <ChartCard
                 title="Gross profit per order"
                 description="Dollars left after ingredients and packaging, for every item & size."
+                minWidth={singleMinWidth}
             >
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart

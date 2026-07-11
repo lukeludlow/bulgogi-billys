@@ -11,12 +11,40 @@ export type Protein = "beef" | "pork";
 /** Sentinel recipe-line ingredient id that resolves to the selected protein. */
 export const PROTEIN_INGREDIENT_ID = "protein";
 
+/** One cost line in a batch, e.g. "Soy sauce — $4.00" or "Bottle — $5.00". */
+export interface BatchLine {
+    id: string;
+    name: string;
+    /** Total dollars this line contributes to the batch. */
+    cost: number;
+}
+
+/**
+ * A batch/sub-recipe that produces a quantity of an ingredient. The per-unit
+ * cost is derived as (sum of line costs) / yield. A single line covers the
+ * "whole bottle of Sriracha" case; many lines describe a made-from-scratch
+ * batch like Seoul sauce.
+ */
+export interface Batch {
+    /** Output amount produced, expressed in the ingredient's `unit`. */
+    yield: number;
+    lines: BatchLine[];
+}
+
 export interface Ingredient {
     id: string;
     name: string;
     unit: Unit;
-    /** Cost in dollars for one `unit` of this ingredient. */
+    /**
+     * Cost in dollars for one `unit`, used directly when `pricing` is
+     * "direct" (the default). When `pricing` is "batch" the effective cost is
+     * derived from `batch` instead — see `effectiveCostPerUnit`.
+     */
     costPerUnit: number;
+    /** How the per-unit cost is set. Absent means "direct". */
+    pricing?: "direct" | "batch";
+    /** Present when `pricing` is "batch". */
+    batch?: Batch;
 }
 
 export interface RecipeLine {
@@ -33,6 +61,8 @@ export interface Variant {
     /** Menu price charged to the customer, in dollars. */
     sellPrice: number;
     recipe: RecipeLine[];
+    /** How many of this item×size were sold this week. Absent means 0. */
+    unitsSoldThisWeek?: number;
 }
 
 export interface MenuItem {
@@ -70,4 +100,6 @@ export interface Combination {
     grossProfit: number;
     marginPercent: number;
     foodCostPercent: number;
+    /** Units sold this week for this item×size. */
+    unitsSoldThisWeek: number;
 }

@@ -5,7 +5,7 @@ import {
     type Settings,
 } from "./types.ts";
 
-export const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 2;
 
 // Best-guess starting numbers. Every value is editable in the UI — these are
 // deliberately round, plausible estimates for a Korean-fusion food operation,
@@ -16,7 +16,24 @@ const INGREDIENTS: Ingredient[] = [
     { id: "fries", name: "French fries (raw)", unit: "oz", costPerUnit: 0.08 },
     { id: "rice", name: "Steamed rice", unit: "oz", costPerUnit: 0.06 },
     { id: "cheese", name: "Cheddar-jack cheese", unit: "oz", costPerUnit: 0.25 },
-    { id: "seoul", name: "Seoul sauce", unit: "oz", costPerUnit: 0.2 },
+    {
+        // Priced by batch to demo the sub-recipe builder: an ~80 oz batch that
+        // costs $16 in ingredients works out to the same $0.20/oz.
+        id: "seoul",
+        name: "Seoul sauce",
+        unit: "oz",
+        costPerUnit: 0.2,
+        pricing: "batch",
+        batch: {
+            yield: 80,
+            lines: [
+                { id: "soy", name: "Soy sauce", cost: 6 },
+                { id: "sugar", name: "Brown sugar", cost: 3 },
+                { id: "sesame", name: "Sesame oil", cost: 4 },
+                { id: "garlic", name: "Garlic & ginger", cost: 3 },
+            ],
+        },
+    },
     { id: "sriracha", name: "Sriracha", unit: "oz", costPerUnit: 0.1 },
     { id: "sourCream", name: "Sour cream", unit: "oz", costPerUnit: 0.12 },
     { id: "kimchi", name: "Kimchi", unit: "oz", costPerUnit: 0.2 },
