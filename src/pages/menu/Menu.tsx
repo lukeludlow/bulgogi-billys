@@ -10,12 +10,12 @@ export default function Menu() {
         <div className={"flex flex-col gap-3"}>
             <PageMeta
                 title="Menu | Bulgogi Billy's Korean Fusion"
-                description="Bulgogi fries, tacos, and rice bowls made with flame-grilled ribeye or pork bulgogi. Serving The Woodlands, Conroe, and New Caney, TX every weekend."
+                description="Bulgogi fries, tacos, and rice bowls made with flame-grilled Korean marinated beef or pork bulgogi. Serving The Woodlands, Conroe, and New Caney, TX every weekend."
             />
             <Heading className={"text-center md:text-2xl"}>Menu</Heading>
             <Text className={"text-center md:text-lg"}>
                 What is "bulgogi?" Bulgogi literally means "fire meat" and is
-                marinated ribeye beef using my Mom's own recipe.
+                Korean marinated beef using my Mom's own recipe.
             </Text>
             <Divider className={"hidden"} />
             <Button href={"/order-now"} color={"orange"}>

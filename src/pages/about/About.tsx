@@ -50,8 +50,8 @@ export default function About() {
                         What exactly is bulgogi?
                     </Subheading>
                     <Text className="text-lg md:text-lg">
-                        It literally translates to "fire meat." We take premium
-                        ribeye beef or tender pork, marinate it in Mom’s
+                        It literally translates to "fire meat." We take Korean
+                        marinated beef or tender pork, marinate it in Mom’s
                         authentic blend, and flame-grill it to absolute
                         perfection.
                     </Text>
