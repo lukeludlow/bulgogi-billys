@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { list, put } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 import handler from "./settings.js";
 import {
     createSessionCookieHeader,
@@ -8,7 +8,7 @@ import {
 
 // Mock the Vercel Blob SDK so no real network/store is touched.
 vi.mock("@vercel/blob", () => ({
-    list: vi.fn(async () => ({ blobs: [] })),
+    get: vi.fn(async () => null),
     put: vi.fn(async () => ({ url: "https://blob.example/settings.json" })),
 }));
 
@@ -54,7 +54,7 @@ test("responds 401 for an expired/invalid session cookie", async () => {
 });
 
 test("GET returns an empty object when nothing is stored yet", async () => {
-    vi.mocked(list).mockResolvedValueOnce({ blobs: [] });
+    vi.mocked(get).mockResolvedValueOnce(null);
     const response = await handler(
         makeRequest({ method: "GET", cookie: await validCookie() }),
     );
@@ -64,13 +64,22 @@ test("GET returns an empty object when nothing is stored yet", async () => {
 
 test("GET returns the stored settings blob", async () => {
     const stored = { version: 1, hello: "world" };
-    vi.mocked(list).mockResolvedValueOnce({
-        blobs: [{ url: "https://blob.example/settings.json" }],
+    vi.mocked(get).mockResolvedValueOnce({
+        statusCode: 200,
+        stream: new Response(JSON.stringify(stored)).body,
+        headers: new Headers(),
+        blob: {
+            url: "https://blob.example/settings.json",
+            downloadUrl: "https://blob.example/settings.json",
+            pathname: "settings.json",
+            contentDisposition: "",
+            cacheControl: "",
+            uploadedAt: new Date(),
+            etag: "etag",
+            contentType: "application/json",
+            size: JSON.stringify(stored).length,
+        },
     });
-    vi.stubGlobal(
-        "fetch",
-        vi.fn(async () => new Response(JSON.stringify(stored))),
-    );
     const response = await handler(
         makeRequest({ method: "GET", cookie: await validCookie() }),
     );
@@ -87,7 +96,7 @@ test("PUT persists a well-formed settings body to blob", async () => {
     expect(vi.mocked(put)).toHaveBeenCalledWith(
         "settings.json",
         body,
-        expect.objectContaining({ access: "public", allowOverwrite: true }),
+        expect.objectContaining({ access: "private", allowOverwrite: true }),
     );
 });
 

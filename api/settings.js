@@ -1,4 +1,4 @@
-import { list, put } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 import {
     SESSION_COOKIE_NAME,
     env,
@@ -9,10 +9,12 @@ import {
 export const config = { runtime: "nodejs" };
 
 // Cloud sync for the admin calculator, guarded by the admin session cookie.
-// To enable: in the Vercel dashboard create a Blob store (Storage -> Create ->
-// Blob) and connect it to this project; Vercel then injects
-// BLOB_READ_WRITE_TOKEN automatically. Without it, the dashboard still works
-// fully from localStorage and only the Save/Load-to-cloud buttons error.
+// To enable: in the Vercel dashboard create a *private* Blob store (Storage ->
+// Create -> Blob, access: Private) and connect it to this project; Vercel then
+// injects BLOB_READ_WRITE_TOKEN automatically. Without it, the dashboard still
+// works fully from localStorage and only the Save/Load-to-cloud buttons error.
+// Private stores require every read and write to pass access: "private" and
+// reads to go through get() rather than a plain fetch() of the blob URL.
 
 // A single, fixed blob holds the admin's customized calculator settings. The
 // object is guarded by the admin session (below), so a stable pathname is fine;
@@ -43,11 +45,9 @@ export default async function handler(request) {
 
     if (request.method === "GET") {
         try {
-            const { blobs } = await list({ prefix: BLOB_PATHNAME, token });
-            if (!blobs || blobs.length === 0) return json({});
-            const response = await fetch(blobs[0].url, { cache: "no-store" });
-            if (!response.ok) return json({});
-            return json(await response.json());
+            const result = await get(BLOB_PATHNAME, { access: "private", token });
+            if (!result || result.statusCode !== 200) return json({});
+            return json(await new Response(result.stream).json());
         } catch (error) {
             return json({ error: `Could not read settings: ${error.message}` }, 500);
         }
@@ -63,7 +63,7 @@ export default async function handler(request) {
         }
         try {
             await put(BLOB_PATHNAME, raw, {
-                access: "public",
+                access: "private",
                 addRandomSuffix: false,
                 allowOverwrite: true,
                 contentType: "application/json",
