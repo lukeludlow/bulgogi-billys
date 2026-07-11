@@ -1,4 +1,5 @@
 import { Switch } from "@/components/catalyst-ui-kit/switch.tsx";
+import { getIsDarkMode } from "@/lib/theme.ts";
 import { MoonIcon, SunIcon } from "@heroicons/react/16/solid";
 import { useEffect, useState } from "react";
 
@@ -17,18 +18,14 @@ export default function DarkModeToggle() {
     }, [isDarkMode]);
 
     return (
-        <div className={"flex flex-row items-center min-w-20"}>
+        <div
+            className={
+                "flex flex-row items-center min-w-20 text-zinc-950 dark:text-white"
+            }
+        >
             <SunIcon className={`size-${iconSize}`} />
             <Switch checked={isDarkMode} onChange={setIsDarkMode} />
             <MoonIcon className={`size-${iconSize}`} />
         </div>
     );
-
-    function getIsDarkMode() {
-        return (
-            localStorage.theme === "dark" ||
-            (!("theme" in localStorage) &&
-                window.matchMedia("(prefers-color-scheme: dark)").matches)
-        );
-    }
 }

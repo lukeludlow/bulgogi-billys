@@ -15,6 +15,8 @@ import Contact from "@/pages/contact/Contact.tsx";
 import EnterPassword from "@/pages/enter-password/EnterPassword.tsx";
 import Blog from "@/pages/blog/Blog.tsx";
 import BlogPost from "@/pages/blog/BlogPost.tsx";
+import AdminLogin from "@/pages/admin/AdminLogin.tsx";
+import AdminDashboard from "@/pages/admin/AdminDashboard.tsx";
 
 const router = createBrowserRouter([
     {
@@ -58,6 +60,14 @@ const router = createBrowserRouter([
                 element: <NotFound />,
             },
         ],
+    },
+    {
+        path: "/admin-login",
+        element: <AdminLogin />,
+    },
+    {
+        path: "/admin",
+        element: <AdminDashboard />,
     },
 ]);
 
