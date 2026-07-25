@@ -1,0 +1,36 @@
+import { useLocation } from "react-router";
+import {
+    Navbar,
+    NavbarItem,
+    NavbarLabel,
+    NavbarSection,
+} from "@/components/catalyst-ui-kit/navbar.tsx";
+
+const PAGES = [
+    { label: "Profit Calculator", url: "/admin" },
+    { label: "Transaction History", url: "/admin/transactions" },
+];
+
+function isCurrent(pathname: string, url: string): boolean {
+    return url === "/admin" ? pathname === "/admin" : pathname.startsWith(url);
+}
+
+/** Top nav between the admin pages, used on desktop and in the mobile header. */
+export default function AdminTopNav() {
+    const { pathname } = useLocation();
+    return (
+        <Navbar>
+            <NavbarSection>
+                {PAGES.map(({ label, url }) => (
+                    <NavbarItem
+                        key={url}
+                        href={url}
+                        current={isCurrent(pathname, url)}
+                    >
+                        <NavbarLabel>{label}</NavbarLabel>
+                    </NavbarItem>
+                ))}
+            </NavbarSection>
+        </Navbar>
+    );
+}

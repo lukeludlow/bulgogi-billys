@@ -16,9 +16,15 @@ import EnterPassword from "@/pages/enter-password/EnterPassword.tsx";
 import Blog from "@/pages/blog/Blog.tsx";
 import BlogPost from "@/pages/blog/BlogPost.tsx";
 import AdminLogin from "@/pages/admin/AdminLogin.tsx";
-// Lazy-loaded so the charting library (recharts) only ships to the admin route,
-// keeping the public site bundle small.
-const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard.tsx"));
+// Lazy-loaded so the charting library (recharts) only ships to the admin
+// routes, keeping the public site bundle small.
+const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout.tsx"));
+const ProfitCalculator = lazy(
+    () => import("@/pages/admin/dashboard/ProfitCalculator.tsx"),
+);
+const TransactionHistory = lazy(
+    () => import("@/pages/admin/dashboard/TransactionHistory.tsx"),
+);
 
 const router = createBrowserRouter([
     {
@@ -71,9 +77,19 @@ const router = createBrowserRouter([
         path: "/admin",
         element: (
             <Suspense fallback={null}>
-                <AdminDashboard />
+                <AdminLayout />
             </Suspense>
         ),
+        children: [
+            {
+                index: true,
+                element: <ProfitCalculator />,
+            },
+            {
+                path: "transactions",
+                element: <TransactionHistory />,
+            },
+        ],
     },
 ]);
 

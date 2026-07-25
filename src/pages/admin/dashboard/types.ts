@@ -73,6 +73,40 @@ export interface MenuItem {
     variants: Variant[];
 }
 
+/**
+ * One menu item×size that a real sale was made up of, assigned by hand when
+ * itemizing a transaction. `quantity` is how many of that size were in the order.
+ */
+export interface TransactionLineItem {
+    itemId: string;
+    variantId: string;
+    quantity: number;
+}
+
+/**
+ * A single real sale imported from the card/cash processor export. The processor
+ * only records the order total, not what was in it — `lineItems` is filled in
+ * later, by hand, to get an exact cost/profit for that sale.
+ */
+export interface Transaction {
+    /** The processor's "Transaction #" — the dedupe key across re-imports. */
+    id: string;
+    /** ISO 8601, parsed from the export's "07/11/2026 10:19 AM" local time. */
+    date: string;
+    /** Order total in dollars. */
+    amount: number;
+    /** "Sale", "Refund", … kept as-is from the export. */
+    type: string;
+    /** "Approved" | "Declined" | "Errored". */
+    result: string;
+    /** "Tapped" | "Cash" | "Keyed" | … */
+    method: string;
+    /** Card brand, or "Cash". Optional — absent on some rows. */
+    brand?: string;
+    /** Present once the sale has been manually itemized. */
+    lineItems?: TransactionLineItem[];
+}
+
 export interface Settings {
     version: number;
     /** Which protein to price the recipes with (a what-if toggle, remembered). */
@@ -83,6 +117,13 @@ export interface Settings {
     groceryWeeklySpend: number;
     /** Packaging/container cost added to every order, in dollars. */
     packagingCostPerOrder: number;
+    /** Real sales history imported from the processor, deduped by `id`. */
+    transactions: Transaction[];
+    /**
+     * Food cost as a percent of price, used to estimate profit for a sale whose
+     * amount matches no menu price and hasn't been itemized. e.g. 32 = 32%.
+     */
+    blendedFoodCostPercent: number;
 }
 
 /** A single item×size combination with its computed economics. */

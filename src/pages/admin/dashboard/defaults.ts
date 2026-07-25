@@ -5,7 +5,7 @@ import {
     type Settings,
 } from "./types.ts";
 
-export const SETTINGS_VERSION = 2;
+export const SETTINGS_VERSION = 3;
 
 // Best-guess starting numbers. Every value is editable in the UI — these are
 // deliberately round, plausible estimates for a Korean-fusion food operation,
@@ -194,4 +194,6 @@ export const DEFAULT_SETTINGS: Settings = {
     items: ITEMS,
     groceryWeeklySpend: 400,
     packagingCostPerOrder: 0.25,
+    transactions: [],
+    blendedFoodCostPercent: 32,
 };

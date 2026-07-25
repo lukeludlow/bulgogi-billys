@@ -1,16 +1,23 @@
 import { afterEach, expect, test } from "vitest";
 import ProfitCalculator from "./ProfitCalculator.tsx";
+import { SettingsProvider } from "../SettingsContext.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 
 afterEach(() => {
     localStorage.removeItem("bb_admin_settings");
 });
 
-test("renders the calculator with a summary and controls", async () => {
-    const { getByRole, getByText } = await renderWithProviders(
-        <ProfitCalculator />,
+function renderCalculator() {
+    return renderWithProviders(
+        <SettingsProvider>
+            <ProfitCalculator />
+        </SettingsProvider>,
         { route: "/admin" },
     );
+}
+
+test("renders the calculator with a summary and controls", async () => {
+    const { getByRole, getByText } = await renderCalculator();
 
     await expect
         .element(getByRole("heading", { name: "Profit Margin Calculator" }))
@@ -22,9 +29,7 @@ test("renders the calculator with a summary and controls", async () => {
 });
 
 test("editing a sell price updates the shared settings state", async () => {
-    const { getByLabelText } = await renderWithProviders(<ProfitCalculator />, {
-        route: "/admin",
-    });
+    const { getByLabelText } = await renderCalculator();
 
     const priceInput = getByLabelText("Bulgogi Fries Small price");
     await expect.element(priceInput).toHaveValue(7);
@@ -37,9 +42,7 @@ test("editing a sell price updates the shared settings state", async () => {
 });
 
 test("renders sidebar jump links for each section", async () => {
-    const { getByRole } = await renderWithProviders(<ProfitCalculator />, {
-        route: "/admin",
-    });
+    const { getByRole } = await renderCalculator();
 
     await expect
         .element(getByRole("button", { name: "This Week" }))
@@ -50,10 +53,7 @@ test("renders sidebar jump links for each section", async () => {
 });
 
 test("entering weekly units sold surfaces the weekly profit chart", async () => {
-    const { getByLabelText, getByText } = await renderWithProviders(
-        <ProfitCalculator />,
-        { route: "/admin" },
-    );
+    const { getByLabelText, getByText } = await renderCalculator();
 
     // With nothing sold yet, the weekly chart is replaced by a prompt.
     await expect
@@ -71,9 +71,7 @@ test("entering weekly units sold surfaces the weekly profit chart", async () => 
 });
 
 test("switching an ingredient to batch pricing reveals the batch editor", async () => {
-    const { getByLabelText } = await renderWithProviders(<ProfitCalculator />, {
-        route: "/admin",
-    });
+    const { getByLabelText } = await renderCalculator();
 
     // Sriracha starts priced directly, so it has no batch yield field yet.
     const pricingSelect = getByLabelText("Sriracha pricing method");

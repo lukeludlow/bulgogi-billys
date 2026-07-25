@@ -1,26 +1,15 @@
-import { useEffect, useState, type ReactNode } from "react";
 import PageMeta from "@/components/PageMeta.tsx";
-import { Heading, Subheading } from "@/components/catalyst-ui-kit/heading.tsx";
-import { Text } from "@/components/catalyst-ui-kit/text.tsx";
-import { Divider } from "@/components/catalyst-ui-kit/divider.tsx";
-import { SidebarLayout } from "@/components/catalyst-ui-kit/sidebar-layout.tsx";
-import DashboardNav, { type NavSection } from "./DashboardNav.tsx";
-import CloudSyncBar from "./CloudSyncBar.tsx";
+import DashboardShell from "./DashboardShell.tsx";
+import Section from "./Section.tsx";
 import SummaryCards from "./SummaryCards.tsx";
 import MarginCharts from "./MarginCharts.tsx";
 import WeeklySales from "./WeeklySales.tsx";
 import IngredientsEditor from "./IngredientsEditor.tsx";
 import MenuItemEditor from "./MenuItemEditor.tsx";
 import NumberField from "./NumberField.tsx";
-import { loadSettings, saveSettings } from "./storage.ts";
-import { useActiveSection } from "./useActiveSection.ts";
-import type {
-    Batch,
-    BatchLine,
-    Ingredient,
-    Protein,
-    Settings,
-} from "./types.ts";
+import type { NavSection } from "./DashboardNav.tsx";
+import { useSettings } from "../SettingsContext.tsx";
+import type { Batch, BatchLine, Ingredient } from "./types.ts";
 
 const SECTIONS: NavSection[] = [
     { id: "visualizations", label: "Visualizations" },
@@ -36,37 +25,8 @@ function newId(): string {
         : Math.random().toString(36).slice(2);
 }
 
-function Section({
-    id,
-    title,
-    description,
-    children,
-}: {
-    id: string;
-    title: string;
-    description?: string;
-    children: ReactNode;
-}) {
-    return (
-        <section id={id} className="mt-10 scroll-mt-24">
-            <Subheading>{title}</Subheading>
-            {description && <Text className="mt-1 text-sm">{description}</Text>}
-            <Divider className="mt-3 mb-5" />
-            {children}
-        </section>
-    );
-}
-
 export default function ProfitCalculator() {
-    const [settings, setSettings] = useState<Settings>(() => loadSettings());
-    const activeId = useActiveSection(SECTIONS.map((section) => section.id));
-
-    // Persist to localStorage shortly after edits settle, so every keystroke
-    // isn't a write but nothing is ever lost on reload.
-    useEffect(() => {
-        const timer = setTimeout(() => saveSettings(settings), 300);
-        return () => clearTimeout(timer);
-    }, [settings]);
+    const { settings, setSettings } = useSettings();
 
     function patchIngredient(id: string, update: (ing: Ingredient) => Ingredient) {
         setSettings((prev) => ({
@@ -205,40 +165,16 @@ export default function ProfitCalculator() {
     }
 
     return (
-        <SidebarLayout
-            sidebar={<DashboardNav sections={SECTIONS} activeId={activeId} />}
-            navbar={
-                <span className="text-sm font-semibold text-zinc-950 dark:text-white">
-                    Profit Calculator
-                </span>
-            }
+        <DashboardShell
+            title="Profit Calculator"
+            heading="Profit Margin Calculator"
+            intro="Bulgogi Billy's — model your menu economics. Edits save to this browser automatically."
+            sections={SECTIONS}
         >
             <PageMeta
                 title="Admin | Profit Margin Calculator"
                 description="Bulgogi Billy's internal profit margin calculator."
             />
-
-            <Heading level={1} className="text-2xl sm:text-3xl">
-                Profit Margin Calculator
-            </Heading>
-            <Text className="mt-1">
-                Bulgogi Billy's — model your menu economics. Edits save to this
-                browser automatically.
-            </Text>
-
-            <div className="mt-6">
-                <CloudSyncBar
-                    settings={settings}
-                    onApplySettings={setSettings}
-                    selectedProtein={settings.selectedProtein}
-                    onChangeProtein={(protein: Protein) =>
-                        setSettings((prev) => ({
-                            ...prev,
-                            selectedProtein: protein,
-                        }))
-                    }
-                />
-            </div>
 
             {/* Sticky so the headline metrics stay visible while you edit the
                 numbers that drive them. */}
@@ -362,6 +298,6 @@ export default function ProfitCalculator() {
                     </div>
                 </div>
             </Section>
-        </SidebarLayout>
+        </DashboardShell>
     );
 }

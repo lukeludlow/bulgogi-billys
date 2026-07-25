@@ -57,13 +57,17 @@ interface TooltipProps {
     label?: string;
     payload?: Array<{ name: string; value: number; color: string; dataKey: string }>;
     theme: Theme;
-    kind: "percent" | "currency";
+    kind: "percent" | "currency" | "count";
 }
 
 export function ChartTooltip({ active, label, payload, theme, kind }: TooltipProps) {
     if (!active || !payload || payload.length === 0) return null;
     const format = (value: number) =>
-        kind === "percent" ? formatPercent(value) : formatCurrency(value);
+        kind === "percent"
+            ? formatPercent(value)
+            : kind === "count"
+              ? value.toLocaleString()
+              : formatCurrency(value);
     return (
         <div
             style={{

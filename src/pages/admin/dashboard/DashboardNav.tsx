@@ -15,6 +15,7 @@ export interface NavSection {
 }
 
 interface Props {
+    title: string;
     sections: NavSection[];
     activeId: string;
 }
@@ -30,13 +31,13 @@ function scrollToSection(id: string) {
  * `CloseButton` so tapping one on mobile scrolls to the section *and* closes the
  * drawer; on desktop (no drawer) it just scrolls.
  */
-export default function DashboardNav({ sections, activeId }: Props) {
+export default function DashboardNav({ title, sections, activeId }: Props) {
     return (
         <Sidebar>
             <SidebarHeader>
                 <div className="flex items-center justify-between gap-2">
                     <div className="text-sm font-semibold text-zinc-950 dark:text-white">
-                        Profit Calculator
+                        {title}
                     </div>
                     <DarkModeToggle />
                 </div>

@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS, SETTINGS_VERSION } from "./defaults.ts";
-import type { Ingredient, MenuItem, Settings } from "./types.ts";
+import type { Ingredient, MenuItem, Settings, Transaction } from "./types.ts";
 
 const STORAGE_KEY = "bb_admin_settings";
 
@@ -39,7 +39,22 @@ export function migrateSettings(settings: Settings): Settings {
             unitsSoldThisWeek: variant.unitsSoldThisWeek ?? 0,
         })),
     }));
-    return { ...settings, version: SETTINGS_VERSION, ingredients, items };
+    // Added in v3: real sales history + the blended food-cost fallback.
+    const transactions: Transaction[] = Array.isArray(settings.transactions)
+        ? settings.transactions
+        : [];
+    const blendedFoodCostPercent =
+        typeof settings.blendedFoodCostPercent === "number"
+            ? settings.blendedFoodCostPercent
+            : DEFAULT_SETTINGS.blendedFoodCostPercent;
+    return {
+        ...settings,
+        version: SETTINGS_VERSION,
+        ingredients,
+        items,
+        transactions,
+        blendedFoodCostPercent,
+    };
 }
 
 /** Read customized settings from localStorage, or a fresh copy of the defaults. */

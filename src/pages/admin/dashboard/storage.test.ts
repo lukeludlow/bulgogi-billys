@@ -64,10 +64,31 @@ test("loadSettings migrates a v1 payload instead of discarding it", () => {
     expect(loaded.selectedProtein).toBe("pork");
     expect(loaded.groceryWeeklySpend).toBe(321);
     expect(loaded.ingredients[0].costPerUnit).toBe(9);
-    // New fields are filled in and the version is bumped.
-    expect(loaded.version).toBe(2);
+    // New fields are filled in and the version is bumped to the latest.
+    expect(loaded.version).toBe(3);
     expect(loaded.ingredients[0].pricing).toBe("direct");
     expect(loaded.items[0].variants[0].unitsSoldThisWeek).toBe(0);
+    // v3 fields default in.
+    expect(loaded.transactions).toEqual([]);
+    expect(loaded.blendedFoodCostPercent).toBe(32);
+});
+
+test("loadSettings migrates a v2 payload, defaulting the sales fields", () => {
+    // A pre-sales-import save: has ingredients/items but no transactions or
+    // blended food-cost percentage.
+    const v2 = {
+        ...DEFAULT_SETTINGS,
+        version: 2,
+        blendedFoodCostPercent: undefined,
+    } as unknown as Record<string, unknown>;
+    delete v2.transactions;
+    delete v2.blendedFoodCostPercent;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v2));
+
+    const loaded = loadSettings();
+    expect(loaded.version).toBe(3);
+    expect(loaded.transactions).toEqual([]);
+    expect(loaded.blendedFoodCostPercent).toBe(32);
 });
 
 test("loadSettings falls back to defaults for corrupt JSON", () => {

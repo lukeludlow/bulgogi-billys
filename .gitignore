@@ -32,3 +32,6 @@ CLAUDE.md
 **/__screenshots__/*.test.tsx
 __screenshots__
 .vitest-attachments
+
+items.xlsx
+transactions.csv
