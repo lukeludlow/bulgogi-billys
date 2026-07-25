@@ -3,7 +3,6 @@ import PageMeta from "@/components/PageMeta.tsx";
 import DashboardShell from "./DashboardShell.tsx";
 import Section from "./Section.tsx";
 import ImportData from "./ImportData.tsx";
-import ItemSalesBreakdown from "./ItemSalesBreakdown.tsx";
 import NumberField from "./NumberField.tsx";
 import PricePointAnalysis from "./PricePointAnalysis.tsx";
 import SalesOverTime from "./SalesOverTime.tsx";
@@ -13,12 +12,11 @@ import type { NavSection } from "./DashboardNav.tsx";
 import { mergeTransactions } from "./import/mergeTransactions.ts";
 import type { TimeRange } from "./salesAnalytics.ts";
 import { useSettings } from "../SettingsContext.tsx";
-import type { Transaction, TransactionLineItem } from "./types.ts";
+import type { Transaction } from "./types.ts";
 
 const SECTIONS: NavSection[] = [
     { id: "sales-over-time", label: "Sales Over Time" },
     { id: "price-points", label: "Price Points" },
-    { id: "item-sales", label: "Item Sales" },
     { id: "transactions", label: "Transactions" },
     { id: "import-data", label: "Import Data" },
     { id: "assumptions", label: "Assumptions" },
@@ -37,26 +35,6 @@ export default function TransactionHistory() {
             ...prev,
             transactions: mergeTransactions(prev.transactions, incoming)
                 .transactions,
-        }));
-    }
-
-    function setTransactionLineItems(
-        id: string,
-        lineItems: TransactionLineItem[],
-    ) {
-        setSettings((prev) => ({
-            ...prev,
-            transactions: prev.transactions.map((txn) => {
-                if (txn.id !== id) return txn;
-                if (lineItems.length === 0) {
-                    // Clear the labels and drop the field so profit falls back to
-                    // the price-match / blended estimate.
-                    const next = { ...txn };
-                    delete next.lineItems;
-                    return next;
-                }
-                return { ...txn, lineItems };
-            }),
         }));
     }
 
@@ -94,29 +72,17 @@ export default function TransactionHistory() {
             </Section>
 
             <Section
-                id="item-sales"
-                title="Sold by item & size"
-                description="Units, revenue, and profit per item & size — built from the sales you've itemized. Label sales in the Transactions section and these update automatically."
-            >
-                <ItemSalesBreakdown settings={settings} range={range} />
-            </Section>
-
-            <Section
                 id="transactions"
                 title="Transactions"
-                description="Every imported sale. Itemize a sale to record exactly what was in it and get exact profit instead of an estimate."
+                description="Every imported sale, with its estimated profit basis."
             >
-                <TransactionsTable
-                    settings={settings}
-                    range={range}
-                    onItemize={setTransactionLineItems}
-                />
+                <TransactionsTable settings={settings} range={range} />
             </Section>
 
             <Section
                 id="import-data"
                 title="Import data"
-                description="Upload your processor's transactions CSV to drive the charts above with real numbers. Re-imports are safe — sales are deduped and your itemizations survive."
+                description="Upload your processor's transactions CSV to drive the charts above with real numbers. Re-imports are safe — sales are deduped."
             >
                 <ImportData
                     settings={settings}
@@ -127,7 +93,7 @@ export default function TransactionHistory() {
             <Section
                 id="assumptions"
                 title="Assumptions"
-                description="How profit is estimated for sales that haven't been itemized."
+                description="How profit is estimated for sales whose amount matches no menu price."
             >
                 <div className="rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
                     <div className="max-w-xs">
@@ -150,7 +116,7 @@ export default function TransactionHistory() {
                         </div>
                         <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                             Used to estimate profit for a sale whose amount
-                            matches no menu price and hasn't been itemized.
+                            matches no menu price.
                         </p>
                     </div>
                 </div>

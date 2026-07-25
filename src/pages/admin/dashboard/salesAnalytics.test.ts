@@ -6,8 +6,6 @@ import {
     pricePointBreakdown,
     resolveTransactionProfit,
     salesSummary,
-    unitsByVariantInRange,
-    withDerivedUnits,
 } from "./salesAnalytics.ts";
 import { DEFAULT_SETTINGS } from "./defaults.ts";
 import type { Settings, Transaction } from "./types.ts";
@@ -46,7 +44,6 @@ test("resolveTransactionProfit falls back to blended % for an unmatched amount",
     expect(resolved.basis).toBe("blended");
     expect(resolved.cost).toBeCloseTo(32); // 32% of $100
     expect(resolved.profit).toBeCloseTo(68);
-    expect(resolved.units).toBe(1);
 });
 
 test("resolveTransactionProfit matches a menu price to its recipe cost", () => {
@@ -54,26 +51,6 @@ test("resolveTransactionProfit matches a menu price to its recipe cost", () => {
     expect(resolved.basis).toBe("matched");
     expect(resolved.cost).toBeGreaterThan(0);
     expect(resolved.cost).toBeLessThan(9);
-    expect(resolved.units).toBe(1);
-});
-
-test("itemization overrides price-matching and sums line quantities", () => {
-    const oneLarge = resolveTransactionProfit(
-        txn(9, 0, {
-            lineItems: [{ itemId: "fries", variantId: "large", quantity: 1 }],
-        }),
-        settings,
-    );
-    const twoLarge = resolveTransactionProfit(
-        // Amount 9 would price-match, but the labels win.
-        txn(9, 0, {
-            lineItems: [{ itemId: "fries", variantId: "large", quantity: 2 }],
-        }),
-        settings,
-    );
-    expect(twoLarge.basis).toBe("itemized");
-    expect(twoLarge.units).toBe(2);
-    expect(twoLarge.cost).toBeCloseTo(oneLarge.cost * 2);
 });
 
 test("filterByRange anchors the window to the latest transaction", () => {
@@ -115,58 +92,6 @@ test("pricePointBreakdown aggregates by amount with a profit basis", () => {
     expect(points.map((p) => p.price)).toEqual([9, 100]); // sorted ascending
     expect(points[0]).toMatchObject({ orders: 2, basis: "matched" });
     expect(points[1]).toMatchObject({ orders: 1, basis: "blended" });
-});
-
-test("unitsByVariantInRange sums labeled quantities, ignoring the rest", () => {
-    const txns = [
-        txn(12, 0, {
-            lineItems: [{ itemId: "fries", variantId: "large", quantity: 2 }],
-        }),
-        txn(9, 1, {
-            lineItems: [
-                { itemId: "fries", variantId: "large", quantity: 1 },
-                { itemId: "rice", variantId: "regular", quantity: 3 },
-            ],
-        }),
-        // Excluded: declined, and un-itemized approved.
-        txn(12, 0, {
-            result: "Declined",
-            lineItems: [{ itemId: "fries", variantId: "large", quantity: 5 }],
-        }),
-        txn(9, 0),
-    ];
-    const units = unitsByVariantInRange(txns, { window: "all", granularity: "day" });
-    expect(units.get("fries:large")).toBe(3);
-    expect(units.get("rice:regular")).toBe(3);
-    expect(units.has("fries:small")).toBe(false);
-});
-
-test("unitsByVariantInRange respects the window", () => {
-    const txns = [
-        txn(12, 0, {
-            lineItems: [{ itemId: "fries", variantId: "large", quantity: 1 }],
-        }),
-        txn(12, 40, {
-            lineItems: [{ itemId: "fries", variantId: "large", quantity: 9 }],
-        }),
-    ];
-    const units = unitsByVariantInRange(txns, { window: "7d", granularity: "day" });
-    expect(units.get("fries:large")).toBe(1); // the 40-day-old sale is excluded
-});
-
-test("withDerivedUnits projects counts onto variants and zeroes the rest", () => {
-    const withTxns: Settings = {
-        ...settings,
-        transactions: [
-            txn(12, 0, {
-                lineItems: [{ itemId: "fries", variantId: "large", quantity: 2 }],
-            }),
-        ],
-    };
-    const derived = withDerivedUnits(withTxns, { window: "all", granularity: "day" });
-    const fries = derived.items.find((i) => i.id === "fries")!;
-    expect(fries.variants.find((v) => v.id === "large")!.unitsSoldThisWeek).toBe(2);
-    expect(fries.variants.find((v) => v.id === "small")!.unitsSoldThisWeek).toBe(0);
 });
 
 test("salesSummary totals revenue, profit, and average order value", () => {

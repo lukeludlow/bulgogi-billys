@@ -64,8 +64,7 @@ export default function ImportData({ settings, onImportTransactions }: Props) {
                 </Text>
                 <Text className="mt-1 text-sm">
                     Your processor's sales export. Re-importing is safe —
-                    already-imported sales are skipped and your itemized labels
-                    are kept.
+                    already-imported sales are skipped.
                 </Text>
                 <input
                     type="file"

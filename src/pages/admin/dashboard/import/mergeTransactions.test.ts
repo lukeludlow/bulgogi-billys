@@ -22,15 +22,13 @@ test("adds new transactions and reports counts", () => {
     expect(result.transactions).toHaveLength(2);
 });
 
-test("keeps existing manual itemization when the same sale is re-imported", () => {
-    const labeled = txn("A", "2026-04-12T14:00:00.000Z", {
-        lineItems: [{ itemId: "fries", variantId: "large", quantity: 1 }],
-    });
-    const reimportedBare = txn("A", "2026-04-12T14:00:00.000Z");
+test("keeps the existing row when the same sale is re-imported", () => {
+    const existing = txn("A", "2026-04-12T14:00:00.000Z", { brand: "Visa" });
+    const reimported = txn("A", "2026-04-12T14:00:00.000Z");
 
-    const result = mergeTransactions([labeled], [reimportedBare]);
+    const result = mergeTransactions([existing], [reimported]);
     const merged = result.transactions.find((t) => t.id === "A")!;
-    expect(merged.lineItems).toEqual(labeled.lineItems);
+    expect(merged.brand).toBe("Visa");
 });
 
 test("sorts the merged set newest-first", () => {

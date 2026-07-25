@@ -10,9 +10,8 @@ export interface MergeResult {
 
 /**
  * Merge freshly-imported transactions into the existing store, deduping by the
- * processor's transaction id. Existing rows win, so any manual itemization
- * (`lineItems`) already attached to a sale survives a re-import of the same
- * export. New rows are appended and the whole set is sorted newest-first.
+ * processor's transaction id. Existing rows win. New rows are appended and the
+ * whole set is sorted newest-first.
  */
 export function mergeTransactions(
     existing: Transaction[],

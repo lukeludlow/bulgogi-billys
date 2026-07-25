@@ -4,16 +4,15 @@
 //
 // The processor only records an order total, so profit per sale is resolved
 // best-effort, in priority order:
-//   1. itemized  — the sale was labeled by hand; sum each line's recipe cost,
-//   2. matched   — the amount equals one or more menu prices; use their avg cost,
-//   3. blended   — fall back to the adjustable food-cost % of the amount.
+//   1. matched  — the amount equals one or more menu prices; use their avg cost,
+//   2. blended  — fall back to the adjustable food-cost % of the amount.
 
 import { allCombinations } from "./calculations.ts";
 import type { Settings, Transaction } from "./types.ts";
 
 export type Granularity = "day" | "week" | "month";
 export type RangeWindow = "7d" | "30d" | "90d" | "all";
-export type ProfitBasis = "itemized" | "matched" | "blended";
+export type ProfitBasis = "matched" | "blended";
 
 export interface TimeRange {
     granularity: Granularity;
@@ -25,8 +24,6 @@ export interface TransactionProfit {
     cost: number;
     profit: number;
     basis: ProfitBasis;
-    /** Items in the order: summed line quantities when itemized, else 1. */
-    units: number;
 }
 
 export interface PeriodBucket {
@@ -43,13 +40,12 @@ export interface PricePoint {
     orders: number;
     revenue: number;
     profit: number;
-    /** How the profit was derived across sales at this price. */
-    basis: ProfitBasis | "mixed";
+    /** How the profit was derived for sales at this price. */
+    basis: ProfitBasis;
 }
 
 export interface SalesSummary {
     orders: number;
-    units: number;
     revenue: number;
     profit: number;
     avgOrderValue: number;
@@ -69,24 +65,13 @@ export function isCountable(txn: Transaction): boolean {
 
 /** Precomputed cost lookups so per-transaction resolution stays O(1). */
 interface ProfitIndex {
-    costByVariant: Map<string, number>;
     costByPrice: Map<number, number>;
     blendedFoodCostPercent: number;
 }
 
-function variantKey(itemId: string, variantId: string): string {
-    return `${itemId}:${variantId}`;
-}
-
 function buildProfitIndex(settings: Settings): ProfitIndex {
-    const combinations = allCombinations(settings);
-    const costByVariant = new Map<string, number>();
     const priceGroups = new Map<number, number[]>();
-    for (const combination of combinations) {
-        costByVariant.set(
-            variantKey(combination.itemId, combination.variantId),
-            combination.cost,
-        );
+    for (const combination of allCombinations(settings)) {
         const group = priceGroups.get(combination.revenue) ?? [];
         group.push(combination.cost);
         priceGroups.set(combination.revenue, group);
@@ -96,7 +81,6 @@ function buildProfitIndex(settings: Settings): ProfitIndex {
         costByPrice.set(price, costs.reduce((a, b) => a + b, 0) / costs.length);
     }
     return {
-        costByVariant,
         costByPrice,
         blendedFoodCostPercent: settings.blendedFoodCostPercent,
     };
@@ -108,19 +92,6 @@ function resolveWithIndex(
 ): TransactionProfit {
     const revenue = txn.amount;
 
-    if (txn.lineItems && txn.lineItems.length > 0) {
-        let cost = 0;
-        let units = 0;
-        for (const line of txn.lineItems) {
-            const unitCost =
-                index.costByVariant.get(variantKey(line.itemId, line.variantId)) ??
-                0;
-            cost += unitCost * line.quantity;
-            units += line.quantity;
-        }
-        return { revenue, cost, profit: revenue - cost, basis: "itemized", units };
-    }
-
     const matched = index.costByPrice.get(txn.amount);
     if (matched !== undefined) {
         return {
@@ -128,12 +99,11 @@ function resolveWithIndex(
             cost: matched,
             profit: revenue - matched,
             basis: "matched",
-            units: 1,
         };
     }
 
     const cost = revenue * (index.blendedFoodCostPercent / 100);
-    return { revenue, cost, profit: revenue - cost, basis: "blended", units: 1 };
+    return { revenue, cost, profit: revenue - cost, basis: "blended" };
 }
 
 /** Public single-transaction resolver (builds the index on demand). */
@@ -243,7 +213,7 @@ export function pricePointBreakdown(
     const index = buildProfitIndex(settings);
     const points = new Map<
         number,
-        { orders: number; revenue: number; profit: number; bases: Set<ProfitBasis> }
+        { orders: number; revenue: number; profit: number; basis: ProfitBasis }
     >();
 
     for (const txn of txns) {
@@ -253,67 +223,19 @@ export function pricePointBreakdown(
             orders: 0,
             revenue: 0,
             profit: 0,
-            bases: new Set<ProfitBasis>(),
+            // Basis depends only on the amount, so it's the same for every sale
+            // at this price.
+            basis: resolved.basis,
         };
         point.orders += 1;
         point.revenue += resolved.revenue;
         point.profit += resolved.profit;
-        point.bases.add(resolved.basis);
         points.set(txn.amount, point);
     }
 
     return Array.from(points.entries())
-        .map(
-            ([price, point]): PricePoint => ({
-                price,
-                orders: point.orders,
-                revenue: point.revenue,
-                profit: point.profit,
-                basis: point.bases.size > 1 ? "mixed" : [...point.bases][0],
-            }),
-        )
+        .map(([price, point]): PricePoint => ({ price, ...point }))
         .sort((a, b) => a.price - b.price);
-}
-
-/**
- * Sum labeled quantities per `${itemId}:${variantId}` across the itemized,
- * approved sales inside the range. Un-itemized sales carry no per-item breakdown,
- * so only labeled sales contribute.
- */
-export function unitsByVariantInRange(
-    txns: Transaction[],
-    range: TimeRange,
-): Map<string, number> {
-    const units = new Map<string, number>();
-    for (const txn of filterByRange(txns, range)) {
-        if (!isCountable(txn) || !txn.lineItems) continue;
-        for (const line of txn.lineItems) {
-            const key = variantKey(line.itemId, line.variantId);
-            units.set(key, (units.get(key) ?? 0) + line.quantity);
-        }
-    }
-    return units;
-}
-
-/**
- * A copy of `settings` whose every variant's `unitsSoldThisWeek` is replaced by
- * the units derived from itemized sales in the range (0 when unlabeled). Feeding
- * this to `weeklyStats` / `WeeklySales` makes the per-item breakdown reflect real
- * labeled sales without changing any downstream math.
- */
-export function withDerivedUnits(settings: Settings, range: TimeRange): Settings {
-    const units = unitsByVariantInRange(settings.transactions, range);
-    return {
-        ...settings,
-        items: settings.items.map((item) => ({
-            ...item,
-            variants: item.variants.map((variant) => ({
-                ...variant,
-                unitsSoldThisWeek:
-                    units.get(variantKey(item.id, variant.id)) ?? 0,
-            })),
-        })),
-    };
 }
 
 /** Headline totals for a set of transactions (the stat-card row). */
@@ -323,20 +245,17 @@ export function salesSummary(
 ): SalesSummary {
     const index = buildProfitIndex(settings);
     let orders = 0;
-    let units = 0;
     let revenue = 0;
     let profit = 0;
     for (const txn of txns) {
         if (!isCountable(txn)) continue;
         const resolved = resolveWithIndex(txn, index);
         orders += 1;
-        units += resolved.units;
         revenue += resolved.revenue;
         profit += resolved.profit;
     }
     return {
         orders,
-        units,
         revenue,
         profit,
         avgOrderValue: orders > 0 ? revenue / orders : 0,

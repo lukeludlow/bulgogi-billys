@@ -64,7 +64,7 @@ export default function SalesOverTime({ settings, range }: Props) {
                 <StatCard
                     label="Est. profit"
                     value={formatCurrency(summary.profit)}
-                    sub="itemized where labeled"
+                    sub="from menu match or blended %"
                     tone={summary.profit >= 0 ? "profit" : "loss"}
                 />
                 <StatCard
