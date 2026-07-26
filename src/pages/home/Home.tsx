@@ -35,6 +35,7 @@ export default function Home() {
             <PageMeta
                 title="Bulgogi Billy's | Korean Fusion Food Truck – Houston, TX"
                 description="Bulgogi Billy's serves Korean-American fusion food every weekend at farmers markets in The Woodlands, Conroe, and New Caney, TX. Try our signature bulgogi fries, tacos, and rice bowls!"
+                path="/"
             />
             <RestaurantStructuredData />
             <div className="relative isolate overflow-hidden pt-14">

@@ -11,6 +11,7 @@ export default function Blog() {
             <PageMeta
                 title="Blog | Bulgogi Billy's Korean Fusion"
                 description="Stories, updates, and food tips from Bulgogi Billy's — your favorite Korean fusion food vendor at farmers markets in The Woodlands, Conroe, and the greater Houston area."
+                path="/blog"
             />
             <div className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
                 <Heading level={1} className="text-4xl font-bold mb-2">

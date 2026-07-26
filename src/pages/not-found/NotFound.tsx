@@ -1,6 +1,13 @@
+import PageMeta from "@/components/PageMeta.tsx";
+
 export default function NotFound() {
     return (
         <main className="grid min-h-full place-items-center bg-zinc-100 px-6 py-24 sm:py-32 lg:px-8 dark:bg-zinc-900">
+            <PageMeta
+                title="Page Not Found | Bulgogi Billy's"
+                description="Sorry, we couldn't find the page you're looking for."
+                noindex
+            />
             <div className="text-center">
                 <p className="text-base font-semibold text-orange-600 dark:text-orange-400">
                     404

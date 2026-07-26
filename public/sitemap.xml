@@ -1,32 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://bulgogibillys.com/</loc>
+        <loc>https://www.bulgogibillys.com/</loc>
+        <lastmod>2026-07-25</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
     <url>
-        <loc>https://bulgogibillys.com/schedule</loc>
+        <loc>https://www.bulgogibillys.com/schedule</loc>
+        <lastmod>2026-07-25</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.9</priority>
     </url>
     <url>
-        <loc>https://bulgogibillys.com/menu</loc>
+        <loc>https://www.bulgogibillys.com/menu</loc>
+        <lastmod>2026-07-25</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://bulgogibillys.com/contact</loc>
+        <loc>https://www.bulgogibillys.com/order-now</loc>
+        <lastmod>2026-07-25</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://www.bulgogibillys.com/contact</loc>
+        <lastmod>2026-07-25</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://bulgogibillys.com/blog</loc>
+        <loc>https://www.bulgogibillys.com/blog</loc>
+        <lastmod>2026-07-25</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
     <url>
-        <loc>https://bulgogibillys.com/blog/the-tiktok-that-put-bulgogi-billys-on-the-map</loc>
+        <loc>https://www.bulgogibillys.com/blog/the-tiktok-that-put-bulgogi-billys-on-the-map</loc>
+        <lastmod>2025-06-01</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.6</priority>
     </url>

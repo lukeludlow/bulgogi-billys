@@ -16,6 +16,7 @@ export default function BlogPost() {
                 <PageMeta
                     title="Post Not Found | Bulgogi Billy's"
                     description="This blog post could not be found."
+                    noindex
                 />
                 <div className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
                     <Heading level={1}>Post not found</Heading>
@@ -36,6 +37,7 @@ export default function BlogPost() {
             <PageMeta
                 title={`${post.title} | Bulgogi Billy's`}
                 description={post.excerpt}
+                path={`/blog/${post.slug}`}
             />
             <div className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
                 <Text className="text-xs uppercase tracking-widest mb-2">

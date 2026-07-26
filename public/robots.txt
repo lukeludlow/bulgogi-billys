@@ -1,3 +1,6 @@
 User-agent: *
 Allow: /
-Sitemap: https://bulgogibillys.com/sitemap.xml
+Disallow: /admin
+Disallow: /admin-login
+Disallow: /enter-password
+Sitemap: https://www.bulgogibillys.com/sitemap.xml

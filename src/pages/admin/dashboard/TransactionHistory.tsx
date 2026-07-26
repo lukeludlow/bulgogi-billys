@@ -48,6 +48,7 @@ export default function TransactionHistory() {
             <PageMeta
                 title="Admin | Transaction History"
                 description="Bulgogi Billy's internal sales history and analytics."
+                noindex
             />
 
             {/* One sticky range selector drives every section below. */}

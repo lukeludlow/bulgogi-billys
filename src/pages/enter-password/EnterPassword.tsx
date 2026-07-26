@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PageMeta from "@/components/PageMeta.tsx";
 
 export default function EnterPassword() {
     const [password, setPassword] = useState<string>("");
@@ -6,6 +7,11 @@ export default function EnterPassword() {
 
     return (
         <main className="grid min-h-0 h-full flex-1 place-items-center bg-zinc-100 px-6 py-24 sm:py-32 lg:px-8 dark:bg-zinc-900 transition-colors duration-200">
+            <PageMeta
+                title="Enter Password | Bulgogi Billy's"
+                description="Password-protected preview of Bulgogi Billy's."
+                noindex
+            />
             <div className="w-full max-w-md text-center">
                 {/* Icon / Top Badge */}
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950/50">

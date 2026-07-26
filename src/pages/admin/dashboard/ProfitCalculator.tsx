@@ -174,6 +174,7 @@ export default function ProfitCalculator() {
             <PageMeta
                 title="Admin | Profit Margin Calculator"
                 description="Bulgogi Billy's internal profit margin calculator."
+                noindex
             />
 
             {/* Sticky so the headline metrics stay visible while you edit the

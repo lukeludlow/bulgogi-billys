@@ -11,6 +11,7 @@ export default function Menu() {
             <PageMeta
                 title="Menu | Bulgogi Billy's Korean Fusion"
                 description="Bulgogi fries, tacos, and rice bowls made with flame-grilled Korean marinated beef or pork bulgogi. Serving The Woodlands, Conroe, and New Caney, TX every weekend."
+                path="/menu"
             />
             <Heading className={"text-center md:text-2xl"}>Menu</Heading>
             <Text className={"text-center md:text-lg"}>

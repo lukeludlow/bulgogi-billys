@@ -6,6 +6,7 @@ import { Field, Label } from "@/components/catalyst-ui-kit/fieldset.tsx";
 import { Input } from "@/components/catalyst-ui-kit/input.tsx";
 import { Button } from "@/components/catalyst-ui-kit/button.tsx";
 import DarkModeToggle from "@/components/dark-mode-toggle/DarkModeToggle.tsx";
+import PageMeta from "@/components/PageMeta.tsx";
 
 export default function AdminLogin() {
     const [password, setPassword] = useState<string>("");
@@ -13,6 +14,11 @@ export default function AdminLogin() {
 
     return (
         <AuthLayout>
+            <PageMeta
+                title="Admin Sign In | Bulgogi Billy's"
+                description="Bulgogi Billy's internal admin sign in."
+                noindex
+            />
             <div className="fixed top-4 right-4">
                 <DarkModeToggle />
             </div>

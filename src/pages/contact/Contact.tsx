@@ -14,6 +14,7 @@ export default function Contact() {
             <PageMeta
                 title="Contact & Catering | Bulgogi Billy's"
                 description="Book Bulgogi Billy's for your next event. We offer Korean fusion catering for gatherings of any size across the greater Houston, TX area."
+                path="/contact"
             />
             <Heading>Contact</Heading>
             <Divider />

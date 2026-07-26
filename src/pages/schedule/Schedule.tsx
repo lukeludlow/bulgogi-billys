@@ -13,6 +13,7 @@ export default function Schedule() {
             <PageMeta
                 title="Find Us | Bulgogi Billy's – The Woodlands, Conroe & New Caney, TX"
                 description="Find Bulgogi Billy's Korean fusion food truck at Grogan's Mill (The Woodlands), Farmers Market at 1488 (Conroe), and New Caney Community Market every weekend."
+                path="/schedule"
             />
 
             <div className="flex flex-col gap-3 text-center">
