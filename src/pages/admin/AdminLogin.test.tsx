@@ -1,57 +1,105 @@
 import { afterEach, expect, test, vi } from "vitest";
+import { Route, Routes } from "react-router";
 import AdminLogin from "./AdminLogin.tsx";
+import { supabase } from "@/lib/supabase.ts";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 
+vi.mock("@/lib/supabase.ts", () => ({
+    supabase: {
+        auth: {
+            getSession: vi.fn(async () => ({ data: { session: null } })),
+            signInWithOtp: vi.fn(async () => ({ data: {}, error: null })),
+        },
+    },
+}));
+
 afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
 });
 
-test("shows an error when the server rejects the password", async () => {
-    vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue(new Response(null, { status: 401 })),
+test("sends a magic link and shows the check-your-email state", async () => {
+    const { getByLabelText, getByRole, getByText } =
+        await renderWithProviders(<AdminLogin />);
+
+    await getByLabelText("Email").fill("billy@example.com");
+    await getByRole("button", { name: "Send sign-in link" }).click();
+
+    await expect.element(getByText("Check your email")).toBeInTheDocument();
+    expect(vi.mocked(supabase.auth.signInWithOtp)).toHaveBeenCalledWith({
+        email: "billy@example.com",
+        options: {
+            shouldCreateUser: false,
+            emailRedirectTo: expect.stringContaining("/auth/callback"),
+        },
+    });
+});
+
+test("shows an error when Supabase rejects the email", async () => {
+    vi.mocked(supabase.auth.signInWithOtp).mockResolvedValueOnce({
+        data: {},
+        error: { message: "Signups not allowed for otp" },
+    } as never);
+
+    const { getByLabelText, getByRole, getByText } =
+        await renderWithProviders(<AdminLogin />);
+
+    await getByLabelText("Email").fill("stranger@example.com");
+    await getByRole("button", { name: "Send sign-in link" }).click();
+
+    await expect
+        .element(getByText("Couldn't send the link", { exact: false }))
+        .toBeInTheDocument();
+});
+
+test("shows an error when the request itself fails", async () => {
+    vi.mocked(supabase.auth.signInWithOtp).mockRejectedValueOnce(
+        new Error("network down"),
     );
 
     const { getByLabelText, getByRole, getByText } =
         await renderWithProviders(<AdminLogin />);
 
-    await getByLabelText("Password").fill("definitely-wrong");
-    await getByRole("button", { name: "Sign in" }).click();
+    await getByLabelText("Email").fill("billy@example.com");
+    await getByRole("button", { name: "Send sign-in link" }).click();
 
     await expect
-        .element(getByText("Incorrect password. Try again."))
+        .element(getByText("Couldn't send the link", { exact: false }))
         .toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(
-        "/api/admin-login",
-        expect.objectContaining({
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ password: "definitely-wrong" }),
-        }),
-    );
 });
 
 test("clears the error message as soon as the user starts typing again", async () => {
-    vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue(new Response(null, { status: 401 })),
-    );
+    vi.mocked(supabase.auth.signInWithOtp).mockResolvedValueOnce({
+        data: {},
+        error: { message: "rate limited" },
+    } as never);
 
     const { getByLabelText, getByRole, getByText } =
         await renderWithProviders(<AdminLogin />);
 
-    await getByLabelText("Password").fill("definitely-wrong");
-    await getByRole("button", { name: "Sign in" }).click();
+    await getByLabelText("Email").fill("billy@example.com");
+    await getByRole("button", { name: "Send sign-in link" }).click();
     await expect
-        .element(getByText("Incorrect password. Try again."))
+        .element(getByText("Couldn't send the link", { exact: false }))
         .toBeInTheDocument();
 
-    await getByLabelText("Password").fill("definitely-wrong-2");
+    await getByLabelText("Email").fill("billy2@example.com");
 
     await expect
-        .element(getByText("Incorrect password. Try again."))
+        .element(getByText("Couldn't send the link", { exact: false }))
         .not.toBeInTheDocument();
+});
+
+test("redirects straight to the dashboard when already signed in", async () => {
+    vi.mocked(supabase.auth.getSession).mockResolvedValueOnce({
+        data: { session: { access_token: "token" } },
+    } as never);
+
+    const { getByText } = await renderWithProviders(
+        <AdminLoginRoutes />,
+        { route: "/admin-login" },
+    );
+
+    await expect.element(getByText("dashboard probe")).toBeInTheDocument();
 });
 
 test("renders a dark mode toggle", async () => {
@@ -60,24 +108,11 @@ test("renders a dark mode toggle", async () => {
     await expect.element(getByRole("switch")).toBeInTheDocument();
 });
 
-test("shows an error when the login request itself fails", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
-
-    const { getByLabelText, getByRole, getByText } =
-        await renderWithProviders(<AdminLogin />);
-
-    await getByLabelText("Password").fill("some-password");
-    await getByRole("button", { name: "Sign in" }).click();
-
-    await expect
-        .element(getByText("Incorrect password. Try again."))
-        .toBeInTheDocument();
-});
-
-// Note: on success the component does window.location.href = "/admin" to
-// force a real navigation so edge middleware re-validates the freshly-issued
-// HttpOnly session cookie. There's no way to assert "no error is shown" on
-// the success path without also triggering that real navigation, which
-// crashes the browser-mode test runner's iframe (it's mid-teardown by the
-// time the assertion would run). That's intentionally not covered here, same
-// limitation documented in EnterPassword.test.tsx.
+function AdminLoginRoutes() {
+    return (
+        <Routes>
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin" element={<div>dashboard probe</div>} />
+        </Routes>
+    );
+}

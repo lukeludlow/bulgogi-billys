@@ -37,7 +37,8 @@ moment.
 
 This site was built from the ground up to serve as the business's digital home: showcasing the menu, publishing the
 weekly market schedule, handling catering inquiries, and telling the brand's story. It is deployed to production on
-Vercel and fully optimized for search engines and social sharing. All food photography featured on the site was shot by me — I'm also a professional photographer.
+Vercel and fully optimized for search engines and social sharing. All food photography featured on the site was shot by
+me — I'm also a professional photographer.
 
 ---
 
@@ -143,3 +144,10 @@ npm run dev
 
 Open `http://localhost:5173`. Requires Node 18+. No `.env` variables are needed to run the public
 dev server — the Web3Forms access key is public by design.
+
+## TODO
+
+- Categorize days by farmer's market location
+- Adding years to the date display on graph
+- Normalizing by number of hours worked - tied to location and date
+- Web scraper to itemize transaction IDs

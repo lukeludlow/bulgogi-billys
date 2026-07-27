@@ -7,6 +7,7 @@ import {
     saveToCloud,
 } from "./storage.ts";
 import type { Protein, Settings } from "./types.ts";
+import { supabase } from "@/lib/supabase.ts";
 
 type Status =
     | { kind: "idle" }
@@ -61,7 +62,8 @@ export default function CloudSyncBar({
     }
 
     async function handleLogout() {
-        await fetch("/api/admin-logout", { method: "POST" });
+        await supabase.auth.signOut();
+        // Hard navigation also clears in-memory dashboard state.
         window.location.href = "/admin-login";
     }
 

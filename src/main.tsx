@@ -15,9 +15,11 @@ import Contact from "@/pages/contact/Contact.tsx";
 import EnterPassword from "@/pages/enter-password/EnterPassword.tsx";
 import Blog from "@/pages/blog/Blog.tsx";
 import BlogPost from "@/pages/blog/BlogPost.tsx";
-import AdminLogin from "@/pages/admin/AdminLogin.tsx";
-// Lazy-loaded so the charting library (recharts) only ships to the admin
-// routes, keeping the public site bundle small.
+// Lazy-loaded so the charting library (recharts) and the Supabase client only
+// ship to the admin routes, keeping the public site bundle small.
+const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin.tsx"));
+const AuthCallback = lazy(() => import("@/pages/admin/AuthCallback.tsx"));
+const RequireAdmin = lazy(() => import("@/pages/admin/RequireAdmin.tsx"));
 const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout.tsx"));
 const ProfitCalculator = lazy(
     () => import("@/pages/admin/dashboard/ProfitCalculator.tsx"),
@@ -71,13 +73,27 @@ const router = createBrowserRouter([
     },
     {
         path: "/admin-login",
-        element: <AdminLogin />,
+        element: (
+            <Suspense fallback={null}>
+                <AdminLogin />
+            </Suspense>
+        ),
+    },
+    {
+        path: "/auth/callback",
+        element: (
+            <Suspense fallback={null}>
+                <AuthCallback />
+            </Suspense>
+        ),
     },
     {
         path: "/admin",
         element: (
             <Suspense fallback={null}>
-                <AdminLayout />
+                <RequireAdmin>
+                    <AdminLayout />
+                </RequireAdmin>
             </Suspense>
         ),
         children: [

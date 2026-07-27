@@ -1,14 +1,9 @@
 import { get, put } from "@vercel/blob";
-import {
-    SESSION_COOKIE_NAME,
-    env,
-    isValidSessionCookie,
-    parseCookie,
-} from "../lib/adminSession.js";
+import { env, verifyAdminRequest } from "../lib/adminAuth.js";
 
 export const config = { runtime: "nodejs" };
 
-// Cloud sync for the admin calculator, guarded by the admin session cookie.
+// Cloud sync for the admin calculator, guarded by a Supabase access token.
 // To enable: in the Vercel dashboard create a *private* Blob store (Storage ->
 // Create -> Blob, access: Private) and connect it to this project; Vercel then
 // injects BLOB_READ_WRITE_TOKEN automatically. Without it, the dashboard still
@@ -17,8 +12,8 @@ export const config = { runtime: "nodejs" };
 // reads to go through get() rather than a plain fetch() of the blob URL.
 
 // A single, fixed blob holds the admin's customized calculator settings. The
-// object is guarded by the admin session (below), so a stable pathname is fine;
-// the pathname is never linked publicly.
+// object is guarded by the admin auth check (below), so a stable pathname is
+// fine; the pathname is never linked publicly.
 const BLOB_PATHNAME = "settings.json";
 
 function json(body, status = 200) {
@@ -28,16 +23,8 @@ function json(body, status = 200) {
     });
 }
 
-async function isAuthorized(request) {
-    const cookieHeader = request.headers?.get?.("cookie") || "";
-    const cookieValue = parseCookie(cookieHeader, SESSION_COOKIE_NAME);
-    if (!cookieValue) return false;
-    const secret = env("ADMIN_SESSION_SECRET") || "";
-    return isValidSessionCookie(cookieValue, secret);
-}
-
 export async function handler(request) {
-    if (!(await isAuthorized(request))) {
+    if (!(await verifyAdminRequest(request))) {
         return json({ error: "Unauthorized" }, 401);
     }
 

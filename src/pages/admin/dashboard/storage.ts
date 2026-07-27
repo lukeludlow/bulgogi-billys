@@ -1,5 +1,6 @@
 import { DEFAULT_SETTINGS, SETTINGS_VERSION } from "./defaults.ts";
 import type { Ingredient, MenuItem, Settings, Transaction } from "./types.ts";
+import { supabase } from "@/lib/supabase.ts";
 
 const STORAGE_KEY = "bb_admin_settings";
 
@@ -89,11 +90,25 @@ export function resetSettings(): Settings {
     return clone(DEFAULT_SETTINGS);
 }
 
+/**
+ * The settings API authorizes with the Supabase access token; getSession()
+ * transparently refreshes an expired one, so long-lived tabs keep working.
+ */
+async function authHeaders(): Promise<Record<string, string>> {
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
+    return session ? { Authorization: `Bearer ${session.access_token}` } : {};
+}
+
 /** Persist settings to the shared Vercel Blob store via the admin API. */
 export async function saveToCloud(settings: Settings): Promise<void> {
     const response = await fetch("/api/settings", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            ...(await authHeaders()),
+        },
         body: JSON.stringify(settings),
     });
     if (!response.ok) {
@@ -103,7 +118,9 @@ export async function saveToCloud(settings: Settings): Promise<void> {
 
 /** Load settings from the shared Vercel Blob store. Returns null if none saved. */
 export async function loadFromCloud(): Promise<Settings | null> {
-    const response = await fetch("/api/settings");
+    const response = await fetch("/api/settings", {
+        headers: await authHeaders(),
+    });
     if (!response.ok) {
         throw new Error(`Cloud load failed (${response.status})`);
     }
