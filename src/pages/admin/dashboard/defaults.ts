@@ -5,8 +5,6 @@ import {
     type Settings,
 } from "./types.ts";
 
-export const SETTINGS_VERSION = 3;
-
 // Best-guess starting numbers. Every value is editable in the UI — these are
 // deliberately round, plausible estimates for a Korean-fusion food operation,
 // not audited figures. Toppings are measured in ounces, proteins in pounds.
@@ -188,7 +186,6 @@ const ITEMS: MenuItem[] = [
 ];
 
 export const DEFAULT_SETTINGS: Settings = {
-    version: SETTINGS_VERSION,
     selectedProtein: "beef",
     ingredients: INGREDIENTS,
     items: ITEMS,

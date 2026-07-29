@@ -1,7 +1,23 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import TransactionHistory from "./TransactionHistory.tsx";
 import { SettingsProvider } from "../SettingsContext.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
+
+// Resolve the provider's mount-load instantly with the defaults so the page
+// renders without a database.
+vi.mock("./persistence/settingsRepo.ts", async () => {
+    const { DEFAULT_SETTINGS } = await import("./defaults.ts");
+    const { rowsToSettings, settingsToRows } = await import(
+        "./persistence/rows.ts"
+    );
+    const defaults = () => rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
+    return {
+        fetchSettings: async () => defaults(),
+        seedDefaults: async () => defaults(),
+        applyChangeSet: async () => {},
+        clearAllData: async () => defaults(),
+    };
+});
 
 function renderHistory() {
     return renderWithProviders(

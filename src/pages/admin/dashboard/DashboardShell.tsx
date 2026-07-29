@@ -3,11 +3,9 @@ import { Heading } from "@/components/catalyst-ui-kit/heading.tsx";
 import { Text } from "@/components/catalyst-ui-kit/text.tsx";
 import { SidebarLayout } from "@/components/catalyst-ui-kit/sidebar-layout.tsx";
 import AdminTopNav from "./AdminTopNav.tsx";
-import CloudSyncBar from "./CloudSyncBar.tsx";
+import SyncStatusBar from "./SyncStatusBar.tsx";
 import DashboardNav, { type NavSection } from "./DashboardNav.tsx";
 import { useActiveSection } from "./useActiveSection.ts";
-import { useSettings } from "../SettingsContext.tsx";
-import type { Protein } from "./types.ts";
 
 interface Props {
     /** Sidebar header title, e.g. the page name. */
@@ -33,7 +31,6 @@ export default function DashboardShell({
     sections,
     children,
 }: Props) {
-    const { settings, setSettings } = useSettings();
     const activeId = useActiveSection(sections.map((section) => section.id));
 
     return (
@@ -59,17 +56,7 @@ export default function DashboardShell({
             <Text className="mt-1">{intro}</Text>
 
             <div className="mt-6">
-                <CloudSyncBar
-                    settings={settings}
-                    onApplySettings={setSettings}
-                    selectedProtein={settings.selectedProtein}
-                    onChangeProtein={(protein: Protein) =>
-                        setSettings((prev) => ({
-                            ...prev,
-                            selectedProtein: protein,
-                        }))
-                    }
-                />
+                <SyncStatusBar />
             </div>
 
             {children}

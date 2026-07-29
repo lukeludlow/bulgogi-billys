@@ -1,10 +1,26 @@
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import ProfitCalculator from "./ProfitCalculator.tsx";
 import { SettingsProvider } from "../SettingsContext.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 
+// Resolve the provider's mount-load instantly with the defaults so the page
+// renders without a database.
+vi.mock("./persistence/settingsRepo.ts", async () => {
+    const { DEFAULT_SETTINGS } = await import("./defaults.ts");
+    const { rowsToSettings, settingsToRows } = await import(
+        "./persistence/rows.ts"
+    );
+    const defaults = () => rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
+    return {
+        fetchSettings: async () => defaults(),
+        seedDefaults: async () => defaults(),
+        applyChangeSet: async () => {},
+        clearAllData: async () => defaults(),
+    };
+});
+
 afterEach(() => {
-    localStorage.removeItem("bb_admin_settings");
+    localStorage.removeItem("bb_admin_pending");
 });
 
 function renderCalculator() {
@@ -24,7 +40,7 @@ test("renders the calculator with a summary and controls", async () => {
         .toBeInTheDocument();
     await expect.element(getByText("Average margin")).toBeInTheDocument();
     await expect
-        .element(getByRole("button", { name: "Save to cloud" }))
+        .element(getByRole("button", { name: "Reset" }))
         .toBeInTheDocument();
 });
 

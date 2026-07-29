@@ -1,0 +1,210 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import { DEFAULT_SETTINGS } from "../defaults.ts";
+import { computeChangeSet } from "./diff.ts";
+import { rowsToSettings, settingsToRows } from "./rows.ts";
+import {
+    applyChangeSet,
+    clearAllData,
+    fetchSettings,
+    seedDefaults,
+} from "./settingsRepo.ts";
+
+// Chainable PostgREST stub: every method returns the same query object, and
+// awaiting it resolves to { data, error } configured per table. Each call is
+// recorded so tests can assert order and arguments.
+interface RecordedCall {
+    table: string;
+    method: string;
+    args: unknown[];
+}
+
+const mock = vi.hoisted(() => {
+    const calls: RecordedCall[] = [];
+    const data = new Map<string, unknown>();
+    const errors = new Map<string, string>();
+
+    function from(table: string) {
+        const query: Record<string, unknown> = {};
+        for (const method of [
+            "select",
+            "order",
+            "maybeSingle",
+            "upsert",
+            "insert",
+            "delete",
+            "eq",
+            "neq",
+            "gte",
+            "in",
+        ]) {
+            query[method] = (...args: unknown[]) => {
+                calls.push({ table, method, args });
+                return query;
+            };
+        }
+        query.then = (
+            onFulfilled: (value: unknown) => unknown,
+            onRejected?: (reason: unknown) => unknown,
+        ) =>
+            Promise.resolve({
+                data: data.get(table) ?? null,
+                error: errors.has(table)
+                    ? { message: errors.get(table) }
+                    : null,
+            }).then(onFulfilled, onRejected);
+        return query;
+    }
+
+    return { calls, data, errors, from };
+});
+
+vi.mock("@/lib/supabase.ts", () => ({
+    supabase: { from: mock.from },
+}));
+
+beforeEach(() => {
+    mock.calls.length = 0;
+    mock.data.clear();
+    mock.errors.clear();
+});
+
+/** The mutation calls (table + method) in the order they were issued. */
+function mutationOrder(): string[] {
+    return mock.calls
+        .filter((call) =>
+            ["upsert", "insert", "delete"].includes(call.method),
+        )
+        .map((call) => `${call.table}.${call.method}`);
+}
+
+const BASE = rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
+
+describe("fetchSettings", () => {
+    test("returns null when the settings row has never been seeded", async () => {
+        for (const table of [
+            "ingredients",
+            "batch_lines",
+            "menu_items",
+            "variants",
+            "recipe_lines",
+            "transactions",
+        ]) {
+            mock.data.set(table, []);
+        }
+        expect(await fetchSettings()).toBeNull();
+    });
+
+    test("assembles a full Settings object from the seven tables", async () => {
+        const snapshot = settingsToRows(DEFAULT_SETTINGS);
+        mock.data.set("settings", snapshot.settings);
+        mock.data.set("ingredients", snapshot.ingredients);
+        mock.data.set("batch_lines", snapshot.batchLines);
+        mock.data.set("menu_items", snapshot.menuItems);
+        mock.data.set("variants", snapshot.variants);
+        mock.data.set("recipe_lines", snapshot.recipeLines);
+        mock.data.set("transactions", snapshot.transactions);
+
+        expect(await fetchSettings()).toEqual(BASE);
+    });
+
+    test("throws when a select fails", async () => {
+        mock.errors.set("ingredients", "permission denied");
+        await expect(fetchSettings()).rejects.toThrow("permission denied");
+    });
+});
+
+describe("seedDefaults", () => {
+    test("writes parents before children and returns the normalized defaults", async () => {
+        const seeded = await seedDefaults();
+        expect(seeded).toEqual(BASE);
+
+        const order = mutationOrder();
+        expect(order.indexOf("ingredients.upsert")).toBeLessThan(
+            order.indexOf("batch_lines.upsert"),
+        );
+        expect(order.indexOf("menu_items.upsert")).toBeLessThan(
+            order.indexOf("variants.upsert"),
+        );
+        expect(order.indexOf("variants.upsert")).toBeLessThan(
+            order.indexOf("recipe_lines.upsert"),
+        );
+        // Defaults ship no transactions — nothing should touch that table.
+        expect(order.some((entry) => entry.startsWith("transactions."))).toBe(
+            false,
+        );
+    });
+});
+
+describe("applyChangeSet", () => {
+    test("config rewrite runs FK-safe: parent upserts, line rewrites, then deletes", async () => {
+        const next = structuredClone(BASE);
+        next.ingredients[0].costPerUnit = 9;
+        next.items[0].variants.pop();
+        await applyChangeSet(computeChangeSet(BASE, next));
+
+        expect(mutationOrder()).toEqual([
+            "ingredients.upsert",
+            "menu_items.upsert",
+            "variants.upsert",
+            "batch_lines.delete",
+            "batch_lines.insert",
+            "recipe_lines.delete",
+            "recipe_lines.insert",
+            "variants.delete",
+        ]);
+
+        const variantUpsert = mock.calls.find(
+            (call) => call.table === "variants" && call.method === "upsert",
+        )!;
+        expect(variantUpsert.args[1]).toEqual({ onConflict: "item_id,id" });
+    });
+
+    test("transaction inserts ignore duplicates so existing rows win", async () => {
+        const next = structuredClone(BASE);
+        next.transactions = [
+            {
+                id: "42",
+                date: "2026-07-11T17:19:00.000Z",
+                amount: 9,
+                type: "Sale",
+                result: "Approved",
+                method: "Tapped",
+            },
+        ];
+        await applyChangeSet(computeChangeSet(BASE, next));
+
+        expect(mutationOrder()).toEqual(["transactions.upsert"]);
+        const upsert = mock.calls.find(
+            (call) => call.table === "transactions" && call.method === "upsert",
+        )!;
+        expect(upsert.args[1]).toEqual({
+            onConflict: "id",
+            ignoreDuplicates: true,
+        });
+    });
+
+    test("propagates the first database error", async () => {
+        mock.errors.set("settings", "row level security violation");
+        const next = { ...BASE, groceryWeeklySpend: 999 };
+        await expect(
+            applyChangeSet(computeChangeSet(BASE, next)),
+        ).rejects.toThrow("row level security violation");
+    });
+});
+
+describe("clearAllData", () => {
+    test("wipes transactions and config, then reseeds defaults", async () => {
+        const reseeded = await clearAllData();
+        expect(reseeded).toEqual(BASE);
+
+        const order = mutationOrder();
+        expect(order.slice(0, 3)).toEqual([
+            "transactions.delete",
+            "menu_items.delete",
+            "ingredients.delete",
+        ]);
+        expect(order.indexOf("ingredients.delete")).toBeLessThan(
+            order.indexOf("ingredients.upsert"),
+        );
+    });
+});

@@ -1,0 +1,3 @@
+# Minimal Supabase CLI config. Regenerate with `supabase init` if you want the
+# full commented template; only project_id is required for link/db push.
+project_id = "bulgogi-billys"

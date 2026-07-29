@@ -95,7 +95,6 @@ export interface Transaction {
 }
 
 export interface Settings {
-    version: number;
     /** Which protein to price the recipes with (a what-if toggle, remembered). */
     selectedProtein: Protein;
     ingredients: Ingredient[];
