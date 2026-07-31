@@ -116,6 +116,70 @@ describe("settingsToRows / rowsToSettings", () => {
         expect("brand" in back).toBe(false);
     });
 
+    test("events and classifications survive the round-trip", () => {
+        const settings: Settings = {
+            ...DEFAULT_SETTINGS,
+            events: [
+                {
+                    date: "2026-07-25",
+                    market: "grogans-mill",
+                    marketFee: 20,
+                    fuel: 8,
+                    propane: 5,
+                    waste: 12,
+                    employeeHours: 4.5,
+                    billysHours: 7,
+                },
+            ],
+            marketClassifications: {
+                ...DEFAULT_SETTINGS.marketClassifications,
+                "grogans-mill": "core",
+            },
+        };
+        const back = normalize(settings);
+        expect(back.events).toEqual(settings.events);
+        expect(back.marketClassifications["grogans-mill"]).toBe("core");
+        expect(back.marketClassifications["new-caney"]).toBeNull();
+        expect(back.employeeHourlyRate).toBe(settings.employeeHourlyRate);
+        expect(back.salesTaxRatePercent).toBe(settings.salesTaxRatePercent);
+    });
+
+    test("missing classification rows synthesize the all-null record", () => {
+        // An existing database migrated before any classification was chosen
+        // has an empty market_classifications table.
+        const snapshot = settingsToRows(DEFAULT_SETTINGS);
+        snapshot.marketClassifications = [];
+        const settings = rowsToSettings(snapshot);
+        expect(settings.marketClassifications).toEqual({
+            "grogans-mill": null,
+            "new-caney": null,
+            "fm-1488": null,
+            other: null,
+        });
+    });
+
+    test("event rows are emitted sorted by date+market for stable diffs", () => {
+        const event = (date: string, market: "grogans-mill" | "other") => ({
+            date,
+            market,
+            marketFee: 0,
+            fuel: 0,
+            propane: 0,
+            waste: 0,
+            employeeHours: 0,
+            billysHours: 0,
+        });
+        const a: Settings = {
+            ...DEFAULT_SETTINGS,
+            events: [event("2026-07-25", "grogans-mill"), event("2026-07-20", "other")],
+        };
+        const b: Settings = {
+            ...DEFAULT_SETTINGS,
+            events: [event("2026-07-20", "other"), event("2026-07-25", "grogans-mill")],
+        };
+        expect(settingsToRows(a).events).toEqual(settingsToRows(b).events);
+    });
+
     test("timestamptz-style dates normalize back to the parser's ISO format", () => {
         const settings: Settings = {
             ...DEFAULT_SETTINGS,

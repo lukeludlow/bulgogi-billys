@@ -193,4 +193,15 @@ export const DEFAULT_SETTINGS: Settings = {
     packagingCostPerOrder: 0.25,
     transactions: [],
     blendedFoodCostPercent: 32,
+    events: [],
+    marketClassifications: {
+        "grogans-mill": null,
+        "new-caney": null,
+        "fm-1488": null,
+        other: null,
+    },
+    // Must match the SQL column defaults in the events_and_market_settings
+    // migration so a migrated database and a fresh seed agree.
+    employeeHourlyRate: 12,
+    salesTaxRatePercent: 8.25,
 };

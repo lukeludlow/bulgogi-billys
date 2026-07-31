@@ -1,10 +1,32 @@
 import { describe, expect, test } from "vitest";
 import { DEFAULT_SETTINGS } from "../defaults.ts";
-import type { Settings, Transaction } from "../types.ts";
+import type { MarketEvent, Settings, Transaction } from "../types.ts";
 import { computeChangeSet, isEmptyChangeSet } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
 
 const BASE: Settings = rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
+
+function makeEvent(date: string, market: MarketEvent["market"]): MarketEvent {
+    return {
+        date,
+        market,
+        marketFee: 20,
+        fuel: 0,
+        propane: 0,
+        waste: 0,
+        employeeHours: 0,
+        billysHours: 0,
+    };
+}
+
+const EVENTS_BASE: Settings = {
+    ...BASE,
+    events: [
+        makeEvent("2026-07-11", "grogans-mill"),
+        makeEvent("2026-07-18", "grogans-mill"),
+        makeEvent("2026-07-19", "new-caney"),
+    ],
+};
 
 function makeTransaction(id: string): Transaction {
     return {
@@ -68,6 +90,75 @@ describe("computeChangeSet", () => {
         expect(changeSet.transactionInserts?.map((t) => t.id)).toEqual(["2"]);
         expect(changeSet.config).toBeUndefined();
         expect(changeSet.settings).toBeUndefined();
+    });
+
+    test("editing one event upserts exactly that row", () => {
+        const next = structuredClone(EVENTS_BASE);
+        next.events[1] = { ...next.events[1], fuel: 15 };
+        const changeSet = computeChangeSet(EVENTS_BASE, next);
+        expect(changeSet.events?.upserts).toEqual([
+            {
+                date: "2026-07-18",
+                market: "grogans-mill",
+                market_fee: 20,
+                fuel: 15,
+                propane: 0,
+                waste: 0,
+                employee_hours: 0,
+                billys_hours: 0,
+            },
+        ]);
+        expect(changeSet.events?.deletes).toEqual([]);
+        expect(changeSet.settings).toBeUndefined();
+        expect(changeSet.config).toBeUndefined();
+    });
+
+    test("adding an event upserts it; removing one deletes by key", () => {
+        const next = structuredClone(EVENTS_BASE);
+        next.events.push(makeEvent("2026-07-25", "grogans-mill"));
+        next.events = next.events.filter(
+            (event) => event.date !== "2026-07-19",
+        );
+        const changeSet = computeChangeSet(EVENTS_BASE, next);
+        expect(changeSet.events?.upserts.map((row) => row.date)).toEqual([
+            "2026-07-25",
+        ]);
+        expect(changeSet.events?.deletes).toEqual([
+            { date: "2026-07-19", market: "new-caney" },
+        ]);
+    });
+
+    test("untouched events emit no events slice", () => {
+        const changeSet = computeChangeSet(
+            EVENTS_BASE,
+            structuredClone(EVENTS_BASE),
+        );
+        expect(isEmptyChangeSet(changeSet)).toBe(true);
+    });
+
+    test("a classification change rewrites the four-row set wholesale", () => {
+        const next = structuredClone(BASE);
+        next.marketClassifications["fm-1488"] = "probation";
+        const changeSet = computeChangeSet(BASE, next);
+        expect(changeSet.marketClassifications).toEqual([
+            { market: "grogans-mill", classification: null },
+            { market: "new-caney", classification: null },
+            { market: "fm-1488", classification: "probation" },
+            { market: "other", classification: null },
+        ]);
+        expect(isEmptyChangeSet(changeSet)).toBe(false);
+        expect(changeSet.settings).toBeUndefined();
+    });
+
+    test("hourly rate and tax rate ride the settings row", () => {
+        const next = {
+            ...BASE,
+            employeeHourlyRate: 15,
+            salesTaxRatePercent: 6.25,
+        };
+        const changeSet = computeChangeSet(BASE, next);
+        expect(changeSet.settings?.employee_hourly_rate).toBe(15);
+        expect(changeSet.settings?.sales_tax_rate_percent).toBe(6.25);
     });
 
     test("removed transactions never produce deletes or writes", () => {

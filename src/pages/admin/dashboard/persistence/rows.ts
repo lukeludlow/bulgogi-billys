@@ -2,7 +2,16 @@
 // snake_case rows stored in Supabase. `position` columns preserve the UI
 // order of every list; composite keys carry the parent ids.
 
-import type { Ingredient, MenuItem, Settings, Transaction } from "../types.ts";
+import {
+    MARKETS,
+    type Ingredient,
+    type Market,
+    type MarketClassification,
+    type MarketEvent,
+    type MenuItem,
+    type Settings,
+    type Transaction,
+} from "../types.ts";
 
 export interface SettingsRow {
     id: number;
@@ -10,6 +19,8 @@ export interface SettingsRow {
     grocery_weekly_spend: number;
     packaging_cost_per_order: number;
     blended_food_cost_percent: number;
+    employee_hourly_rate: number;
+    sales_tax_rate_percent: number;
 }
 
 export interface IngredientRow {
@@ -64,6 +75,22 @@ export interface TransactionRow {
     brand: string | null;
 }
 
+export interface EventRow {
+    date: string;
+    market: string;
+    market_fee: number;
+    fuel: number;
+    propane: number;
+    waste: number;
+    employee_hours: number;
+    billys_hours: number;
+}
+
+export interface MarketClassificationRow {
+    market: string;
+    classification: string | null;
+}
+
 export interface DbSnapshot {
     settings: SettingsRow;
     ingredients: IngredientRow[];
@@ -72,6 +99,8 @@ export interface DbSnapshot {
     variants: VariantRow[];
     recipeLines: RecipeLineRow[];
     transactions: TransactionRow[];
+    events: EventRow[];
+    marketClassifications: MarketClassificationRow[];
 }
 
 export function settingsToRows(settings: Settings): DbSnapshot {
@@ -136,6 +165,8 @@ export function settingsToRows(settings: Settings): DbSnapshot {
             grocery_weekly_spend: settings.groceryWeeklySpend,
             packaging_cost_per_order: settings.packagingCostPerOrder,
             blended_food_cost_percent: settings.blendedFoodCostPercent,
+            employee_hourly_rate: settings.employeeHourlyRate,
+            sales_tax_rate_percent: settings.salesTaxRatePercent,
         },
         ingredients,
         batchLines,
@@ -143,6 +174,30 @@ export function settingsToRows(settings: Settings): DbSnapshot {
         variants,
         recipeLines,
         transactions: settings.transactions.map(transactionToRow),
+        // Sorted so both sides of a diff serialize identically regardless of
+        // the order the UI happened to append rows in.
+        events: [...settings.events]
+            .sort((a, b) =>
+                `${a.date} ${a.market}`.localeCompare(`${b.date} ${b.market}`),
+            )
+            .map(eventToRow),
+        marketClassifications: MARKETS.map((market) => ({
+            market,
+            classification: settings.marketClassifications[market],
+        })),
+    };
+}
+
+export function eventToRow(event: MarketEvent): EventRow {
+    return {
+        date: event.date,
+        market: event.market,
+        market_fee: event.marketFee,
+        fuel: event.fuel,
+        propane: event.propane,
+        waste: event.waste,
+        employee_hours: event.employeeHours,
+        billys_hours: event.billysHours,
     };
 }
 
@@ -229,6 +284,33 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         return transaction;
     });
 
+    const events: MarketEvent[] = [...snapshot.events]
+        .sort((a, b) =>
+            `${b.date} ${b.market}`.localeCompare(`${a.date} ${a.market}`),
+        )
+        .map((row) => ({
+            date: row.date,
+            market: row.market as Market,
+            marketFee: row.market_fee,
+            fuel: row.fuel,
+            propane: row.propane,
+            waste: row.waste,
+            employeeHours: row.employee_hours,
+            billysHours: row.billys_hours,
+        }));
+
+    // Start from all-null so markets with no stored row (e.g. a database
+    // migrated before any classification was chosen) are still present.
+    const marketClassifications = Object.fromEntries(
+        MARKETS.map((market) => [market, null]),
+    ) as Record<Market, MarketClassification | null>;
+    for (const row of snapshot.marketClassifications) {
+        if ((MARKETS as string[]).includes(row.market)) {
+            marketClassifications[row.market as Market] =
+                row.classification as MarketClassification | null;
+        }
+    }
+
     return {
         selectedProtein: snapshot.settings
             .selected_protein as Settings["selectedProtein"],
@@ -238,5 +320,9 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         packagingCostPerOrder: snapshot.settings.packaging_cost_per_order,
         transactions,
         blendedFoodCostPercent: snapshot.settings.blended_food_cost_percent,
+        events,
+        marketClassifications,
+        employeeHourlyRate: snapshot.settings.employee_hourly_rate,
+        salesTaxRatePercent: snapshot.settings.sales_tax_rate_percent,
     };
 }

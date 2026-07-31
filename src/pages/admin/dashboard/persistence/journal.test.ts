@@ -37,6 +37,16 @@ test("readPendingJournal rejects corrupt or misshapen payloads", () => {
     expect(readPendingJournal()).toBeNull();
 });
 
+test("readPendingJournal rejects a journal from a pre-events app version", () => {
+    // A journal written before the events feature existed lacks the newer
+    // Settings fields; adopting it would crash the events page.
+    const stale: Record<string, unknown> = { ...DEFAULT_SETTINGS };
+    delete stale.events;
+    delete stale.employeeHourlyRate;
+    localStorage.setItem(PENDING_KEY, JSON.stringify(stale));
+    expect(readPendingJournal()).toBeNull();
+});
+
 test("clearPendingJournal removes the journal", () => {
     writePendingJournal(DEFAULT_SETTINGS);
     clearPendingJournal();

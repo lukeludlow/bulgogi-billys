@@ -73,6 +73,42 @@ export interface MenuItem {
     variants: Variant[];
 }
 
+/** The markets Billy sells at, plus "other" for non-market-day sales. */
+export type Market = "grogans-mill" | "new-caney" | "fm-1488" | "other";
+
+/** Fixed order — persistence emits market rows in this order so diffs are stable. */
+export const MARKETS: Market[] = [
+    "grogans-mill",
+    "new-caney",
+    "fm-1488",
+    "other",
+];
+
+/** The growth plan's five-way market classification (§17.2). */
+export type MarketClassification =
+    | "growth"
+    | "core"
+    | "development"
+    | "probation"
+    | "exit";
+
+/** Direct expenses recorded for one market on one local calendar day. */
+export interface MarketEvent {
+    /** Local calendar day, "YYYY-MM-DD". */
+    date: string;
+    market: Market;
+    /** Booth/stall fee in dollars. */
+    marketFee: number;
+    fuel: number;
+    propane: number;
+    /** Dollar value of food wasted at this event. */
+    waste: number;
+    /** Paid employee hours; costed at `Settings.employeeHourlyRate`. */
+    employeeHours: number;
+    /** Billy's own hours — recorded and displayed, never subtracted. */
+    billysHours: number;
+}
+
 /**
  * A single real sale imported from the card/cash processor export. The processor
  * only records the order total, not what was in it.
@@ -110,6 +146,17 @@ export interface Settings {
      * amount matches no menu price. e.g. 32 = 32%.
      */
     blendedFoodCostPercent: number;
+    /** Per-event expense records, keyed by (date, market). */
+    events: MarketEvent[];
+    /** Manually chosen classification per market; null = not yet classified. */
+    marketClassifications: Record<Market, MarketClassification | null>;
+    /** Dollars per hour used to cost `MarketEvent.employeeHours`. */
+    employeeHourlyRate: number;
+    /**
+     * Sales-tax rate baked into the tax-inclusive menu prices, e.g. 8.25 = 8.25%.
+     * Pre-tax sales = amount ÷ (1 + rate/100).
+     */
+    salesTaxRatePercent: number;
 }
 
 /** A single item×size combination with its computed economics. */

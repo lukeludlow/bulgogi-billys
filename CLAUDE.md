@@ -1,0 +1,3 @@
+- Use Tailwind Plus Catalyst UI Kit components located in directory catalyst-ui-kit whenever possible.
+- Write unit tests. Everything that can be tested should be tested.
+- Make sure UI/UX design is mobile-friendly and mobile-first, but still looks good on desktop.

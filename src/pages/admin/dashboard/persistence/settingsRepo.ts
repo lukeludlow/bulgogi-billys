@@ -11,7 +11,9 @@ import {
     rowsToSettings,
     type BatchLineRow,
     type DbSnapshot,
+    type EventRow,
     type IngredientRow,
+    type MarketClassificationRow,
     type MenuItemRow,
     type RecipeLineRow,
     type SettingsRow,
@@ -40,6 +42,8 @@ export async function fetchSettings(): Promise<Settings | null> {
         variants,
         recipeLines,
         transactions,
+        events,
+        marketClassifications,
     ] = await Promise.all([
         supabase
             .from("settings")
@@ -76,6 +80,15 @@ export async function fetchSettings(): Promise<Settings | null> {
             .select("*")
             .order("date", { ascending: false })
             .then(unwrap<TransactionRow[]>),
+        supabase
+            .from("events")
+            .select("*")
+            .order("date", { ascending: false })
+            .then(unwrap<EventRow[]>),
+        supabase
+            .from("market_classifications")
+            .select("*")
+            .then(unwrap<MarketClassificationRow[]>),
     ]);
 
     if (!settingsRow) return null;
@@ -88,6 +101,8 @@ export async function fetchSettings(): Promise<Settings | null> {
         variants,
         recipeLines,
         transactions,
+        events,
+        marketClassifications,
     };
     return rowsToSettings(snapshot);
 }
@@ -140,6 +155,35 @@ export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
 
     if (changeSet.settings) {
         unwrap(await supabase.from("settings").upsert(changeSet.settings));
+    }
+
+    if (changeSet.events) {
+        if (changeSet.events.upserts.length > 0) {
+            unwrap(
+                await supabase
+                    .from("events")
+                    .upsert(changeSet.events.upserts, {
+                        onConflict: "date,market",
+                    }),
+            );
+        }
+        for (const key of changeSet.events.deletes) {
+            unwrap(
+                await supabase
+                    .from("events")
+                    .delete()
+                    .eq("date", key.date)
+                    .eq("market", key.market),
+            );
+        }
+    }
+
+    if (changeSet.marketClassifications) {
+        unwrap(
+            await supabase
+                .from("market_classifications")
+                .upsert(changeSet.marketClassifications),
+        );
     }
 
     if (changeSet.transactionInserts) {

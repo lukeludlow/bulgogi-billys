@@ -8,12 +8,19 @@ const PENDING_KEY = "bb_admin_pending";
 /** The pre-Supabase localStorage cache; cleared on load, never written. */
 const LEGACY_CACHE_KEY = "bb_admin_settings";
 
-/** Shape check so a corrupt journal is dropped instead of crashing the load. */
+/**
+ * Shape check so a corrupt journal — or one written by an older app version
+ * missing newer Settings fields — is dropped instead of crashing the load.
+ */
 function isUsableSettings(value: unknown): value is Settings {
     if (typeof value !== "object" || value === null) return false;
     const candidate = value as Partial<Settings>;
     return (
-        Array.isArray(candidate.ingredients) && Array.isArray(candidate.items)
+        Array.isArray(candidate.ingredients) &&
+        Array.isArray(candidate.items) &&
+        Array.isArray(candidate.events) &&
+        typeof candidate.employeeHourlyRate === "number" &&
+        typeof candidate.salesTaxRatePercent === "number"
     );
 }
 

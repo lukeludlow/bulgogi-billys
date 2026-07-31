@@ -9,6 +9,7 @@ import {
 const PAGES = [
     { label: "Profit Calculator", url: "/admin" },
     { label: "Transaction History", url: "/admin/transactions" },
+    { label: "Events", url: "/admin/events" },
 ];
 
 function isCurrent(pathname: string, url: string): boolean {

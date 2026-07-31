@@ -27,7 +27,6 @@ dist-ssr
 .vercel
 .env*
 
-CLAUDE.md
 **/__screenshots__/*.test.ts
 **/__screenshots__/*.test.tsx
 __screenshots__
@@ -37,3 +36,5 @@ items.xlsx
 transactions.csv
 
 supabase/.temp
+
+Bulgogi Billy’s Family Business Growth Plan.pdf

@@ -27,6 +27,7 @@ const ProfitCalculator = lazy(
 const TransactionHistory = lazy(
     () => import("@/pages/admin/dashboard/TransactionHistory.tsx"),
 );
+const Events = lazy(() => import("@/pages/admin/dashboard/Events.tsx"));
 
 const router = createBrowserRouter([
     {
@@ -104,6 +105,10 @@ const router = createBrowserRouter([
             {
                 path: "transactions",
                 element: <TransactionHistory />,
+            },
+            {
+                path: "events",
+                element: <Events />,
             },
         ],
     },

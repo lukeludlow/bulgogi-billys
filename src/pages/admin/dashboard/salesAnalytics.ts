@@ -64,12 +64,12 @@ export function isCountable(txn: Transaction): boolean {
 }
 
 /** Precomputed cost lookups so per-transaction resolution stays O(1). */
-interface ProfitIndex {
+export interface ProfitIndex {
     costByPrice: Map<number, number>;
     blendedFoodCostPercent: number;
 }
 
-function buildProfitIndex(settings: Settings): ProfitIndex {
+export function buildProfitIndex(settings: Settings): ProfitIndex {
     const priceGroups = new Map<number, number[]>();
     for (const combination of allCombinations(settings)) {
         const group = priceGroups.get(combination.revenue) ?? [];
@@ -86,7 +86,7 @@ function buildProfitIndex(settings: Settings): ProfitIndex {
     };
 }
 
-function resolveWithIndex(
+export function resolveWithIndex(
     txn: Transaction,
     index: ProfitIndex,
 ): TransactionProfit {

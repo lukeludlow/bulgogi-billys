@@ -83,13 +83,15 @@ describe("fetchSettings", () => {
             "variants",
             "recipe_lines",
             "transactions",
+            "events",
+            "market_classifications",
         ]) {
             mock.data.set(table, []);
         }
         expect(await fetchSettings()).toBeNull();
     });
 
-    test("assembles a full Settings object from the seven tables", async () => {
+    test("assembles a full Settings object from the nine tables", async () => {
         const snapshot = settingsToRows(DEFAULT_SETTINGS);
         mock.data.set("settings", snapshot.settings);
         mock.data.set("ingredients", snapshot.ingredients);
@@ -98,6 +100,8 @@ describe("fetchSettings", () => {
         mock.data.set("variants", snapshot.variants);
         mock.data.set("recipe_lines", snapshot.recipeLines);
         mock.data.set("transactions", snapshot.transactions);
+        mock.data.set("events", snapshot.events);
+        mock.data.set("market_classifications", snapshot.marketClassifications);
 
         expect(await fetchSettings()).toEqual(BASE);
     });
@@ -154,6 +158,53 @@ describe("applyChangeSet", () => {
             onConflict: "id",
             ignoreDuplicates: true,
         });
+    });
+
+    test("event edits upsert by composite key and delete per key", async () => {
+        const event = {
+            date: "2026-07-11",
+            market: "grogans-mill" as const,
+            marketFee: 20,
+            fuel: 0,
+            propane: 0,
+            waste: 0,
+            employeeHours: 0,
+            billysHours: 0,
+        };
+        const prev = {
+            ...BASE,
+            events: [event, { ...event, date: "2026-07-18" }],
+        };
+        const next = {
+            ...BASE,
+            events: [{ ...event, fuel: 10 }],
+        };
+        await applyChangeSet(computeChangeSet(prev, next));
+
+        expect(mutationOrder()).toEqual(["events.upsert", "events.delete"]);
+        const upsert = mock.calls.find(
+            (call) => call.table === "events" && call.method === "upsert",
+        )!;
+        expect(upsert.args[1]).toEqual({ onConflict: "date,market" });
+        const deleteEqs = mock.calls.filter(
+            (call) => call.table === "events" && call.method === "eq",
+        );
+        expect(deleteEqs.map((call) => call.args)).toEqual([
+            ["date", "2026-07-18"],
+            ["market", "grogans-mill"],
+        ]);
+    });
+
+    test("classification changes upsert the whole four-row set", async () => {
+        const next = structuredClone(BASE);
+        next.marketClassifications["fm-1488"] = "exit";
+        await applyChangeSet(computeChangeSet(BASE, next));
+
+        expect(mutationOrder()).toEqual(["market_classifications.upsert"]);
+        const upsert = mock.calls.find(
+            (call) => call.table === "market_classifications",
+        )!;
+        expect(upsert.args[0]).toHaveLength(4);
     });
 
     test("propagates the first database error", async () => {
