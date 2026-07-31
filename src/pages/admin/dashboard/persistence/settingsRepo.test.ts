@@ -20,9 +20,11 @@ const mock = vi.hoisted(() => {
 
     function from(table: string) {
         const query: Record<string, unknown> = {};
+        let range: [number, number] | null = null;
         for (const method of [
             "select",
             "order",
+            "range",
             "maybeSingle",
             "upsert",
             "insert",
@@ -34,19 +36,27 @@ const mock = vi.hoisted(() => {
         ]) {
             query[method] = (...args: unknown[]) => {
                 calls.push({ table, method, args });
+                if (method === "range") {
+                    range = args as [number, number];
+                }
                 return query;
             };
         }
         query.then = (
             onFulfilled: (value: unknown) => unknown,
             onRejected?: (reason: unknown) => unknown,
-        ) =>
-            Promise.resolve({
-                data: data.get(table) ?? null,
+        ) => {
+            let rows = data.get(table) ?? null;
+            if (range && Array.isArray(rows)) {
+                rows = rows.slice(range[0], range[1] + 1);
+            }
+            return Promise.resolve({
+                data: rows,
                 error: errors.has(table)
                     ? { message: errors.get(table) }
                     : null,
             }).then(onFulfilled, onRejected);
+        };
         return query;
     }
 
@@ -91,7 +101,7 @@ describe("fetchSettings", () => {
         expect(await fetchSettings()).toBeNull();
     });
 
-    test("assembles a full Settings object from the nine tables", async () => {
+    function seedAllTables() {
         const snapshot = settingsToRows(DEFAULT_SETTINGS);
         mock.data.set("settings", snapshot.settings);
         mock.data.set("ingredients", snapshot.ingredients);
@@ -102,12 +112,64 @@ describe("fetchSettings", () => {
         mock.data.set("transactions", snapshot.transactions);
         mock.data.set("events", snapshot.events);
         mock.data.set("market_classifications", snapshot.marketClassifications);
+    }
 
+    test("assembles a full Settings object from the nine tables", async () => {
+        seedAllTables();
         expect(await fetchSettings()).toEqual(BASE);
     });
 
     test("throws when a select fails", async () => {
         mock.errors.set("ingredients", "permission denied");
+        await expect(fetchSettings()).rejects.toThrow("permission denied");
+    });
+
+    test("pages past the 1000-row cap to load every transaction", async () => {
+        seedAllTables();
+        mock.data.set(
+            "transactions",
+            Array.from({ length: 2500 }, (_, index) => ({
+                id: String(index),
+                date: "2026-07-11T17:19:00.000Z",
+                amount: 1,
+                type: "Sale",
+                result: "Approved",
+                method: "Tapped",
+                brand: null,
+            })),
+        );
+
+        const settings = await fetchSettings();
+        expect(settings!.transactions).toHaveLength(2500);
+        expect(settings!.transactions.map((txn) => txn.id)).toEqual(
+            Array.from({ length: 2500 }, (_, index) => String(index)),
+        );
+
+        const rangeCalls = mock.calls.filter(
+            (call) =>
+                call.table === "transactions" && call.method === "range",
+        );
+        expect(rangeCalls.map((call) => call.args)).toEqual([
+            [0, 999],
+            [1000, 1999],
+            [2000, 2999],
+        ]);
+    });
+
+    test("fetches a single page when transactions fit within the cap", async () => {
+        seedAllTables();
+        await fetchSettings();
+
+        const rangeCalls = mock.calls.filter(
+            (call) =>
+                call.table === "transactions" && call.method === "range",
+        );
+        expect(rangeCalls.map((call) => call.args)).toEqual([[0, 999]]);
+    });
+
+    test("propagates errors from paginated fetches", async () => {
+        seedAllTables();
+        mock.errors.set("transactions", "permission denied");
         await expect(fetchSettings()).rejects.toThrow("permission denied");
     });
 });

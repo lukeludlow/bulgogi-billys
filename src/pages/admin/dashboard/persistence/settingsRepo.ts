@@ -21,6 +21,30 @@ import {
     type VariantRow,
 } from "./rows.ts";
 
+// PostgREST caps each response at 1000 rows (db.max-rows), so large tables
+// must be fetched in pages. The tiebreaker column keeps the sort order total;
+// with date alone, rows sharing a date could shift between pages and be
+// skipped or duplicated.
+const PAGE_SIZE = 1000;
+
+async function fetchAllRows<T>(
+    table: string,
+    tiebreaker: string,
+): Promise<T[]> {
+    const rows: T[] = [];
+    for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .order("date", { ascending: false })
+            .order(tiebreaker, { ascending: true })
+            .range(from, from + PAGE_SIZE - 1);
+        if (error) throw new Error(error.message);
+        rows.push(...((data ?? []) as T[]));
+        if (!data || data.length < PAGE_SIZE) return rows;
+    }
+}
+
 function unwrap<T>({
     data,
     error,
@@ -75,16 +99,8 @@ export async function fetchSettings(): Promise<Settings | null> {
             .select("*")
             .order("position")
             .then(unwrap<RecipeLineRow[]>),
-        supabase
-            .from("transactions")
-            .select("*")
-            .order("date", { ascending: false })
-            .then(unwrap<TransactionRow[]>),
-        supabase
-            .from("events")
-            .select("*")
-            .order("date", { ascending: false })
-            .then(unwrap<EventRow[]>),
+        fetchAllRows<TransactionRow>("transactions", "id"),
+        fetchAllRows<EventRow>("events", "market"),
         supabase
             .from("market_classifications")
             .select("*")
