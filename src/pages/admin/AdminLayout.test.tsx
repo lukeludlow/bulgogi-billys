@@ -15,9 +15,7 @@ vi.mock("./dashboard/persistence/settingsRepo.ts", async () => {
     const defaults = () => rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
     return {
         fetchSettings: async () => defaults(),
-        seedDefaults: async () => defaults(),
         applyChangeSet: async () => {},
-        clearAllData: async () => defaults(),
     };
 });
 

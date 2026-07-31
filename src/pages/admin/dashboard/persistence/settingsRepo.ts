@@ -5,12 +5,10 @@
 // acceptable.
 
 import { supabase } from "@/lib/supabase.ts";
-import { DEFAULT_SETTINGS } from "../defaults.ts";
 import type { Settings } from "../types.ts";
 import type { ChangeSet } from "./diff.ts";
 import {
     rowsToSettings,
-    settingsToRows,
     type BatchLineRow,
     type DbSnapshot,
     type IngredientRow,
@@ -32,7 +30,7 @@ function unwrap<T>({
     return data as T;
 }
 
-/** Load everything, or null if the app has never seeded the settings row. */
+/** Load everything, or null if the settings row doesn't exist. */
 export async function fetchSettings(): Promise<Settings | null> {
     const [
         settingsRow,
@@ -91,34 +89,6 @@ export async function fetchSettings(): Promise<Settings | null> {
         recipeLines,
         transactions,
     };
-    return rowsToSettings(snapshot);
-}
-
-async function insertSnapshot(snapshot: DbSnapshot): Promise<void> {
-    unwrap(await supabase.from("settings").upsert(snapshot.settings));
-    unwrap(await supabase.from("ingredients").upsert(snapshot.ingredients));
-    unwrap(await supabase.from("batch_lines").upsert(snapshot.batchLines));
-    unwrap(await supabase.from("menu_items").upsert(snapshot.menuItems));
-    unwrap(
-        await supabase
-            .from("variants")
-            .upsert(snapshot.variants, { onConflict: "item_id,id" }),
-    );
-    unwrap(await supabase.from("recipe_lines").upsert(snapshot.recipeLines));
-    if (snapshot.transactions.length > 0) {
-        unwrap(
-            await supabase.from("transactions").upsert(snapshot.transactions, {
-                onConflict: "id",
-                ignoreDuplicates: true,
-            }),
-        );
-    }
-}
-
-/** First-run seeding. Returns the normalized Settings that were written. */
-export async function seedDefaults(): Promise<Settings> {
-    const snapshot = settingsToRows(DEFAULT_SETTINGS);
-    await insertSnapshot(snapshot);
     return rowsToSettings(snapshot);
 }
 
@@ -185,10 +155,3 @@ export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
     }
 }
 
-/** Reset: wipe config AND transactions, then reseed the defaults. */
-export async function clearAllData(): Promise<Settings> {
-    unwrap(await supabase.from("transactions").delete().neq("id", ""));
-    unwrap(await supabase.from("menu_items").delete().neq("id", ""));
-    unwrap(await supabase.from("ingredients").delete().neq("id", ""));
-    return seedDefaults();
-}

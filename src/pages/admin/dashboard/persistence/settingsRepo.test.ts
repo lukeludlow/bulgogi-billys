@@ -2,12 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DEFAULT_SETTINGS } from "../defaults.ts";
 import { computeChangeSet } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
-import {
-    applyChangeSet,
-    clearAllData,
-    fetchSettings,
-    seedDefaults,
-} from "./settingsRepo.ts";
+import { applyChangeSet, fetchSettings } from "./settingsRepo.ts";
 
 // Chainable PostgREST stub: every method returns the same query object, and
 // awaiting it resolves to { data, error } configured per table. Each call is
@@ -113,28 +108,6 @@ describe("fetchSettings", () => {
     });
 });
 
-describe("seedDefaults", () => {
-    test("writes parents before children and returns the normalized defaults", async () => {
-        const seeded = await seedDefaults();
-        expect(seeded).toEqual(BASE);
-
-        const order = mutationOrder();
-        expect(order.indexOf("ingredients.upsert")).toBeLessThan(
-            order.indexOf("batch_lines.upsert"),
-        );
-        expect(order.indexOf("menu_items.upsert")).toBeLessThan(
-            order.indexOf("variants.upsert"),
-        );
-        expect(order.indexOf("variants.upsert")).toBeLessThan(
-            order.indexOf("recipe_lines.upsert"),
-        );
-        // Defaults ship no transactions — nothing should touch that table.
-        expect(order.some((entry) => entry.startsWith("transactions."))).toBe(
-            false,
-        );
-    });
-});
-
 describe("applyChangeSet", () => {
     test("config rewrite runs FK-safe: parent upserts, line rewrites, then deletes", async () => {
         const next = structuredClone(BASE);
@@ -192,19 +165,3 @@ describe("applyChangeSet", () => {
     });
 });
 
-describe("clearAllData", () => {
-    test("wipes transactions and config, then reseeds defaults", async () => {
-        const reseeded = await clearAllData();
-        expect(reseeded).toEqual(BASE);
-
-        const order = mutationOrder();
-        expect(order.slice(0, 3)).toEqual([
-            "transactions.delete",
-            "menu_items.delete",
-            "ingredients.delete",
-        ]);
-        expect(order.indexOf("ingredients.delete")).toBeLessThan(
-            order.indexOf("ingredients.upsert"),
-        );
-    });
-});

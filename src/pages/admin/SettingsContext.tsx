@@ -17,9 +17,7 @@ import {
 } from "./dashboard/persistence/diff.ts";
 import {
     applyChangeSet,
-    clearAllData,
     fetchSettings,
-    seedDefaults,
 } from "./dashboard/persistence/settingsRepo.ts";
 import {
     clearLegacyCache,
@@ -36,8 +34,6 @@ interface SettingsContextValue {
     setSettings: Dispatch<SetStateAction<Settings>>;
     /** Where the last edit stands relative to the database. */
     syncStatus: SyncStatus;
-    /** Wipe everything (transactions included) and reseed the defaults. */
-    resetToDefaults: () => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -113,13 +109,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         runSaveRef.current = runSave;
     }, [runSave]);
 
-    // Initial load: database → (first run) seed defaults → apply any edit the
-    // previous session journaled on its way out.
+    // Initial load: database → apply any edit the previous session journaled
+    // on its way out. An empty database is unexpected (it holds the real
+    // data) and lands on the error screen.
     useEffect(() => {
         let cancelled = false;
         (async () => {
             try {
-                const loaded = (await fetchSettings()) ?? (await seedDefaults());
+                const loaded = await fetchSettings();
+                if (!loaded) throw new Error("settings have never been seeded");
                 if (cancelled) return;
                 lastPersisted.current = loaded;
                 const journal = readPendingJournal();
@@ -180,19 +178,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         [],
     );
 
-    const resetToDefaults = useCallback(async () => {
-        setSyncStatus("saving");
-        try {
-            const fresh = await clearAllData();
-            lastPersisted.current = fresh;
-            setSettingsState(fresh);
-            setSyncStatus("saved");
-        } catch (error) {
-            setSyncStatus("error");
-            throw error;
-        }
-    }, []);
-
     if (loadError) {
         return (
             <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
@@ -225,7 +210,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                 settings,
                 setSettings,
                 syncStatus,
-                resetToDefaults,
             }}
         >
             {children}

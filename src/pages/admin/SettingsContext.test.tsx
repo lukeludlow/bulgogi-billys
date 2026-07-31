@@ -9,14 +9,11 @@ import {
 import {
     applyChangeSet,
     fetchSettings,
-    seedDefaults,
 } from "./dashboard/persistence/settingsRepo.ts";
 
 vi.mock("./dashboard/persistence/settingsRepo.ts", () => ({
     fetchSettings: vi.fn(),
-    seedDefaults: vi.fn(),
     applyChangeSet: vi.fn(),
-    clearAllData: vi.fn(),
 }));
 
 const BASE = rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
@@ -25,7 +22,6 @@ const PENDING_KEY = "bb_admin_pending";
 beforeEach(() => {
     localStorage.removeItem(PENDING_KEY);
     vi.mocked(fetchSettings).mockResolvedValue(structuredClone(BASE));
-    vi.mocked(seedDefaults).mockResolvedValue(structuredClone(BASE));
     vi.mocked(applyChangeSet).mockResolvedValue(undefined);
 });
 
@@ -81,14 +77,13 @@ test("shows a loading state, then the children with the fetched settings", async
     await expect.element(screen.getByLabelText("status")).toHaveTextContent("saved");
 });
 
-test("seeds the defaults when the database is empty", async () => {
+test("an empty database shows the error screen instead of seeding", async () => {
     vi.mocked(fetchSettings).mockResolvedValue(null);
     const screen = await renderProvider();
 
     await expect
-        .element(screen.getByLabelText("spend"))
-        .toHaveTextContent(String(BASE.groceryWeeklySpend));
-    expect(seedDefaults).toHaveBeenCalledOnce();
+        .element(screen.getByText("Couldn’t load the dashboard data."))
+        .toBeInTheDocument();
 });
 
 test("shows an error with a retry that reloads", async () => {

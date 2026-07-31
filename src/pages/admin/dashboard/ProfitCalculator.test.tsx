@@ -13,9 +13,7 @@ vi.mock("./persistence/settingsRepo.ts", async () => {
     const defaults = () => rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
     return {
         fetchSettings: async () => defaults(),
-        seedDefaults: async () => defaults(),
         applyChangeSet: async () => {},
-        clearAllData: async () => defaults(),
     };
 });
 
@@ -39,9 +37,6 @@ test("renders the calculator with a summary and controls", async () => {
         .element(getByRole("heading", { name: "Profit Margin Calculator" }))
         .toBeInTheDocument();
     await expect.element(getByText("Average margin")).toBeInTheDocument();
-    await expect
-        .element(getByRole("button", { name: "Reset" }))
-        .toBeInTheDocument();
 });
 
 test("editing a sell price updates the shared settings state", async () => {
