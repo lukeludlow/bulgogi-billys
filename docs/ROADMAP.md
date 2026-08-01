@@ -141,8 +141,6 @@ Only after the earlier phases prove out (§24 expansion gates):
   cash flow exists; catering and preorders come first.
 - **No feature that doesn't serve cash clarity, margins, or a proven revenue lever** until P0/P1
   are done.
-- **Cleanup (anytime, low effort):** remove the unused `src/pages/order/Order.tsx` component and
-  the vestigial `/enter-password` gate.
 
 ## Suggested build order (high-value deliverables)
 

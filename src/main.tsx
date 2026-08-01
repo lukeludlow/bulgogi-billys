@@ -12,7 +12,6 @@ import Schedule from "@/pages/schedule/Schedule.tsx";
 import { Analytics } from "@vercel/analytics/react";
 import OrderNow from "@/pages/order-now/OrderNow.tsx";
 import Contact from "@/pages/contact/Contact.tsx";
-import EnterPassword from "@/pages/enter-password/EnterPassword.tsx";
 import Blog from "@/pages/blog/Blog.tsx";
 import BlogPost from "@/pages/blog/BlogPost.tsx";
 // Lazy-loaded so the charting library (recharts) and the Supabase client only
@@ -53,10 +52,6 @@ const router = createBrowserRouter([
             {
                 path: "/contact",
                 element: <Contact />,
-            },
-            {
-                path: "/enter-password",
-                element: <EnterPassword />,
             },
             {
                 path: "/blog",

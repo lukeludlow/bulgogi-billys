@@ -215,7 +215,6 @@ Four layers, each with one hard rule:
 | 5 | **Catering-form spam** — a public POST endpoint will be found by bots                                                                        | Turnstile + honeypot field + function-side rate limiting; insert-only table with no anon SELECT (inquiries contain customer PII) |
 | 6 | **Secrets-management debut** — the first Vercel Function introduces the service-role key                                                     | Server-side Vercel environment variables only; never in the repo; never `VITE_`-prefixed; rotate immediately if ever exposed     |
 | 7 | **Non-transactional config saves** — acknowledged in `settingsRepo` today                                                                    | `apply_config(jsonb)` RPC (§7) makes the save atomic                                                                             |
-| 8 | **Dead code implying security that doesn't exist** — `/enter-password` references a nonexistent middleware; its password ships in the bundle | Delete `src/pages/enter-password/` and the unused `src/pages/order/Order.tsx` (already a ROADMAP cleanup item)                   |
 
 ## 11. Immediate action list
 
@@ -226,4 +225,3 @@ Small, ordered, all cheap:
 3. **Adopt `supabase gen types typescript`** and retire the hand-written row types in `rows.ts`.
 4. **Extract `transactionsRepo` + `eventsRepo`** while building roadmap 0.1 (which touches that code anyway).
 5. **Add the `apply_config` RPC** to make config saves atomic.
-6. **Delete dead code**: `/enter-password` gate and `Order.tsx`.

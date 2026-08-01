@@ -55,5 +55,4 @@ test("robots.txt references the www sitemap and blocks admin routes", () => {
     expect(robotsTxt).toContain(`Sitemap: ${BASE_URL}/sitemap.xml`);
     expect(robotsTxt).not.toContain("Sitemap: https://bulgogibillys.com");
     expect(robotsTxt).toContain("Disallow: /admin");
-    expect(robotsTxt).toContain("Disallow: /enter-password");
 });

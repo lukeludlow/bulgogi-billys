@@ -2,5 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /admin-login
-Disallow: /enter-password
 Sitemap: https://www.bulgogibillys.com/sitemap.xml
