@@ -6,8 +6,9 @@ import type { Session } from "@supabase/supabase-js";
 /**
  * Client-side guard for the /admin routes: waits for the Supabase session to
  * load, bounces anonymous visitors to the login page, and reacts to sign-out
- * from anywhere via onAuthStateChange. The settings API independently
- * verifies the access token server-side, so this guard is purely navigation.
+ * from anywhere via onAuthStateChange. This is navigation only, not a
+ * security boundary — Postgres RLS (is_admin()) gates every read and write,
+ * so bypassing this guard reveals nothing.
  */
 export default function RequireAdmin({ children }: { children: ReactNode }) {
     // undefined = still loading, null = signed out

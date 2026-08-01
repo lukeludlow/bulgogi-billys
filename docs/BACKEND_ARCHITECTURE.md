@@ -44,8 +44,7 @@ The one-sentence rule that drives most of this document:
 This "zero server code, database-enforced security" shape is not technical debt
 — it is the cheapest, most secure architecture this project could have, and
 every recommendation below is about **preserving it as long as possible**. The
-genuine debt is narrower: `settingsRepo` has outgrown its name (§7), and two
-pieces of dead code imply security that doesn't exist (§9).
+genuine debt is narrower: `settingsRepo` has outgrown its name (§7).
 
 ## 3. Server vs serverless — and why not Kotlin
 
@@ -231,7 +230,7 @@ Four layers, each with one hard rule:
 
 | Phase                       | Stays the same                                   | Changes                                                                                                                                                                                                                                                    | Trigger being answered                                                          |
 | --------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Now / P0**                | Static SPA + supabase-js + RLS; zero server code | Upgrade Vercel to Pro (§4); add DB keep-alive ping (Vercel Cron); extract transactions/events repos; adopt generated types; delete dead code                                                                                                               | Hobby ToS compliance; transactions-table growth                                 |
+| **Now / P0**                | Static SPA + supabase-js + RLS; zero server code | Upgrade Vercel to Pro (§4); add DB keep-alive ping (Vercel Cron); extract transactions/events repos; adopt generated types                                                                                                                                 | Hobby ToS compliance; transactions-table growth                                 |
 | **P1**                      | Admin path unchanged                             | **First Vercel Function** (catering inquiries: Turnstile + service-role insert + notification email). The first secret appears — server-side Vercel environment variables only, **never** in a `VITE_`-prefixed var (those compile into the public bundle) | First anonymous write + first secret                                            |
 | **P2**                      | Admin stays direct-to-Supabase                   | More functions (preorders, Square payment links, list signup). **Upgrade Supabase to Pro** the day a public feature depends on the DB at runtime                                                                                                           | Money flows through the site; a paused DB becomes an outage                     |
 | **P3**                      | Same shape — more functions, not a server        | Square checkout + webhook functions; role-scoped RLS policies; Drizzle _permitted_ inside functions if RPC proves insufficient                                                                                                                             | Order volume; multi-user access                                                 |

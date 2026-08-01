@@ -174,7 +174,7 @@ export default function ProfitCalculator() {
         <DashboardShell
             title="Profit Calculator"
             heading="Profit Margin Calculator"
-            intro="Bulgogi Billy's — model your menu economics. Edits save to this browser automatically."
+            intro="Bulgogi Billy's — model your menu economics. Edits save automatically."
             sections={SECTIONS}
         >
             <PageMeta

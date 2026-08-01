@@ -106,7 +106,7 @@ export default function ImportData({ settings, onImportTransactions }: Props) {
                 )}
                 {done && (
                     <span className="text-green-700 dark:text-green-400">
-                        {done} Remember to Save to cloud to keep it.
+                        {done} Saved automatically.
                     </span>
                 )}
             </div>
