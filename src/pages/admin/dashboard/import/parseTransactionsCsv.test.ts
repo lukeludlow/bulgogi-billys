@@ -34,8 +34,8 @@ test("parses PM times and 12-hour edge cases", () => {
 TXN-0003,07/11/2026 12:00 PM,Sale,$1.00,Approved,Cash,,,,,,ACCT,e
 TXN-0004,07/11/2026 12:30 AM,Sale,$1.00,Approved,Cash,,,,,,ACCT,e
 TXN-0005,07/11/2026 1:05 PM,Sale,$1.00,Approved,Cash,,,,,,ACCT,e`;
-    const [noon, midnight, afternoon] = parseTransactionsCsv(csv).map(
-        (t) => new Date(t.date).getHours(),
+    const [noon, midnight, afternoon] = parseTransactionsCsv(csv).map((t) =>
+        new Date(t.date).getHours(),
     );
     expect(noon).toBe(12);
     expect(midnight).toBe(0);

@@ -28,7 +28,10 @@ function newId(): string {
 export default function ProfitCalculator() {
     const { settings, setSettings } = useSettings();
 
-    function patchIngredient(id: string, update: (ing: Ingredient) => Ingredient) {
+    function patchIngredient(
+        id: string,
+        update: (ing: Ingredient) => Ingredient,
+    ) {
         setSettings((prev) => ({
             ...prev,
             ingredients: prev.ingredients.map((ingredient) =>
@@ -156,7 +159,10 @@ export default function ProfitCalculator() {
                                       ? { ...line, amount: value }
                                       : line,
                               )
-                            : [...variant.recipe, { ingredientId, amount: value }];
+                            : [
+                                  ...variant.recipe,
+                                  { ingredientId, amount: value },
+                              ];
                         return { ...variant, recipe };
                     }),
                 };
@@ -218,7 +224,9 @@ export default function ProfitCalculator() {
                             item={item}
                             ingredients={settings.ingredients}
                             selectedProtein={settings.selectedProtein}
-                            packagingCostPerOrder={settings.packagingCostPerOrder}
+                            packagingCostPerOrder={
+                                settings.packagingCostPerOrder
+                            }
                             onChangePrice={(variantId, value) =>
                                 updateVariant(item.id, variantId, {
                                     sellPrice: value,

@@ -1,0 +1,7 @@
+# Tool-local config and skills — not project source.
+.claude/
+# Build and test artifacts.
+dist/
+supabase/.temp/
+.vitest-attachments/
+**/__screenshots__/

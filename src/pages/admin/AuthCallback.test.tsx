@@ -68,8 +68,6 @@ test("shows the expired-link message when Supabase reports an error", async () =
         route: "/auth/callback?error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired",
     });
 
-    await expect
-        .element(getByText("Sign-in link expired"))
-        .toBeInTheDocument();
+    await expect.element(getByText("Sign-in link expired")).toBeInTheDocument();
     expect(vi.mocked(supabase.auth.onAuthStateChange)).not.toHaveBeenCalled();
 });

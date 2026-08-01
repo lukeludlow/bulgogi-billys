@@ -9,9 +9,8 @@ import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 // matches no menu price, so blended 50% makes its food cost $5.
 vi.mock("./persistence/settingsRepo.ts", async () => {
     const { DEFAULT_SETTINGS } = await import("./defaults.ts");
-    const { rowsToSettings, settingsToRows } = await import(
-        "./persistence/rows.ts"
-    );
+    const { rowsToSettings, settingsToRows } =
+        await import("./persistence/rows.ts");
     const sale = (id: string, year: number, month: number, day: number) => ({
         id,
         date: new Date(year, month, day, 12).toISOString(),
@@ -95,9 +94,7 @@ test("a sales-derived event without expenses offers Add expenses", async () => {
     await addButton.click();
 
     await expect
-        .element(
-            getByLabelText("Market fee for 2026-07-25 Grogan's Mill"),
-        )
+        .element(getByLabelText("Market fee for 2026-07-25 Grogan's Mill"))
         .toBeInTheDocument();
 });
 
@@ -170,9 +167,7 @@ test("purchases can be added and removed", async () => {
     const { getByRole, getByLabelText } = await renderEvents();
 
     await getByRole("button", { name: "Add purchase" }).click();
-    await expect
-        .element(getByLabelText("Purchase amount"))
-        .toBeInTheDocument();
+    await expect.element(getByLabelText("Purchase amount")).toBeInTheDocument();
     await getByLabelText("Purchase amount").fill("35");
 
     await getByRole("button", { name: "Remove", exact: true }).first().click();

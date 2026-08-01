@@ -7,7 +7,12 @@ import {
     variantMargin,
     weeklyStats,
 } from "./calculations.ts";
-import { PROTEIN_INGREDIENT_ID, type Ingredient, type Settings, type Variant } from "./types.ts";
+import {
+    PROTEIN_INGREDIENT_ID,
+    type Ingredient,
+    type Settings,
+    type Variant,
+} from "./types.ts";
 import { DEFAULT_SETTINGS } from "./defaults.ts";
 
 const ingredients: Ingredient[] = [

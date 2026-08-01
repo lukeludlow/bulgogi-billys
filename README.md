@@ -4,7 +4,7 @@
 
 # Bulgogi Billy's — Official Website
 
-*A production web app built for a viral Korean-American food business.*
+_A production web app built for a viral Korean-American food business._
 
 [![Live Site](https://img.shields.io/badge/Live%20Site-bulgogibillys.com-orange?style=for-the-badge)](https://bulgogibillys.com)
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com)
@@ -29,16 +29,17 @@
 
 ## Overview
 
-Bulgogi Billy's is a Korean-American fusion food business based in the greater Houston, Texas area, serving farmers
-markets
-across The Woodlands, Conroe, and New Caney every weekend. After a candid video of the owner — filmed with smart
-glasses — went viral on TikTok with over 24 million views, the business needed a professional web presence to match the
-moment.
+Bulgogi Billy's is a Korean-American fusion food business based in the greater
+Houston, Texas area, serving farmers markets across The Woodlands, Conroe, and
+New Caney every weekend. After a candid video of the owner — filmed with smart
+glasses — went viral on TikTok with over 24 million views, the business needed a
+professional web presence to match the moment.
 
-This site was built from the ground up to serve as the business's digital home: showcasing the menu, publishing the
-weekly market schedule, handling catering inquiries, and telling the brand's story. It is deployed to production on
-Vercel and fully optimized for search engines and social sharing. All food photography featured on the site was shot by
-me — I'm also a professional photographer.
+This site was built from the ground up to serve as the business's digital home:
+showcasing the menu, publishing the weekly market schedule, handling catering
+inquiries, and telling the brand's story. It is deployed to production on Vercel
+and fully optimized for search engines and social sharing. All food photography
+featured on the site was shot by me — I'm also a professional photographer.
 
 ---
 
@@ -63,20 +64,23 @@ me — I'm also a professional photographer.
 
 **Technical**
 
-- Per-route SEO: unique `<title>`, `<meta description>`, and `<link rel="canonical">` on every page
+- Per-route SEO: unique `<title>`, `<meta description>`, and
+  `<link rel="canonical">` on every page
 - Open Graph meta tags for rich social media sharing previews
-- JSON-LD structured data (`FoodEstablishment` + `LocalBusiness` schema.org types)
+- JSON-LD structured data (`FoodEstablishment` + `LocalBusiness` schema.org
+  types)
 - `sitemap.xml` and `robots.txt` for search engine crawlability
 - Vercel Analytics for traffic monitoring
 - SPA routing with Vercel rewrite rules (`vercel.json`)
-- Private, password-protected **admin profit-margin calculator** with interactive charts
+- Private, password-protected **admin profit-margin calculator** with
+  interactive charts
 
 ---
 
 ## Tech Stack
 
 | Category      | Technology                      | Notes                                 |
-|---------------|---------------------------------|---------------------------------------|
+| ------------- | ------------------------------- | ------------------------------------- |
 | Framework     | React 19 + TypeScript 6         | Strict TypeScript config              |
 | Build Tool    | Vite 8                          | Path aliasing (`@/`) configured       |
 | Styling       | Tailwind CSS 4                  | CSS-first config, custom dark variant |
@@ -122,14 +126,15 @@ public/
 
 ## Admin Dashboard
 
-A private, owner-only **profit-margin calculator** lives behind password protection. It models the
-gross margin of every menu item and size, with live-editable ingredient costs, recipe amounts, and
-menu prices, a Beef/Pork toggle, at-a-glance KPI cards, and three interactive charts. Change any
-number and watch the margins and graphs update instantly.
+A private, owner-only **profit-margin calculator** lives behind password
+protection. It models the gross margin of every menu item and size, with
+live-editable ingredient costs, recipe amounts, and menu prices, a Beef/Pork
+toggle, at-a-glance KPI cards, and three interactive charts. Change any number
+and watch the margins and graphs update instantly.
 
-It's mobile-first, follows the site's light/dark theme, remembers your customized numbers between
-visits, and can optionally sync them to the cloud so they follow you across devices — all running on
-Vercel's free tier.
+It's mobile-first, follows the site's light/dark theme, remembers your
+customized numbers between visits, and can optionally sync them to the cloud so
+they follow you across devices — all running on Vercel's free tier.
 
 ---
 
@@ -142,8 +147,8 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Requires Node 18+. No `.env` variables are needed to run the public
-dev server — the Web3Forms access key is public by design.
+Open `http://localhost:5173`. Requires Node 18+. No `.env` variables are needed
+to run the public dev server — the Web3Forms access key is public by design.
 
 ## TODO
 

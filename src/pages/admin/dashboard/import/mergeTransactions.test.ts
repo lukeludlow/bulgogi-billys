@@ -2,7 +2,11 @@ import { expect, test } from "vitest";
 import { mergeTransactions } from "./mergeTransactions.ts";
 import type { Transaction } from "../types.ts";
 
-const txn = (id: string, date: string, extra: Partial<Transaction> = {}): Transaction => ({
+const txn = (
+    id: string,
+    date: string,
+    extra: Partial<Transaction> = {},
+): Transaction => ({
     id,
     date,
     amount: 10,
@@ -15,7 +19,10 @@ const txn = (id: string, date: string, extra: Partial<Transaction> = {}): Transa
 test("adds new transactions and reports counts", () => {
     const result = mergeTransactions(
         [txn("A", "2026-04-12T14:00:00.000Z")],
-        [txn("A", "2026-04-12T14:00:00.000Z"), txn("B", "2026-04-13T14:00:00.000Z")],
+        [
+            txn("A", "2026-04-12T14:00:00.000Z"),
+            txn("B", "2026-04-13T14:00:00.000Z"),
+        ],
     );
     expect(result.added).toBe(1);
     expect(result.duplicates).toBe(1);

@@ -106,7 +106,12 @@ export default function WeeklySales({ settings, onChangeUnitsSold }: Props) {
                     </TableHead>
                     <TableBody>
                         {stats.lines.map((line) => (
-                            <TableRow key={line.combination.variantId + line.combination.itemId}>
+                            <TableRow
+                                key={
+                                    line.combination.variantId +
+                                    line.combination.itemId
+                                }
+                            >
                                 <TableCell className="font-medium">
                                     {line.combination.label}
                                 </TableCell>
@@ -170,9 +175,15 @@ export default function WeeklySales({ settings, onChangeUnitsSold }: Props) {
                                 width={44}
                             />
                             <Tooltip
-                                cursor={{ fill: theme.muted, fillOpacity: 0.08 }}
+                                cursor={{
+                                    fill: theme.muted,
+                                    fillOpacity: 0.08,
+                                }}
                                 content={
-                                    <ChartTooltip theme={theme} kind="currency" />
+                                    <ChartTooltip
+                                        theme={theme}
+                                        kind="currency"
+                                    />
                                 }
                             />
                             <Bar
@@ -188,7 +199,10 @@ export default function WeeklySales({ settings, onChangeUnitsSold }: Props) {
                                     formatter={(value) =>
                                         `$${Number(value).toFixed(0)}`
                                     }
-                                    style={{ fill: theme.secondary, fontSize: 11 }}
+                                    style={{
+                                        fill: theme.secondary,
+                                        fontSize: 11,
+                                    }}
                                 />
                             </Bar>
                         </BarChart>
@@ -196,8 +210,8 @@ export default function WeeklySales({ settings, onChangeUnitsSold }: Props) {
                 </ChartCard>
             ) : (
                 <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-white/15 dark:text-zinc-400">
-                    Enter how many of each item you sold to see this week's profit
-                    chart.
+                    Enter how many of each item you sold to see this week's
+                    profit chart.
                 </div>
             )}
         </div>

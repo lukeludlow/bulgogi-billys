@@ -1,11 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { DEFAULT_SETTINGS } from "../defaults.ts";
-import type {
-    MarketEvent,
-    Purchase,
-    Settings,
-    Transaction,
-} from "../types.ts";
+import type { MarketEvent, Purchase, Settings, Transaction } from "../types.ts";
 import { computeChangeSet, isEmptyChangeSet } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
 
@@ -161,7 +156,11 @@ describe("computeChangeSet", () => {
                 classification: "probation",
                 employee_hourly_rate: null,
             },
-            { market: "other", classification: null, employee_hourly_rate: null },
+            {
+                market: "other",
+                classification: null,
+                employee_hourly_rate: null,
+            },
         ]);
         expect(isEmptyChangeSet(changeSet)).toBe(false);
         expect(changeSet.settings).toBeUndefined();

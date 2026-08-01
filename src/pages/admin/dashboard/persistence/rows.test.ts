@@ -211,13 +211,21 @@ describe("settingsToRows / rowsToSettings", () => {
         });
         const a: Settings = {
             ...DEFAULT_SETTINGS,
-            purchases: [purchase("b", "2026-07-25"), purchase("a", "2026-07-20")],
+            purchases: [
+                purchase("b", "2026-07-25"),
+                purchase("a", "2026-07-20"),
+            ],
         };
         const b: Settings = {
             ...DEFAULT_SETTINGS,
-            purchases: [purchase("a", "2026-07-20"), purchase("b", "2026-07-25")],
+            purchases: [
+                purchase("a", "2026-07-20"),
+                purchase("b", "2026-07-25"),
+            ],
         };
-        expect(settingsToRows(a).purchases).toEqual(settingsToRows(b).purchases);
+        expect(settingsToRows(a).purchases).toEqual(
+            settingsToRows(b).purchases,
+        );
     });
 
     test("event rows are emitted sorted by date+market for stable diffs", () => {
@@ -231,11 +239,17 @@ describe("settingsToRows / rowsToSettings", () => {
         });
         const a: Settings = {
             ...DEFAULT_SETTINGS,
-            events: [event("2026-07-25", "grogans-mill"), event("2026-07-20", "other")],
+            events: [
+                event("2026-07-25", "grogans-mill"),
+                event("2026-07-20", "other"),
+            ],
         };
         const b: Settings = {
             ...DEFAULT_SETTINGS,
-            events: [event("2026-07-20", "other"), event("2026-07-25", "grogans-mill")],
+            events: [
+                event("2026-07-20", "other"),
+                event("2026-07-25", "grogans-mill"),
+            ],
         };
         expect(settingsToRows(a).events).toEqual(settingsToRows(b).events);
     });

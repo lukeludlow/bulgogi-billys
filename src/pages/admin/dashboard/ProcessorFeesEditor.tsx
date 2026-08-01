@@ -138,9 +138,7 @@ export default function ProcessorFeesEditor({
                                     <TableCell>
                                         <Button
                                             plain
-                                            onClick={() =>
-                                                removeFee(fee.month)
-                                            }
+                                            onClick={() => removeFee(fee.month)}
                                         >
                                             Remove
                                         </Button>
@@ -176,8 +174,8 @@ export default function ProcessorFeesEditor({
 
             {unallocated > 0 && (
                 <Text className="mt-3 text-sm text-amber-700 dark:text-amber-400">
-                    {formatCurrency(unallocated)} in fees belongs to months
-                    with no events, so it isn&apos;t counted anywhere yet.
+                    {formatCurrency(unallocated)} in fees belongs to months with
+                    no events, so it isn&apos;t counted anywhere yet.
                 </Text>
             )}
         </div>

@@ -7,9 +7,8 @@ import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 // renders without a database.
 vi.mock("./persistence/settingsRepo.ts", async () => {
     const { DEFAULT_SETTINGS } = await import("./defaults.ts");
-    const { rowsToSettings, settingsToRows } = await import(
-        "./persistence/rows.ts"
-    );
+    const { rowsToSettings, settingsToRows } =
+        await import("./persistence/rows.ts");
     const defaults = () => rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
     return {
         fetchSettings: async () => defaults(),

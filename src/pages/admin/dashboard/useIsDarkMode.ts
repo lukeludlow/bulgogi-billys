@@ -17,7 +17,10 @@ export function useIsDarkMode(): boolean {
         const update = () => setIsDarkMode(root.classList.contains("dark"));
         update();
         const observer = new MutationObserver(update);
-        observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+        observer.observe(root, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
         return () => observer.disconnect();
     }, []);
 

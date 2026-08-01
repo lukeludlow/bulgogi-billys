@@ -9,12 +9,19 @@ interface PageMetaProps {
     noindex?: boolean;
 }
 
-export default function PageMeta({ title, description, path, noindex }: PageMetaProps) {
+export default function PageMeta({
+    title,
+    description,
+    path,
+    noindex,
+}: PageMetaProps) {
     return (
         <>
             <title>{title}</title>
             <meta name="description" content={description} />
-            {path !== undefined && <link rel="canonical" href={`${BASE_URL}${path}`} />}
+            {path !== undefined && (
+                <link rel="canonical" href={`${BASE_URL}${path}`} />
+            )}
             {noindex && <meta name="robots" content="noindex" />}
         </>
     );

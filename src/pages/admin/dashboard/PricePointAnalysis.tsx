@@ -96,7 +96,9 @@ export default function PricePointAnalysis({ settings, range }: Props) {
                         />
                         <Tooltip
                             cursor={{ fill: theme.muted, fillOpacity: 0.08 }}
-                            content={<ChartTooltip theme={theme} kind="count" />}
+                            content={
+                                <ChartTooltip theme={theme} kind="count" />
+                            }
                         />
                         <Bar
                             dataKey="orders"
@@ -138,7 +140,10 @@ export default function PricePointAnalysis({ settings, range }: Props) {
                         </TableHead>
                         <TableBody>
                             {points.map((point) => (
-                                <PricePointRow key={point.price} point={point} />
+                                <PricePointRow
+                                    key={point.price}
+                                    point={point}
+                                />
                             ))}
                         </TableBody>
                     </Table>

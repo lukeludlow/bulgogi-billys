@@ -18,8 +18,9 @@ afterEach(() => {
 });
 
 test("sends a magic link and shows the check-your-email state", async () => {
-    const { getByLabelText, getByRole, getByText } =
-        await renderWithProviders(<AdminLogin />);
+    const { getByLabelText, getByRole, getByText } = await renderWithProviders(
+        <AdminLogin />,
+    );
 
     await getByLabelText("Email").fill("billy@example.com");
     await getByRole("button", { name: "Send sign-in link" }).click();
@@ -40,8 +41,9 @@ test("shows an error when Supabase rejects the email", async () => {
         error: { message: "Signups not allowed for otp" },
     } as never);
 
-    const { getByLabelText, getByRole, getByText } =
-        await renderWithProviders(<AdminLogin />);
+    const { getByLabelText, getByRole, getByText } = await renderWithProviders(
+        <AdminLogin />,
+    );
 
     await getByLabelText("Email").fill("stranger@example.com");
     await getByRole("button", { name: "Send sign-in link" }).click();
@@ -56,8 +58,9 @@ test("shows an error when the request itself fails", async () => {
         new Error("network down"),
     );
 
-    const { getByLabelText, getByRole, getByText } =
-        await renderWithProviders(<AdminLogin />);
+    const { getByLabelText, getByRole, getByText } = await renderWithProviders(
+        <AdminLogin />,
+    );
 
     await getByLabelText("Email").fill("billy@example.com");
     await getByRole("button", { name: "Send sign-in link" }).click();
@@ -73,8 +76,9 @@ test("clears the error message as soon as the user starts typing again", async (
         error: { message: "rate limited" },
     } as never);
 
-    const { getByLabelText, getByRole, getByText } =
-        await renderWithProviders(<AdminLogin />);
+    const { getByLabelText, getByRole, getByText } = await renderWithProviders(
+        <AdminLogin />,
+    );
 
     await getByLabelText("Email").fill("billy@example.com");
     await getByRole("button", { name: "Send sign-in link" }).click();
@@ -94,10 +98,9 @@ test("redirects straight to the dashboard when already signed in", async () => {
         data: { session: { access_token: "token" } },
     } as never);
 
-    const { getByText } = await renderWithProviders(
-        <AdminLoginRoutes />,
-        { route: "/admin-login" },
-    );
+    const { getByText } = await renderWithProviders(<AdminLoginRoutes />, {
+        route: "/admin-login",
+    });
 
     await expect.element(getByText("dashboard probe")).toBeInTheDocument();
 });

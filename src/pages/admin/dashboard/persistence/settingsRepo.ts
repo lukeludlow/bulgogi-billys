@@ -196,11 +196,9 @@ export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
     if (changeSet.events) {
         if (changeSet.events.upserts.length > 0) {
             unwrap(
-                await supabase
-                    .from("events")
-                    .upsert(changeSet.events.upserts, {
-                        onConflict: "date,market",
-                    }),
+                await supabase.from("events").upsert(changeSet.events.upserts, {
+                    onConflict: "date,market",
+                }),
             );
         }
         for (const key of changeSet.events.deletes) {
@@ -294,4 +292,3 @@ export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
         );
     }
 }
-

@@ -43,8 +43,8 @@ export default function AdminLogin() {
                 <div className="w-full max-w-sm space-y-6">
                     <Heading>Check your email</Heading>
                     <Text>
-                        We sent a sign-in link to <strong>{email}</strong>.
-                        Open it in this browser to finish signing in.
+                        We sent a sign-in link to <strong>{email}</strong>. Open
+                        it in this browser to finish signing in.
                     </Text>
                     <Button
                         outline
@@ -61,8 +61,7 @@ export default function AdminLogin() {
                 >
                     <Heading>Admin sign in</Heading>
                     <Text>
-                        Enter your email and we&apos;ll send you a sign-in
-                        link.
+                        Enter your email and we&apos;ll send you a sign-in link.
                     </Text>
                     <Field>
                         <Label>Email</Label>

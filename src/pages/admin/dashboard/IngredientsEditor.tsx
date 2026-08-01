@@ -44,7 +44,9 @@ export default function IngredientsEditor({
                     <TableHeader>Ingredient</TableHeader>
                     <TableHeader>Unit</TableHeader>
                     <TableHeader>Pricing</TableHeader>
-                    <TableHeader className="text-right">Cost per unit</TableHeader>
+                    <TableHeader className="text-right">
+                        Cost per unit
+                    </TableHeader>
                 </TableRow>
             </TableHead>
             <TableBody>
@@ -70,7 +72,8 @@ export default function IngredientsEditor({
                                         value={ingredient.unit}
                                         onChange={(event) =>
                                             onChange(ingredient.id, {
-                                                unit: event.target.value as Unit,
+                                                unit: event.target
+                                                    .value as Unit,
                                             })
                                         }
                                     >
@@ -100,7 +103,9 @@ export default function IngredientsEditor({
                                     {isBatch ? (
                                         <span className="tabular-nums text-zinc-500 dark:text-zinc-400">
                                             {formatCurrency(
-                                                effectiveCostPerUnit(ingredient),
+                                                effectiveCostPerUnit(
+                                                    ingredient,
+                                                ),
                                             )}
                                             <span className="ml-0.5">
                                                 /{ingredient.unit}

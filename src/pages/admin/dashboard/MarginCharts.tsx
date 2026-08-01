@@ -55,12 +55,23 @@ const round1 = (value: number) => Math.round(value * 10) / 10;
 interface TooltipProps {
     active?: boolean;
     label?: string;
-    payload?: Array<{ name: string; value: number; color: string; dataKey: string }>;
+    payload?: Array<{
+        name: string;
+        value: number;
+        color: string;
+        dataKey: string;
+    }>;
     theme: Theme;
     kind: "percent" | "currency" | "count";
 }
 
-export function ChartTooltip({ active, label, payload, theme, kind }: TooltipProps) {
+export function ChartTooltip({
+    active,
+    label,
+    payload,
+    theme,
+    kind,
+}: TooltipProps) {
     if (!active || !payload || payload.length === 0) return null;
     const format = (value: number) =>
         kind === "percent"
@@ -227,7 +238,9 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
                         />
                         <Tooltip
                             cursor={{ fill: theme.muted, fillOpacity: 0.08 }}
-                            content={<ChartTooltip theme={theme} kind="percent" />}
+                            content={
+                                <ChartTooltip theme={theme} kind="percent" />
+                            }
                         />
                         <Bar
                             dataKey="marginPercent"
@@ -270,10 +283,15 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
                         />
                         <Tooltip
                             cursor={{ fill: theme.muted, fillOpacity: 0.08 }}
-                            content={<ChartTooltip theme={theme} kind="currency" />}
+                            content={
+                                <ChartTooltip theme={theme} kind="currency" />
+                            }
                         />
                         <Legend
-                            wrapperStyle={{ fontSize: 12, color: theme.secondary }}
+                            wrapperStyle={{
+                                fontSize: 12,
+                                color: theme.secondary,
+                            }}
                         />
                         <Bar
                             dataKey="revenue"
@@ -314,7 +332,9 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
                         />
                         <Tooltip
                             cursor={{ fill: theme.muted, fillOpacity: 0.08 }}
-                            content={<ChartTooltip theme={theme} kind="currency" />}
+                            content={
+                                <ChartTooltip theme={theme} kind="currency" />
+                            }
                         />
                         <Bar
                             dataKey="grossProfit"
@@ -326,7 +346,9 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
                             <LabelList
                                 dataKey="grossProfit"
                                 position="top"
-                                formatter={(value) => `$${Number(value).toFixed(2)}`}
+                                formatter={(value) =>
+                                    `$${Number(value).toFixed(2)}`
+                                }
                                 style={{ fill: theme.secondary, fontSize: 11 }}
                             />
                         </Bar>

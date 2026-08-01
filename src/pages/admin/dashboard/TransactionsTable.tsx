@@ -74,7 +74,9 @@ export default function TransactionsTable({ settings, range }: Props) {
                     <TableHead>
                         <TableRow>
                             <TableHeader>Date</TableHeader>
-                            <TableHeader className="text-right">Amount</TableHeader>
+                            <TableHeader className="text-right">
+                                Amount
+                            </TableHeader>
                             <TableHeader>Method</TableHeader>
                             <TableHeader>Profit basis</TableHeader>
                         </TableRow>

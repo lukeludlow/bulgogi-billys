@@ -198,8 +198,8 @@ export default function PurchasesEditor({
                                     className="text-center text-zinc-500 dark:text-zinc-400"
                                 >
                                     No purchases yet — log each shopping trip
-                                    here and its cost is split across the
-                                    events it supplied.
+                                    here and its cost is split across the events
+                                    it supplied.
                                 </TableCell>
                             </TableRow>
                         )}

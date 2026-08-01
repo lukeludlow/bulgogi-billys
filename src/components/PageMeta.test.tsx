@@ -25,9 +25,7 @@ test("renders the page title and meta description into the document head", async
 });
 
 test("renders a www canonical URL built from the path", async () => {
-    render(
-        <PageMeta title="Menu" description="The menu." path="/menu" />,
-    );
+    render(<PageMeta title="Menu" description="The menu." path="/menu" />);
 
     await expect
         .poll(() =>

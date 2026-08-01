@@ -13,12 +13,7 @@ import {
     rollupByMarket,
     type AllocationEvent,
 } from "./eventAnalytics.ts";
-import type {
-    MarketEvent,
-    Purchase,
-    Settings,
-    Transaction,
-} from "./types.ts";
+import type { MarketEvent, Purchase, Settings, Transaction } from "./types.ts";
 
 describe("marketForDate", () => {
     test("Saturdays are Grogan's Mill", () => {
@@ -79,9 +74,9 @@ describe("resolveMarket", () => {
     });
 
     test("a stored override wins over the schedule", () => {
-        expect(
-            resolveMarket("2026-07-25", { "2026-07-25": "new-caney" }),
-        ).toBe("new-caney");
+        expect(resolveMarket("2026-07-25", { "2026-07-25": "new-caney" })).toBe(
+            "new-caney",
+        );
     });
 });
 
@@ -111,7 +106,10 @@ function purchase(
 
 describe("allocatePurchases", () => {
     test("splits a purchase across its span proportional to sales", () => {
-        const events = [allocEvent("2026-07-25", 300), allocEvent("2026-07-26", 100)];
+        const events = [
+            allocEvent("2026-07-25", 300),
+            allocEvent("2026-07-26", 100),
+        ];
         const { byEvent, unallocated } = allocatePurchases(
             [purchase("p1", "2026-07-24", "propane", 40)],
             events,
@@ -290,7 +288,10 @@ describe("allocateProcessorFees", () => {
     });
 
     test("events in other months don't absorb the fee", () => {
-        const june = { ...allocEvent("2026-06-27", 100), key: "2026-06-27 grogans-mill" };
+        const june = {
+            ...allocEvent("2026-06-27", 100),
+            key: "2026-06-27 grogans-mill",
+        };
         const july = allocEvent("2026-07-11", 100);
         const { byEvent } = allocateProcessorFees(
             [{ month: "2026-07", amount: 12 }],
@@ -401,7 +402,9 @@ describe("buildEventReport", () => {
         expect(saturday.market).toBe("new-caney");
         expect(saturday.grossSales).toBe(20);
         expect(saturday.expenses).not.toBeNull();
-        expect(report.filter((row) => row.date === "2026-07-25")).toHaveLength(1);
+        expect(report.filter((row) => row.date === "2026-07-25")).toHaveLength(
+            1,
+        );
     });
 
     test("allocated purchases and fees land on events without expense rows", () => {

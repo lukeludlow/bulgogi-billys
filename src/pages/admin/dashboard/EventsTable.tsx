@@ -223,7 +223,9 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
                             <TableHeader className="text-right">
                                 Propane
                             </TableHeader>
-                            <TableHeader className="text-right">Ice</TableHeader>
+                            <TableHeader className="text-right">
+                                Ice
+                            </TableHeader>
                             <TableHeader className="text-right">
                                 Card fees
                             </TableHeader>
@@ -295,9 +297,7 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
                                 aria-label="Event market"
                                 value={newMarket}
                                 onChange={(event) =>
-                                    setNewMarket(
-                                        event.target.value as Market,
-                                    )
+                                    setNewMarket(event.target.value as Market)
                                 }
                             >
                                 {MARKETS.map((market) => (
@@ -450,7 +450,9 @@ function EventRow({
             {allocatedCell(row.allocatedFoodCost, true)}
             {expenses ? (
                 <>
-                    <TableCell>{expenseField("Market fee", "marketFee")}</TableCell>
+                    <TableCell>
+                        {expenseField("Market fee", "marketFee")}
+                    </TableCell>
                     <TableCell>{expenseField("Waste", "waste")}</TableCell>
                     <TableCell>
                         <DualUnitField
@@ -496,10 +498,7 @@ function EventRow({
                 </>
             ) : (
                 <TableCell colSpan={6}>
-                    <Button
-                        outline
-                        onClick={() => onAddExpenses(date, market)}
-                    >
+                    <Button outline onClick={() => onAddExpenses(date, market)}>
                         Add expenses
                     </Button>
                 </TableCell>

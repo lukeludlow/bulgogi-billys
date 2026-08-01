@@ -13,7 +13,12 @@ const INGREDIENTS: Ingredient[] = [
     { id: "pork", name: "Pork bulgogi", unit: "lb", costPerUnit: 4.5 },
     { id: "fries", name: "French fries (raw)", unit: "oz", costPerUnit: 0.08 },
     { id: "rice", name: "Steamed rice", unit: "oz", costPerUnit: 0.06 },
-    { id: "cheese", name: "Cheddar-jack cheese", unit: "oz", costPerUnit: 0.25 },
+    {
+        id: "cheese",
+        name: "Cheddar-jack cheese",
+        unit: "oz",
+        costPerUnit: 0.25,
+    },
     {
         // Priced by batch to demo the sub-recipe builder: an ~80 oz batch that
         // costs $16 in ingredients works out to the same $0.20/oz.
@@ -35,7 +40,12 @@ const INGREDIENTS: Ingredient[] = [
     { id: "sriracha", name: "Sriracha", unit: "oz", costPerUnit: 0.1 },
     { id: "sourCream", name: "Sour cream", unit: "oz", costPerUnit: 0.12 },
     { id: "kimchi", name: "Kimchi", unit: "oz", costPerUnit: 0.2 },
-    { id: "cabbage", name: "Pickled red cabbage", unit: "oz", costPerUnit: 0.1 },
+    {
+        id: "cabbage",
+        name: "Pickled red cabbage",
+        unit: "oz",
+        costPerUnit: 0.1,
+    },
     { id: "tortilla", name: "Corn tortilla", unit: "each", costPerUnit: 0.15 },
 ];
 

@@ -1,8 +1,4 @@
-import {
-    formatCurrency,
-    formatPercent,
-    summaryStats,
-} from "./calculations.ts";
+import { formatCurrency, formatPercent, summaryStats } from "./calculations.ts";
 import type { Settings } from "./types.ts";
 
 export function StatCard({
@@ -54,12 +50,16 @@ export default function SummaryCards({ settings }: { settings: Settings }) {
             />
             <StatCard
                 label="Best margin"
-                value={stats.best ? formatPercent(stats.best.marginPercent) : "—"}
+                value={
+                    stats.best ? formatPercent(stats.best.marginPercent) : "—"
+                }
                 sub={stats.best?.label}
             />
             <StatCard
                 label="Lowest margin"
-                value={stats.worst ? formatPercent(stats.worst.marginPercent) : "—"}
+                value={
+                    stats.worst ? formatPercent(stats.worst.marginPercent) : "—"
+                }
                 sub={stats.worst?.label}
             />
             <StatCard

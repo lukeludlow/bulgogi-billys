@@ -16,7 +16,11 @@
 // importer's local-time parse — the whole dashboard assumes it is imported
 // and viewed in the business's own timezone.
 
-import { buildProfitIndex, isCountable, resolveWithIndex } from "./salesAnalytics.ts";
+import {
+    buildProfitIndex,
+    isCountable,
+    resolveWithIndex,
+} from "./salesAnalytics.ts";
 import {
     MARKETS,
     PURCHASE_CATEGORIES,
@@ -351,7 +355,10 @@ export function buildEventAllocations(settings: Settings): EventAllocations {
 export function buildEventReport(settings: Settings): EventReportRow[] {
     const sales = bucketSales(settings);
     const expenseRows = new Map(
-        settings.events.map((event) => [`${event.date} ${event.market}`, event]),
+        settings.events.map((event) => [
+            `${event.date} ${event.market}`,
+            event,
+        ]),
     );
     const events = allocationEvents(sales, settings);
     const purchaseAlloc = allocatePurchases(settings.purchases, events);

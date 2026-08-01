@@ -31,7 +31,10 @@ export function effectiveCostPerUnit(ingredient: Ingredient): number {
     if (ingredient.pricing === "batch" && ingredient.batch) {
         const { yield: batchYield, lines } = ingredient.batch;
         if (batchYield > 0) {
-            const total = lines.reduce((sum, line) => sum + (line.cost || 0), 0);
+            const total = lines.reduce(
+                (sum, line) => sum + (line.cost || 0),
+                0,
+            );
             return total / batchYield;
         }
     }
@@ -50,7 +53,11 @@ export function variantCost(
 ): number {
     let cost = packagingCostPerOrder || 0;
     for (const line of variant.recipe) {
-        const ingredient = resolveIngredient(line.ingredientId, ingredients, protein);
+        const ingredient = resolveIngredient(
+            line.ingredientId,
+            ingredients,
+            protein,
+        );
         if (ingredient) cost += line.amount * effectiveCostPerUnit(ingredient);
     }
     return cost;
@@ -71,7 +78,12 @@ export function variantMargin(
     packagingCostPerOrder: number,
 ): Margin {
     const revenue = variant.sellPrice || 0;
-    const cost = variantCost(variant, ingredients, protein, packagingCostPerOrder);
+    const cost = variantCost(
+        variant,
+        ingredients,
+        protein,
+        packagingCostPerOrder,
+    );
     const grossProfit = revenue - cost;
     const marginPercent = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
     const foodCostPercent = revenue > 0 ? (cost / revenue) * 100 : 0;
@@ -80,7 +92,8 @@ export function variantMargin(
 
 /** Every item×size combination flattened, with its economics — for charts/tables. */
 export function allCombinations(settings: Settings): Combination[] {
-    const { ingredients, items, selectedProtein, packagingCostPerOrder } = settings;
+    const { ingredients, items, selectedProtein, packagingCostPerOrder } =
+        settings;
     const combinations: Combination[] = [];
     for (const item of items) {
         for (const variant of item.variants) {
@@ -135,7 +148,8 @@ export function summaryStats(settings: Settings): SummaryStats {
     let grossProfitSum = 0;
     for (const combination of combinations) {
         if (combination.marginPercent > best.marginPercent) best = combination;
-        if (combination.marginPercent < worst.marginPercent) worst = combination;
+        if (combination.marginPercent < worst.marginPercent)
+            worst = combination;
         marginSum += combination.marginPercent;
         foodCostSum += combination.foodCostPercent;
         grossProfitSum += combination.grossProfit;
@@ -150,7 +164,9 @@ export function summaryStats(settings: Settings): SummaryStats {
         avgFoodCostPercent: foodCostSum / count,
         avgGrossProfit,
         breakEvenOrdersPerWeek:
-            avgGrossProfit > 0 ? settings.groceryWeeklySpend / avgGrossProfit : null,
+            avgGrossProfit > 0
+                ? settings.groceryWeeklySpend / avgGrossProfit
+                : null,
     };
 }
 

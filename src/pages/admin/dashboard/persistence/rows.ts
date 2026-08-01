@@ -129,9 +129,7 @@ export interface DbSnapshot {
 export function settingsToRows(settings: Settings): DbSnapshot {
     const batchLines: BatchLineRow[] = [];
     const ingredients = settings.ingredients.map((ingredient, position) => {
-        for (const [index, line] of (
-            ingredient.batch?.lines ?? []
-        ).entries()) {
+        for (const [index, line] of (ingredient.batch?.lines ?? []).entries()) {
             batchLines.push({
                 ingredient_id: ingredient.id,
                 id: line.id,
@@ -374,8 +372,7 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         if ((MARKETS as string[]).includes(row.market)) {
             marketClassifications[row.market as Market] =
                 row.classification as MarketClassification | null;
-            marketHourlyRates[row.market as Market] =
-                row.employee_hourly_rate;
+            marketHourlyRates[row.market as Market] = row.employee_hourly_rate;
         }
     }
 

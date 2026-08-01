@@ -68,13 +68,17 @@ test("shows a loading state, then the children with the fetched settings", async
     );
     const screen = await renderProvider();
 
-    await expect.element(screen.getByText("Loading dashboard…")).toBeInTheDocument();
+    await expect
+        .element(screen.getByText("Loading dashboard…"))
+        .toBeInTheDocument();
 
     resolve(structuredClone(BASE));
     await expect
         .element(screen.getByLabelText("spend"))
         .toHaveTextContent(String(BASE.groceryWeeklySpend));
-    await expect.element(screen.getByLabelText("status")).toHaveTextContent("saved");
+    await expect
+        .element(screen.getByLabelText("status"))
+        .toHaveTextContent("saved");
 });
 
 test("an empty database shows the error screen instead of seeding", async () => {
@@ -102,7 +106,9 @@ test("shows an error with a retry that reloads", async () => {
 
 test("an edit autosaves exactly once after the debounce", async () => {
     const screen = await renderProvider();
-    await expect.element(screen.getByLabelText("status")).toHaveTextContent("saved");
+    await expect
+        .element(screen.getByLabelText("status"))
+        .toHaveTextContent("saved");
 
     await screen.getByRole("button", { name: "bump" }).click();
     await expect
@@ -125,7 +131,9 @@ test("an edit made during a save is saved right after it", async () => {
         }),
     );
     const screen = await renderProvider();
-    await expect.element(screen.getByLabelText("status")).toHaveTextContent("saved");
+    await expect
+        .element(screen.getByLabelText("status"))
+        .toHaveTextContent("saved");
 
     await screen.getByRole("button", { name: "bump" }).click();
     await expect
@@ -149,7 +157,9 @@ test("an edit made during a save is saved right after it", async () => {
 test("a failed save shows an error and retries until it succeeds", async () => {
     vi.mocked(applyChangeSet).mockRejectedValueOnce(new Error("offline"));
     const screen = await renderProvider();
-    await expect.element(screen.getByLabelText("status")).toHaveTextContent("saved");
+    await expect
+        .element(screen.getByLabelText("status"))
+        .toHaveTextContent("saved");
 
     await screen.getByRole("button", { name: "bump" }).click();
     await expect
@@ -172,7 +182,9 @@ test("a journaled edit from a previous session is adopted and persisted", async 
     const screen = await renderProvider();
 
     // The journal wins over the DB copy and is written back through autosave.
-    await expect.element(screen.getByLabelText("spend")).toHaveTextContent("777");
+    await expect
+        .element(screen.getByLabelText("spend"))
+        .toHaveTextContent("777");
     await expect
         .element(screen.getByLabelText("status"), { timeout: 5_000 })
         .toHaveTextContent("saved");

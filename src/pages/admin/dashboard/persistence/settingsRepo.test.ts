@@ -76,9 +76,7 @@ beforeEach(() => {
 /** The mutation calls (table + method) in the order they were issued. */
 function mutationOrder(): string[] {
     return mock.calls
-        .filter((call) =>
-            ["upsert", "insert", "delete"].includes(call.method),
-        )
+        .filter((call) => ["upsert", "insert", "delete"].includes(call.method))
         .map((call) => `${call.table}.${call.method}`);
 }
 
@@ -152,8 +150,7 @@ describe("fetchSettings", () => {
         );
 
         const rangeCalls = mock.calls.filter(
-            (call) =>
-                call.table === "transactions" && call.method === "range",
+            (call) => call.table === "transactions" && call.method === "range",
         );
         expect(rangeCalls.map((call) => call.args)).toEqual([
             [0, 999],
@@ -167,8 +164,7 @@ describe("fetchSettings", () => {
         await fetchSettings();
 
         const rangeCalls = mock.calls.filter(
-            (call) =>
-                call.table === "transactions" && call.method === "range",
+            (call) => call.table === "transactions" && call.method === "range",
         );
         expect(rangeCalls.map((call) => call.args)).toEqual([[0, 999]]);
     });
@@ -351,4 +347,3 @@ describe("applyChangeSet", () => {
         ).rejects.toThrow("row level security violation");
     });
 });
-

@@ -55,15 +55,15 @@ test("resolveTransactionProfit matches a menu price to its recipe cost", () => {
 
 test("filterByRange anchors the window to the latest transaction", () => {
     const txns = [txn(9, 0), txn(9, 3), txn(9, 10), txn(9, 40)];
-    expect(filterByRange(txns, { window: "7d", granularity: "day" })).toHaveLength(
-        2,
-    );
+    expect(
+        filterByRange(txns, { window: "7d", granularity: "day" }),
+    ).toHaveLength(2);
     expect(
         filterByRange(txns, { window: "30d", granularity: "day" }),
     ).toHaveLength(3);
-    expect(filterByRange(txns, { window: "all", granularity: "day" })).toHaveLength(
-        4,
-    );
+    expect(
+        filterByRange(txns, { window: "all", granularity: "day" }),
+    ).toHaveLength(4);
 });
 
 test("bucketByPeriod groups countable sales and excludes non-approved", () => {

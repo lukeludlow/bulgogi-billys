@@ -85,7 +85,10 @@ export default function SalesOverTime({ settings, range }: Props) {
                             data={chartData}
                             margin={{ top: 16, right: 12, left: 0, bottom: 0 }}
                         >
-                            <CartesianGrid vertical={false} stroke={theme.grid} />
+                            <CartesianGrid
+                                vertical={false}
+                                stroke={theme.grid}
+                            />
                             <XAxis
                                 dataKey="name"
                                 angle={-35}
@@ -104,9 +107,15 @@ export default function SalesOverTime({ settings, range }: Props) {
                                 width={52}
                             />
                             <Tooltip
-                                cursor={{ stroke: theme.muted, strokeOpacity: 0.3 }}
+                                cursor={{
+                                    stroke: theme.muted,
+                                    strokeOpacity: 0.3,
+                                }}
                                 content={
-                                    <ChartTooltip theme={theme} kind="currency" />
+                                    <ChartTooltip
+                                        theme={theme}
+                                        kind="currency"
+                                    />
                                 }
                             />
                             <Legend

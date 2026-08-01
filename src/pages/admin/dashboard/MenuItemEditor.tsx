@@ -35,7 +35,11 @@ interface Props {
     selectedProtein: Protein;
     packagingCostPerOrder: number;
     onChangePrice: (variantId: string, value: number) => void;
-    onChangeRecipe: (variantId: string, ingredientId: string, value: number) => void;
+    onChangeRecipe: (
+        variantId: string,
+        ingredientId: string,
+        value: number,
+    ) => void;
 }
 
 export default function MenuItemEditor({
@@ -62,12 +66,18 @@ export default function MenuItemEditor({
             return { name: `Protein (${selectedProtein})`, unit: "lb" };
         }
         const ingredient = ingredients.find((i) => i.id === ingredientId);
-        return { name: ingredient?.name ?? ingredientId, unit: ingredient?.unit ?? "" };
+        return {
+            name: ingredient?.name ?? ingredientId,
+            unit: ingredient?.unit ?? "",
+        };
     };
 
     const amountFor = (variantId: string, ingredientId: string) => {
         const variant = item.variants.find((v) => v.id === variantId);
-        return variant?.recipe.find((l) => l.ingredientId === ingredientId)?.amount ?? 0;
+        return (
+            variant?.recipe.find((l) => l.ingredientId === ingredientId)
+                ?.amount ?? 0
+        );
     };
 
     return (
@@ -119,7 +129,11 @@ export default function MenuItemEditor({
                                     {formatCurrency(margin.grossProfit)}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Badge color={marginColor(margin.marginPercent)}>
+                                    <Badge
+                                        color={marginColor(
+                                            margin.marginPercent,
+                                        )}
+                                    >
                                         {formatPercent(margin.marginPercent)}
                                     </Badge>
                                 </TableCell>
@@ -138,7 +152,10 @@ export default function MenuItemEditor({
                     <TableRow>
                         <TableHeader>Ingredient</TableHeader>
                         {item.variants.map((variant) => (
-                            <TableHeader key={variant.id} className="text-right">
+                            <TableHeader
+                                key={variant.id}
+                                className="text-right"
+                            >
                                 {variant.label}
                             </TableHeader>
                         ))}
@@ -158,7 +175,9 @@ export default function MenuItemEditor({
                                 {item.variants.map((variant) => (
                                     <TableCell
                                         key={variant.id}
-                                        className={unit === "lb" ? "w-48" : "w-32"}
+                                        className={
+                                            unit === "lb" ? "w-48" : "w-32"
+                                        }
                                     >
                                         {unit === "lb" ? (
                                             // Billy weighs meat in lb + oz;

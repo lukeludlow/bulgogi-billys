@@ -42,7 +42,11 @@ interface Props {
 }
 
 /** Per-market totals with the manually chosen five-way classification. */
-export default function MarketRollups({ settings, setSettings, report }: Props) {
+export default function MarketRollups({
+    settings,
+    setSettings,
+    report,
+}: Props) {
     const rollups = rollupByMarket(report, settings);
 
     return (
@@ -53,7 +57,9 @@ export default function MarketRollups({ settings, setSettings, report }: Props) 
                         <TableRow>
                             <TableHeader>Market</TableHeader>
                             <TableHeader>Classification</TableHeader>
-                            <TableHeader className="text-right">Events</TableHeader>
+                            <TableHeader className="text-right">
+                                Events
+                            </TableHeader>
                             <TableHeader className="text-right">
                                 Pre-tax sales
                             </TableHeader>
@@ -85,9 +91,12 @@ export default function MarketRollups({ settings, setSettings, report }: Props) 
                                             <Select
                                                 aria-label={`Classification for ${MARKET_LABELS[rollup.market]}`}
                                                 className="max-w-36"
-                                                value={rollup.classification ?? ""}
+                                                value={
+                                                    rollup.classification ?? ""
+                                                }
                                                 onChange={(event) => {
-                                                    const raw = event.target.value;
+                                                    const raw =
+                                                        event.target.value;
                                                     setSettings((prev) => ({
                                                         ...prev,
                                                         marketClassifications: {
@@ -118,13 +127,15 @@ export default function MarketRollups({ settings, setSettings, report }: Props) 
                                                 <Badge
                                                     color={
                                                         CLASSIFICATION_COLORS[
-                                                            rollup.classification
+                                                            rollup
+                                                                .classification
                                                         ]
                                                     }
                                                 >
                                                     {
                                                         CLASSIFICATION_LABELS[
-                                                            rollup.classification
+                                                            rollup
+                                                                .classification
                                                         ]
                                                     }
                                                 </Badge>

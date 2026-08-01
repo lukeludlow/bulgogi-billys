@@ -7,9 +7,8 @@ import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 // renders without a database.
 vi.mock("./persistence/settingsRepo.ts", async () => {
     const { DEFAULT_SETTINGS } = await import("./defaults.ts");
-    const { rowsToSettings, settingsToRows } = await import(
-        "./persistence/rows.ts"
-    );
+    const { rowsToSettings, settingsToRows } =
+        await import("./persistence/rows.ts");
     const defaults = () => rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
     return {
         fetchSettings: async () => defaults(),
@@ -56,8 +55,12 @@ test("meat amounts are entered as pounds and ounces", async () => {
     const { getByLabelText } = await renderCalculator();
 
     // The default recipe uses 0.15 lb of protein → 0 lb 2.4 oz.
-    const pounds = getByLabelText("Bulgogi Fries Small Protein (beef) amount lb");
-    const ounces = getByLabelText("Bulgogi Fries Small Protein (beef) amount oz");
+    const pounds = getByLabelText(
+        "Bulgogi Fries Small Protein (beef) amount lb",
+    );
+    const ounces = getByLabelText(
+        "Bulgogi Fries Small Protein (beef) amount oz",
+    );
     await expect.element(pounds).toHaveValue(0);
     await expect.element(ounces).toHaveValue(2.4);
 
