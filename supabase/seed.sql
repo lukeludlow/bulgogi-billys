@@ -67,7 +67,8 @@ where users.email in (select email from public.admin_users)
 
 -- ── baseline dashboard data ─────────────────────────────────────────────────
 
--- Singleton row; the column defaults match DEFAULT_SETTINGS in the app.
+-- Singleton row; the column defaults match DEFAULT_SETTINGS in
+-- src/test/fixtures/defaultSettings.ts (test fixture).
 insert into public.settings (id) values (1) on conflict (id) do nothing;
 
 -- A slice of the app's default menu — enough for the calculator to compute

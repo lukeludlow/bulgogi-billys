@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from "vitest";
 import Events from "./Events.tsx";
-import { SettingsProvider } from "../SettingsContext.tsx";
+import { SettingsProvider } from "@/pages/admin/SettingsContext.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 
 // Resolve the provider's mount-load instantly with fixture data: one Saturday
@@ -8,7 +8,8 @@ import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 // has expenses. Simple rates keep the contribution math exact — a $10 sale
 // matches no menu price, so blended 50% makes its food cost $5.
 vi.mock("./persistence/settingsRepo.ts", async () => {
-    const { DEFAULT_SETTINGS } = await import("./defaults.ts");
+    const { DEFAULT_SETTINGS } =
+        await import("@/test/fixtures/defaultSettings.ts");
     const { rowsToSettings, settingsToRows } =
         await import("./persistence/rows.ts");
     const sale = (id: string, year: number, month: number, day: number) => ({

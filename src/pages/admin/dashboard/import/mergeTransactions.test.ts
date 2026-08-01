@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { mergeTransactions } from "./mergeTransactions.ts";
-import type { Transaction } from "../types.ts";
+import type { Transaction } from "@/pages/admin/dashboard/types.ts";
 
 const txn = (
     id: string,

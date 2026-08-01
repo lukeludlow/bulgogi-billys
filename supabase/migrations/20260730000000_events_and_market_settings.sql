@@ -25,8 +25,8 @@ create table public.market_classifications (
         check (classification in ('growth', 'core', 'development', 'probation', 'exit'))
 );
 
--- Defaults must match DEFAULT_SETTINGS in the app (same convention as
--- blended_food_cost_percent = 32).
+-- Defaults must match DEFAULT_SETTINGS in src/test/fixtures/defaultSettings.ts
+-- (same convention as blended_food_cost_percent = 32).
 alter table public.settings
     add column employee_hourly_rate numeric not null default 12,
     add column sales_tax_rate_percent numeric not null default 8.25;

@@ -2,7 +2,7 @@
 // a dirty edit is written to localStorage on the way out and replayed through
 // autosave by the next session (see SettingsContext).
 
-import type { Settings } from "../types.ts";
+import type { Settings } from "@/pages/admin/dashboard/types.ts";
 
 const PENDING_KEY = "bb_admin_pending";
 /** The pre-Supabase localStorage cache; cleared on load, never written. */

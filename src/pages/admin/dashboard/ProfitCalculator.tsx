@@ -8,7 +8,7 @@ import IngredientsEditor from "./IngredientsEditor.tsx";
 import MenuItemEditor from "./MenuItemEditor.tsx";
 import NumberField from "./NumberField.tsx";
 import type { NavSection } from "./DashboardNav.tsx";
-import { useSettings } from "../SettingsContext.tsx";
+import { useSettings } from "@/pages/admin/SettingsContext.tsx";
 import type { Batch, BatchLine, Ingredient } from "./types.ts";
 
 const SECTIONS: NavSection[] = [

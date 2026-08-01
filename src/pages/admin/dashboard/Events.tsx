@@ -14,7 +14,7 @@ import {
     buildEventAllocations,
     buildEventReport,
 } from "./eventAnalytics.ts";
-import { useSettings } from "../SettingsContext.tsx";
+import { useSettings } from "@/pages/admin/SettingsContext.tsx";
 import { MARKETS } from "./types.ts";
 
 const SECTIONS: NavSection[] = [

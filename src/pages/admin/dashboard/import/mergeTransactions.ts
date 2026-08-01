@@ -1,4 +1,4 @@
-import type { Transaction } from "../types.ts";
+import type { Transaction } from "@/pages/admin/dashboard/types.ts";
 
 export interface MergeResult {
     transactions: Transaction[];

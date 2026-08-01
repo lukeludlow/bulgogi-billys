@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_SETTINGS } from "../defaults.ts";
-import type { MarketEvent, Purchase, Settings, Transaction } from "../types.ts";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
+import type {
+    MarketEvent,
+    Purchase,
+    Settings,
+    Transaction,
+} from "@/pages/admin/dashboard/types.ts";
 import { computeChangeSet, isEmptyChangeSet } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
 

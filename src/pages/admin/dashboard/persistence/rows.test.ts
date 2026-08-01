@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_SETTINGS } from "../defaults.ts";
-import { PROTEIN_INGREDIENT_ID, type Settings } from "../types.ts";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
+import {
+    PROTEIN_INGREDIENT_ID,
+    type Settings,
+} from "@/pages/admin/dashboard/types.ts";
 import { rowsToSettings, settingsToRows, transactionToRow } from "./rows.ts";
 
 /** The canonical shape settings take after one trip through the mappers. */

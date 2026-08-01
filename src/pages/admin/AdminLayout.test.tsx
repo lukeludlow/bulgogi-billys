@@ -8,7 +8,8 @@ import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 // Resolve the provider's mount-load instantly with the defaults so the pages
 // render without a database.
 vi.mock("./dashboard/persistence/settingsRepo.ts", async () => {
-    const { DEFAULT_SETTINGS } = await import("./dashboard/defaults.ts");
+    const { DEFAULT_SETTINGS } =
+        await import("@/test/fixtures/defaultSettings.ts");
     const { rowsToSettings, settingsToRows } =
         await import("./dashboard/persistence/rows.ts");
     const defaults = () => rowsToSettings(settingsToRows(DEFAULT_SETTINGS));

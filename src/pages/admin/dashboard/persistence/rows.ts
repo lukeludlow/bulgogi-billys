@@ -14,7 +14,7 @@ import {
     type PurchaseCategory,
     type Settings,
     type Transaction,
-} from "../types.ts";
+} from "@/pages/admin/dashboard/types.ts";
 
 export interface SettingsRow {
     id: number;

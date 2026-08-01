@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_SETTINGS } from "./defaults.ts";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 import {
     allocatePurchases,
     allocateProcessorFees,

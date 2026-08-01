@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { SettingsProvider, useSettings } from "./SettingsContext.tsx";
-import { DEFAULT_SETTINGS } from "./dashboard/defaults.ts";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 import {
     rowsToSettings,
     settingsToRows,

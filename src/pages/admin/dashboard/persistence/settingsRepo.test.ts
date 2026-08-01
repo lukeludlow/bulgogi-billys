@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { DEFAULT_SETTINGS } from "../defaults.ts";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 import { computeChangeSet } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
 import { applyChangeSet, fetchSettings } from "./settingsRepo.ts";

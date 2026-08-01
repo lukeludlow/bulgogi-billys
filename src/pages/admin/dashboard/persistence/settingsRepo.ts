@@ -5,7 +5,7 @@
 // acceptable.
 
 import { supabase } from "@/lib/supabase.ts";
-import type { Settings } from "../types.ts";
+import type { Settings } from "@/pages/admin/dashboard/types.ts";
 import type { ChangeSet } from "./diff.ts";
 import {
     rowsToSettings,

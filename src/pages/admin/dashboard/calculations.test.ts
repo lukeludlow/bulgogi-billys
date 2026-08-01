@@ -13,7 +13,7 @@ import {
     type Settings,
     type Variant,
 } from "./types.ts";
-import { DEFAULT_SETTINGS } from "./defaults.ts";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 
 const ingredients: Ingredient[] = [
     { id: "beef", name: "Beef", unit: "lb", costPerUnit: 8 },

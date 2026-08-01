@@ -11,7 +11,7 @@ import TransactionsTable from "./TransactionsTable.tsx";
 import type { NavSection } from "./DashboardNav.tsx";
 import { mergeTransactions } from "./import/mergeTransactions.ts";
 import type { TimeRange } from "./salesAnalytics.ts";
-import { useSettings } from "../SettingsContext.tsx";
+import { useSettings } from "@/pages/admin/SettingsContext.tsx";
 import type { Transaction } from "./types.ts";
 
 const SECTIONS: NavSection[] = [

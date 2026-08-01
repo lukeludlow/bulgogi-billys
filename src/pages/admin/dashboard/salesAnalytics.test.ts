@@ -7,7 +7,7 @@ import {
     resolveTransactionProfit,
     salesSummary,
 } from "./salesAnalytics.ts";
-import { DEFAULT_SETTINGS } from "./defaults.ts";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 import type { Settings, Transaction } from "./types.ts";
 
 // DEFAULT prices: fries/rice regular = $9, tacos one = $4. $9 matches a menu

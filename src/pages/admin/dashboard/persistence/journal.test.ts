@@ -4,7 +4,7 @@ import {
     readPendingJournal,
     writePendingJournal,
 } from "./journal.ts";
-import { DEFAULT_SETTINGS } from "../defaults.ts";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 
 const PENDING_KEY = "bb_admin_pending";
 

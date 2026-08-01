@@ -1,6 +1,9 @@
 import { Button } from "@/components/catalyst-ui-kit/button.tsx";
 import { Select } from "@/components/catalyst-ui-kit/select.tsx";
-import { useSettings, type SyncStatus } from "../SettingsContext.tsx";
+import {
+    useSettings,
+    type SyncStatus,
+} from "@/pages/admin/SettingsContext.tsx";
 import type { Protein } from "./types.ts";
 import { supabase } from "@/lib/supabase.ts";
 
