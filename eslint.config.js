@@ -5,6 +5,23 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 
+// Import-boundary patterns (REFACTOR_PLAN §2.2). ESLint replaces rather than
+// merges rule options across matching config blocks, so every block that
+// restricts imports must restate the shared parent-import ban.
+const noParentImports = {
+    regex: "^\\.\\./",
+    message: "Use the @/ alias instead of parent-relative imports.",
+};
+const noAdminImports = {
+    regex: "^@/admin/",
+    message: "The public site and shared modules must not import admin code.",
+};
+const noSiteImports = {
+    regex: "^@/site/",
+    message:
+        "The admin dashboard and shared modules must not import public-site code.",
+};
+
 export default defineConfig([
     globalIgnores([
         "dist",
@@ -29,6 +46,44 @@ export default defineConfig([
             // theme, useSettings, …) are slated for extraction into their own
             // modules (REFACTOR_PLAN §4), which clears these warnings for real.
             "react-refresh/only-export-components": "warn",
+            "no-restricted-imports": ["error", { patterns: [noParentImports] }],
+        },
+    },
+    // The site/admin/shared boundary. main.tsx (the composition root) and
+    // src/test/ sit outside these globs and may import from both sides.
+    {
+        files: ["src/site/**"],
+        rules: {
+            "no-restricted-imports": [
+                "error",
+                { patterns: [noParentImports, noAdminImports] },
+            ],
+        },
+    },
+    {
+        files: ["src/admin/**"],
+        rules: {
+            "no-restricted-imports": [
+                "error",
+                { patterns: [noParentImports, noSiteImports] },
+            ],
+        },
+    },
+    {
+        files: ["src/shared/**"],
+        rules: {
+            "no-restricted-imports": [
+                "error",
+                { patterns: [noParentImports, noAdminImports, noSiteImports] },
+            ],
+        },
+    },
+    {
+        // The sitemap test reads public/sitemap.xml and public/robots.txt as
+        // ?raw text; public/ is outside src/, so no @/ path can reach it.
+        files: ["src/test/sitemap.test.ts"],
+        rules: {
+            "no-restricted-imports": "off",
         },
     },
 ]);

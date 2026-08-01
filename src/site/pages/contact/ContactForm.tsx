@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Field, Label } from "@/shared/catalyst-ui-kit/fieldset.tsx";
 import { Input } from "@/shared/catalyst-ui-kit/input.tsx";
 import { Textarea } from "@/shared/catalyst-ui-kit/textarea.tsx";
@@ -84,11 +84,14 @@ export default function ContactForm() {
         </div>
     );
 
-    async function handleSubmit(e) {
+    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        // currentTarget is only set during dispatch — grab the form now, it's
+        // still needed for the reset after the fetch.
+        const form = e.currentTarget;
         setStatus({ loading: true, success: null, message: "" });
 
-        const formData = new FormData(e.target);
+        const formData = new FormData(form);
 
         formData.append("access_key", "e07279ae-8bec-40b4-894b-19aa0add3f0e");
 
@@ -112,7 +115,7 @@ export default function ContactForm() {
                     success: true,
                     message: "Thank you! Your message has been sent.",
                 });
-                e.target.reset(); // Clear the form on success
+                form.reset(); // Clear the form on success
             } else {
                 setStatus({
                     loading: false,

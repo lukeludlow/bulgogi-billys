@@ -21,7 +21,7 @@
         "erasableSyntaxOnly": true,
         "noFallthroughCasesInSwitch": true,
 
-        "noImplicitAny": false,
+        "noImplicitAny": true,
 
         //        "baseUrl": ".",
         "paths": {
