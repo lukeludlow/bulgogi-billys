@@ -36,9 +36,8 @@ The one-sentence rule that drives most of this document:
   `supabase/migrations/20260727000000_initial_schema.sql`). The browser holds
   only the publishable key. `RequireAdmin.tsx` is a navigation guard, not a
   security boundary — and that's correct, because RLS is the boundary.
-- All table access is centralized in
-  `src/pages/admin/dashboard/persistence/settingsRepo.ts`, synced by the
-  whole-app-state engine in `src/pages/admin/SettingsContext.tsx` (optimistic
+- All table access is centralized in `src/admin/data/settingsRepo.ts`, synced by
+  the whole-app-state engine in `src/admin/SettingsContext.tsx` (optimistic
   edits, 800 ms debounced diff/save, localStorage crash journal, backoff retry).
 
 This "zero server code, database-enforced security" shape is not technical debt
@@ -69,7 +68,7 @@ project, permanently:**
   time — and idling now costs money:
   [Fly.io and Railway have eliminated their free tiers, and Render's free tier cold-starts after 15 minutes idle](https://hostim.dev/blog/render-vs-railway-vs-fly-pricing/).
 - A second language splits a solo-maintained codebase in two. The domain types
-  in `src/pages/admin/dashboard/types.ts` and `persistence/rows.ts` would need
+  in `src/admin/domain/types.ts` and `persistence/rows.ts` would need
   duplicating or codegen. TypeScript-everywhere means shared types between SPA
   and functions, one toolchain, one test runner (vitest), one deploy story.
 
@@ -152,9 +151,8 @@ RLS works:
 What to do instead — three moves that deliver most of what an ORM promises:
 
 1. **Generated types:** adopt `supabase gen types typescript` and replace the ~9
-   hand-maintained `*Row` interfaces in
-   `src/pages/admin/dashboard/persistence/rows.ts`. Typed rows and compile-time
-   schema-drift detection — 80% of ORM value, 0% of the RLS risk.
+   hand-maintained `*Row` interfaces in `src/admin/data/rows.ts`. Typed rows and
+   compile-time schema-drift detection — 80% of ORM value, 0% of the RLS risk.
 2. **Postgres views/functions via `supabase.rpc()`** when queries outgrow
    PostgREST filters (event-contribution rollups, 13-week forecast seeding).
    Still RLS-governed, transactional for free, no new dependency.

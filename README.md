@@ -101,26 +101,34 @@ featured on the site was shot by me — I'm also a professional photographer.
 
 ```
 src/
-├── components/
+├── site/                         # Public website (bulgogibillys.com)
+│   ├── App.tsx                   # Layout shell (navbar + mobile sidebar)
+│   ├── routes.ts                 # Public route manifest (drives router + sitemap test)
+│   ├── pages/                    # home, menu, schedule, order-now, contact, blog, about, not-found
+│   └── components/               # JSON-LD markup, social icons
+├── admin/                        # Private dashboard, everything behind RequireAdmin
+│   ├── routes.ts                 # Admin route manifest (drives router + top nav)
+│   ├── pages/                    # ProfitCalculator, TransactionHistory, Events
+│   ├── components/               # Editors, tables, charts, dashboard chrome
+│   ├── domain/                   # Pure logic: calculations, analytics, types
+│   ├── data/                     # Supabase client + persistence layer
+│   └── import/                   # Square CSV import parsing/merging
+├── shared/                       # Imported by both sides — kept deliberately small
 │   ├── catalyst-ui-kit/          # Headless UI component library (27 components)
 │   ├── dark-mode-toggle/
-│   ├── icons/                    # Instagram, Facebook, Email SVG components
 │   ├── PageMeta.tsx              # Per-route SEO head management
-│   └── RestaurantStructuredData.tsx  # JSON-LD schema markup
-├── pages/
-│   ├── home/                     # Hero carousel + embedded About section
-│   ├── menu/                     # Menu items with images and descriptions
-│   ├── schedule/                 # Market locations with hours and map links
-│   ├── contact/                  # Web3Forms catering inquiry
-│   ├── blog/                     # Blog index and individual posts
-│   └── not-found/
-├── App.tsx                       # Layout shell (navbar + mobile sidebar)
-└── main.tsx                      # Router config + Analytics bootstrap
+│   └── theme.ts
+├── test/                         # Test infra, fixtures, cross-cutting tests
+└── main.tsx                      # Composition root — the only file importing both sides
 public/
 ├── images/                       # Original food photography (shot by me) and brand assets
 ├── sitemap.xml
 └── robots.txt
 ```
+
+ESLint enforces the boundary: `src/site/` can't import `src/admin/` (and vice
+versa), `src/shared/` can't import either side, and the public bundle is
+asserted free of admin-only dependencies at build time (`./verify.sh --dist`).
 
 ---
 

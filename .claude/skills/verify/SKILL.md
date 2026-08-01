@@ -52,7 +52,7 @@ await browser.close();
 ```
 
 Row shapes for `seedLocal` are the `*Row` interfaces in
-`src/pages/admin/dashboard/persistence/rows.ts`; omitted columns keep their
+`src/admin/data/rows.ts`; omitted columns keep their
 schema defaults. `readTable(table, where)` takes raw SQL for `where`.
 
 **Nothing can reach the hosted project.** `denyRemote` (installed by

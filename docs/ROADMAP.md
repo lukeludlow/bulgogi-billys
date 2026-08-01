@@ -48,8 +48,8 @@ supposed to run (§21).
 - **Why now:** §17.3 puts Farmers Market at 1488 under standing financial
   review. Today nobody can answer "did 1488 actually make money last month?"
   This report answers it with data we already import.
-- Builds on: `src/pages/admin/dashboard/salesAnalytics.ts` (bucketing, countable
-  sales), `TransactionHistory.tsx`, the `transactions` table.
+- Builds on: `src/admin/domain/salesAnalytics.ts` (bucketing, countable sales),
+  `TransactionHistory.tsx`, the `transactions` table.
 
 ### 0.2 Sales-tax separation everywhere (§13.2, §14.2, §26 rule #1)
 
