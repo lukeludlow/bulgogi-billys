@@ -5,12 +5,7 @@ import {
     NavbarLabel,
     NavbarSection,
 } from "@/shared/catalyst-ui-kit/navbar.tsx";
-
-const PAGES = [
-    { label: "Profit Calculator", url: "/admin" },
-    { label: "Transaction History", url: "/admin/transactions" },
-    { label: "Events", url: "/admin/events" },
-];
+import { ADMIN_ROUTES } from "@/admin/routes.ts";
 
 function isCurrent(pathname: string, url: string): boolean {
     return url === "/admin" ? pathname === "/admin" : pathname.startsWith(url);
@@ -25,11 +20,11 @@ export default function AdminTopNav() {
         <div className="min-w-0 overflow-x-auto">
             <Navbar>
                 <NavbarSection>
-                    {PAGES.map(({ label, url }) => (
+                    {ADMIN_ROUTES.map(({ label, path }) => (
                         <NavbarItem
-                            key={url}
-                            href={url}
-                            current={isCurrent(pathname, url)}
+                            key={path}
+                            href={path}
+                            current={isCurrent(pathname, path)}
                         >
                             <NavbarLabel>{label}</NavbarLabel>
                         </NavbarItem>

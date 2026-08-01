@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import sitemapXml from "../../public/sitemap.xml?raw";
 import robotsTxt from "../../public/robots.txt?raw";
 import { BASE_URL } from "@/shared/PageMeta.tsx";
+import { SITE_ROUTES } from "@/site/routes.ts";
 import { posts } from "@/site/pages/blog/posts.ts";
 
 function sitemapUrls(): string[] {
@@ -26,13 +27,12 @@ test("sitemap contains no apex-domain URLs", () => {
 
 test("sitemap covers all indexable public routes", () => {
     const urls = sitemapUrls();
+    // Derived from the route manifest, so a new indexable page that isn't
+    // added to sitemap.xml (or vice versa) fails here.
     const expectedPaths = [
-        "/",
-        "/schedule",
-        "/menu",
-        "/order-now",
-        "/contact",
-        "/blog",
+        ...SITE_ROUTES.filter((route) => route.indexable).map(
+            (route) => route.path,
+        ),
         ...posts.map((post) => `/blog/${post.slug}`),
     ];
     for (const path of expectedPaths) {
