@@ -194,6 +194,9 @@ export const DEFAULT_SETTINGS: Settings = {
     transactions: [],
     blendedFoodCostPercent: 32,
     events: [],
+    purchases: [],
+    marketOverrides: {},
+    processorFees: [],
     marketClassifications: {
         "grogans-mill": null,
         "new-caney": null,
@@ -204,4 +207,10 @@ export const DEFAULT_SETTINGS: Settings = {
     // migration so a migrated database and a fresh seed agree.
     employeeHourlyRate: 12,
     salesTaxRatePercent: 8.25,
+    marketHourlyRates: {
+        "grogans-mill": null,
+        "new-caney": null,
+        "fm-1488": null,
+        other: null,
+    },
 };

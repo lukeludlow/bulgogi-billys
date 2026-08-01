@@ -99,14 +99,40 @@ export interface MarketEvent {
     market: Market;
     /** Booth/stall fee in dollars. */
     marketFee: number;
-    fuel: number;
-    propane: number;
     /** Dollar value of food wasted at this event. */
     waste: number;
-    /** Paid employee hours; costed at `Settings.employeeHourlyRate`. */
+    /**
+     * Paid employee hours; costed at the market's hourly rate
+     * (`Settings.marketHourlyRates`) or the global `employeeHourlyRate`.
+     */
     employeeHours: number;
     /** Billy's own hours — recorded and displayed, never subtracted. */
     billysHours: number;
+}
+
+/** What a shopping trip bought. Fixed order for stable row emission and UI. */
+export const PURCHASE_CATEGORIES = ["food", "fuel", "propane", "ice"] as const;
+export type PurchaseCategory = (typeof PURCHASE_CATEGORIES)[number];
+
+/**
+ * One shopping trip's spend in one category. Costs are not entered per event;
+ * each purchase is distributed across the events between it and the next
+ * purchase of the same category, proportional to event sales.
+ */
+export interface Purchase {
+    id: string;
+    /** Local calendar day, "YYYY-MM-DD". */
+    date: string;
+    category: PurchaseCategory;
+    amount: number;
+    note?: string;
+}
+
+/** One month's card-processor fee total, from the Square statement. */
+export interface ProcessorFee {
+    /** Calendar month, "YYYY-MM". */
+    month: string;
+    amount: number;
 }
 
 /**
@@ -148,10 +174,21 @@ export interface Settings {
     blendedFoodCostPercent: number;
     /** Per-event expense records, keyed by (date, market). */
     events: MarketEvent[];
+    /** Shopping-trip spend, allocated across events between trips. */
+    purchases: Purchase[];
+    /**
+     * Days whose auto-tagged market was wrong: local "YYYY-MM-DD" → the market
+     * that day actually was. Absent = trust `marketForDate`.
+     */
+    marketOverrides: Record<string, Market>;
+    /** Monthly card-processor fee totals, spread across the month's events. */
+    processorFees: ProcessorFee[];
     /** Manually chosen classification per market; null = not yet classified. */
     marketClassifications: Record<Market, MarketClassification | null>;
     /** Dollars per hour used to cost `MarketEvent.employeeHours`. */
     employeeHourlyRate: number;
+    /** Per-market hourly rate; null = use the global `employeeHourlyRate`. */
+    marketHourlyRates: Record<Market, number | null>;
     /**
      * Sales-tax rate baked into the tax-inclusive menu prices, e.g. 8.25 = 8.25%.
      * Pre-tax sales = amount ÷ (1 + rate/100).

@@ -13,8 +13,11 @@ import {
     type DbSnapshot,
     type EventRow,
     type IngredientRow,
-    type MarketClassificationRow,
+    type MarketOverrideRow,
+    type MarketSettingsRow,
     type MenuItemRow,
+    type ProcessorFeeRow,
+    type PurchaseRow,
     type RecipeLineRow,
     type SettingsRow,
     type TransactionRow,
@@ -67,7 +70,10 @@ export async function fetchSettings(): Promise<Settings | null> {
         recipeLines,
         transactions,
         events,
-        marketClassifications,
+        purchases,
+        marketOverrides,
+        processorFees,
+        marketSettings,
     ] = await Promise.all([
         supabase
             .from("settings")
@@ -101,10 +107,21 @@ export async function fetchSettings(): Promise<Settings | null> {
             .then(unwrap<RecipeLineRow[]>),
         fetchAllRows<TransactionRow>("transactions", "id"),
         fetchAllRows<EventRow>("events", "market"),
+        fetchAllRows<PurchaseRow>("purchases", "id"),
+        // Small tables (a handful of rows) — no paging needed, and
+        // processor_fees has no `date` column for fetchAllRows to order by.
         supabase
-            .from("market_classifications")
+            .from("market_overrides")
             .select("*")
-            .then(unwrap<MarketClassificationRow[]>),
+            .then(unwrap<MarketOverrideRow[]>),
+        supabase
+            .from("processor_fees")
+            .select("*")
+            .then(unwrap<ProcessorFeeRow[]>),
+        supabase
+            .from("market_settings")
+            .select("*")
+            .then(unwrap<MarketSettingsRow[]>),
     ]);
 
     if (!settingsRow) return null;
@@ -118,7 +135,10 @@ export async function fetchSettings(): Promise<Settings | null> {
         recipeLines,
         transactions,
         events,
-        marketClassifications,
+        purchases,
+        marketOverrides,
+        processorFees,
+        marketSettings,
     };
     return rowsToSettings(snapshot);
 }
@@ -194,11 +214,71 @@ export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
         }
     }
 
-    if (changeSet.marketClassifications) {
+    if (changeSet.purchases) {
+        if (changeSet.purchases.upserts.length > 0) {
+            unwrap(
+                await supabase
+                    .from("purchases")
+                    .upsert(changeSet.purchases.upserts, {
+                        onConflict: "id",
+                    }),
+            );
+        }
+        if (changeSet.purchases.deletes.length > 0) {
+            unwrap(
+                await supabase
+                    .from("purchases")
+                    .delete()
+                    .in("id", changeSet.purchases.deletes),
+            );
+        }
+    }
+
+    if (changeSet.marketOverrides) {
+        if (changeSet.marketOverrides.upserts.length > 0) {
+            unwrap(
+                await supabase
+                    .from("market_overrides")
+                    .upsert(changeSet.marketOverrides.upserts, {
+                        onConflict: "date",
+                    }),
+            );
+        }
+        if (changeSet.marketOverrides.deletes.length > 0) {
+            unwrap(
+                await supabase
+                    .from("market_overrides")
+                    .delete()
+                    .in("date", changeSet.marketOverrides.deletes),
+            );
+        }
+    }
+
+    if (changeSet.processorFees) {
+        if (changeSet.processorFees.upserts.length > 0) {
+            unwrap(
+                await supabase
+                    .from("processor_fees")
+                    .upsert(changeSet.processorFees.upserts, {
+                        onConflict: "month",
+                    }),
+            );
+        }
+        if (changeSet.processorFees.deletes.length > 0) {
+            unwrap(
+                await supabase
+                    .from("processor_fees")
+                    .delete()
+                    .in("month", changeSet.processorFees.deletes),
+            );
+        }
+    }
+
+    if (changeSet.marketSettings) {
         unwrap(
             await supabase
-                .from("market_classifications")
-                .upsert(changeSet.marketClassifications),
+                .from("market_settings")
+                .upsert(changeSet.marketSettings),
         );
     }
 

@@ -94,7 +94,10 @@ describe("fetchSettings", () => {
             "recipe_lines",
             "transactions",
             "events",
-            "market_classifications",
+            "purchases",
+            "market_overrides",
+            "processor_fees",
+            "market_settings",
         ]) {
             mock.data.set(table, []);
         }
@@ -111,10 +114,13 @@ describe("fetchSettings", () => {
         mock.data.set("recipe_lines", snapshot.recipeLines);
         mock.data.set("transactions", snapshot.transactions);
         mock.data.set("events", snapshot.events);
-        mock.data.set("market_classifications", snapshot.marketClassifications);
+        mock.data.set("purchases", snapshot.purchases);
+        mock.data.set("market_overrides", snapshot.marketOverrides);
+        mock.data.set("processor_fees", snapshot.processorFees);
+        mock.data.set("market_settings", snapshot.marketSettings);
     }
 
-    test("assembles a full Settings object from the nine tables", async () => {
+    test("assembles a full Settings object from the twelve tables", async () => {
         seedAllTables();
         expect(await fetchSettings()).toEqual(BASE);
     });
@@ -227,8 +233,6 @@ describe("applyChangeSet", () => {
             date: "2026-07-11",
             market: "grogans-mill" as const,
             marketFee: 20,
-            fuel: 0,
-            propane: 0,
             waste: 0,
             employeeHours: 0,
             billysHours: 0,
@@ -239,7 +243,7 @@ describe("applyChangeSet", () => {
         };
         const next = {
             ...BASE,
-            events: [{ ...event, fuel: 10 }],
+            events: [{ ...event, waste: 10 }],
         };
         await applyChangeSet(computeChangeSet(prev, next));
 
@@ -257,14 +261,84 @@ describe("applyChangeSet", () => {
         ]);
     });
 
+    test("purchase edits upsert by id then delete removed ids", async () => {
+        const purchase = {
+            id: "p1",
+            date: "2026-07-20",
+            category: "fuel" as const,
+            amount: 30,
+        };
+        const prev = {
+            ...BASE,
+            purchases: [purchase, { ...purchase, id: "p2" }],
+        };
+        const next = {
+            ...BASE,
+            purchases: [{ ...purchase, amount: 45 }],
+        };
+        await applyChangeSet(computeChangeSet(prev, next));
+
+        expect(mutationOrder()).toEqual([
+            "purchases.upsert",
+            "purchases.delete",
+        ]);
+        const upsert = mock.calls.find(
+            (call) => call.table === "purchases" && call.method === "upsert",
+        )!;
+        expect(upsert.args[1]).toEqual({ onConflict: "id" });
+        const deleteIn = mock.calls.find(
+            (call) => call.table === "purchases" && call.method === "in",
+        )!;
+        expect(deleteIn.args).toEqual(["id", ["p2"]]);
+    });
+
+    test("market override changes upsert and delete by date", async () => {
+        const prev = {
+            ...BASE,
+            marketOverrides: { "2026-07-19": "other" as const },
+        };
+        const next = {
+            ...BASE,
+            marketOverrides: { "2026-07-25": "new-caney" as const },
+        };
+        await applyChangeSet(computeChangeSet(prev, next));
+
+        expect(mutationOrder()).toEqual([
+            "market_overrides.upsert",
+            "market_overrides.delete",
+        ]);
+        const upsert = mock.calls.find(
+            (call) =>
+                call.table === "market_overrides" && call.method === "upsert",
+        )!;
+        expect(upsert.args[0]).toEqual([
+            { date: "2026-07-25", market: "new-caney" },
+        ]);
+        expect(upsert.args[1]).toEqual({ onConflict: "date" });
+    });
+
+    test("processor fee changes upsert by month", async () => {
+        const next = {
+            ...BASE,
+            processorFees: [{ month: "2026-07", amount: 84 }],
+        };
+        await applyChangeSet(computeChangeSet(BASE, next));
+
+        expect(mutationOrder()).toEqual(["processor_fees.upsert"]);
+        const upsert = mock.calls.find(
+            (call) => call.table === "processor_fees",
+        )!;
+        expect(upsert.args[1]).toEqual({ onConflict: "month" });
+    });
+
     test("classification changes upsert the whole four-row set", async () => {
         const next = structuredClone(BASE);
         next.marketClassifications["fm-1488"] = "exit";
         await applyChangeSet(computeChangeSet(BASE, next));
 
-        expect(mutationOrder()).toEqual(["market_classifications.upsert"]);
+        expect(mutationOrder()).toEqual(["market_settings.upsert"]);
         const upsert = mock.calls.find(
-            (call) => call.table === "market_classifications",
+            (call) => call.table === "market_settings",
         )!;
         expect(upsert.args[0]).toHaveLength(4);
     });

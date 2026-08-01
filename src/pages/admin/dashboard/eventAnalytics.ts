@@ -1,6 +1,7 @@
-// Turns imported transactions + recorded per-event expenses into the Event
-// Contribution report: which market each sale belongs to, pre-tax sales, and
-// cash contribution per event and per market. Everything here is pure.
+// Turns imported transactions + recorded per-event expenses + the purchases
+// log into the Event Contribution report: which market each sale belongs to,
+// pre-tax sales, and cash contribution per event and per market. Everything
+// here is pure.
 //
 // The market a sale belongs to is derived from its timestamp — the three
 // market schedules never overlap:
@@ -8,6 +9,8 @@
 //   1st / 3rd Sunday  → New Caney
 //   other Sundays     → Farmers Market at 1488
 //   any other day     → Other (catering, one-offs)
+// A stored day-level override (Settings.marketOverrides) wins over the
+// schedule when the heuristic got a day wrong.
 //
 // All date math uses LOCAL getters, matching bucketByPeriod and the CSV
 // importer's local-time parse — the whole dashboard assumes it is imported
@@ -16,9 +19,13 @@
 import { buildProfitIndex, isCountable, resolveWithIndex } from "./salesAnalytics.ts";
 import {
     MARKETS,
+    PURCHASE_CATEGORIES,
     type Market,
     type MarketClassification,
     type MarketEvent,
+    type ProcessorFee,
+    type Purchase,
+    type PurchaseCategory,
     type Settings,
     type Transaction,
 } from "./types.ts";
@@ -38,6 +45,12 @@ export function localDateKey(isoDate: string): string {
     return `${date.getFullYear()}-${month}-${day}`;
 }
 
+/** A local "YYYY-MM-DD" key as a local-midnight Date. */
+export function parseLocalDate(dateKey: string): Date {
+    const [year, month, day] = dateKey.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
 /** The market whose schedule covers this local calendar day. */
 export function marketForDate(date: Date): Market {
     const weekday = date.getDay();
@@ -51,13 +64,175 @@ export function marketForDate(date: Date): Market {
     return "other";
 }
 
-export function marketForTransaction(txn: Transaction): Market {
-    return marketForDate(new Date(txn.date));
+/** Schedule-derived market for a day, unless the day has a stored override. */
+export function resolveMarket(
+    dateKey: string,
+    overrides: Record<string, Market>,
+): Market {
+    return overrides[dateKey] ?? marketForDate(parseLocalDate(dateKey));
+}
+
+export function marketForTransaction(
+    txn: Transaction,
+    overrides: Record<string, Market> = {},
+): Market {
+    return resolveMarket(localDateKey(txn.date), overrides);
 }
 
 /** Menu prices are tax-inclusive; back the tax out of a gross amount. */
 export function preTaxAmount(gross: number, taxRatePercent: number): number {
     return gross / (1 + taxRatePercent / 100);
+}
+
+/** Per-category dollar allocation, all categories present (0 when none). */
+export type CategoryTotals = Record<PurchaseCategory, number>;
+
+export function emptyCategoryTotals(): CategoryTotals {
+    return Object.fromEntries(
+        PURCHASE_CATEGORIES.map((category) => [category, 0]),
+    ) as CategoryTotals;
+}
+
+/** The slice of an event row the allocators need. */
+export interface AllocationEvent {
+    /** Report key, `${date} ${market}`. */
+    key: string;
+    /** Local calendar day, "YYYY-MM-DD". */
+    date: string;
+    /** Tax-inclusive countable revenue. */
+    grossSales: number;
+    /** The card-paid share of grossSales. */
+    cardGross: number;
+}
+
+export interface PurchaseAllocation {
+    /** Event key → dollars per category allocated to that event. */
+    byEvent: Map<string, CategoryTotals>;
+    /** Purchases with no event on or after their date to absorb them. */
+    unallocated: CategoryTotals;
+}
+
+/**
+ * Distribute each purchase across the events between it and the next purchase
+ * of the same category, proportional to gross sales. (One uniform tax rate
+ * means gross and pre-tax weights give identical proportions.)
+ *
+ * Per category: purchases are grouped by day and walked oldest-first; a
+ * group's pool covers the events from its day (inclusive) up to the next
+ * purchase day (exclusive). A span with no events folds its pool forward into
+ * the next span — restocking twice before a market day lands both purchases
+ * on that day. A span whose events all have zero sales splits equally.
+ * Events before the category's first purchase get nothing; pool left after
+ * the last event is reported as unallocated.
+ */
+export function allocatePurchases(
+    purchases: Purchase[],
+    events: AllocationEvent[],
+): PurchaseAllocation {
+    const byEvent = new Map<string, CategoryTotals>();
+    const unallocated = emptyCategoryTotals();
+    const sortedEvents = [...events].sort((a, b) =>
+        a.date.localeCompare(b.date),
+    );
+
+    const add = (key: string, category: PurchaseCategory, amount: number) => {
+        const totals = byEvent.get(key) ?? emptyCategoryTotals();
+        totals[category] += amount;
+        byEvent.set(key, totals);
+    };
+
+    for (const category of PURCHASE_CATEGORIES) {
+        // Group this category's purchases by day, oldest first.
+        const byDate = new Map<string, number>();
+        for (const purchase of purchases) {
+            if (purchase.category !== category) continue;
+            byDate.set(
+                purchase.date,
+                (byDate.get(purchase.date) ?? 0) + purchase.amount,
+            );
+        }
+        const groups = [...byDate.entries()].sort(([a], [b]) =>
+            a.localeCompare(b),
+        );
+
+        let carry = 0;
+        for (const [index, [spanStart, amount]] of groups.entries()) {
+            const pool = amount + carry;
+            const spanEnd = groups[index + 1]?.[0]; // undefined = open-ended
+            const span = sortedEvents.filter(
+                (event) =>
+                    event.date >= spanStart &&
+                    (spanEnd === undefined || event.date < spanEnd),
+            );
+            if (span.length === 0) {
+                carry = pool;
+                continue;
+            }
+            const totalGross = span.reduce(
+                (sum, event) => sum + event.grossSales,
+                0,
+            );
+            for (const event of span) {
+                const share =
+                    totalGross > 0
+                        ? event.grossSales / totalGross
+                        : 1 / span.length;
+                add(event.key, category, pool * share);
+            }
+            carry = 0;
+        }
+        unallocated[category] += carry;
+    }
+
+    return { byEvent, unallocated };
+}
+
+export interface FeeAllocation {
+    /** Event key → this event's share of its month's processor fee. */
+    byEvent: Map<string, number>;
+    /** Fee dollars for months with no events to absorb them. */
+    unallocated: number;
+}
+
+/**
+ * Spread each month's card-processor fee across that month's events,
+ * proportional to card sales — the fee is charged on card volume, so cash-only
+ * events carry none of it. Fallbacks: a month with a fee but no card sales
+ * weights by all gross sales; with no sales at all it splits equally; a month
+ * with no events reports the fee as unallocated rather than losing it.
+ */
+export function allocateProcessorFees(
+    fees: ProcessorFee[],
+    events: AllocationEvent[],
+): FeeAllocation {
+    const byEvent = new Map<string, number>();
+    let unallocated = 0;
+
+    for (const fee of fees) {
+        const month = events.filter((event) =>
+            event.date.startsWith(`${fee.month}-`),
+        );
+        if (month.length === 0) {
+            unallocated += fee.amount;
+            continue;
+        }
+        const cardTotal = month.reduce((sum, e) => sum + e.cardGross, 0);
+        const grossTotal = month.reduce((sum, e) => sum + e.grossSales, 0);
+        for (const event of month) {
+            const share =
+                cardTotal > 0
+                    ? event.cardGross / cardTotal
+                    : grossTotal > 0
+                      ? event.grossSales / grossTotal
+                      : 1 / month.length;
+            byEvent.set(
+                event.key,
+                (byEvent.get(event.key) ?? 0) + fee.amount * share,
+            );
+        }
+    }
+
+    return { byEvent, unallocated };
 }
 
 export interface EventReportRow {
@@ -72,12 +247,99 @@ export interface EventReportRow {
     estFoodCost: number;
     /** The recorded expense row, or null if none exists yet. */
     expenses: MarketEvent | null;
-    /** employeeHours × employeeHourlyRate (0 without an expense row). */
+    /** employeeHours × the market's hourly rate (global rate as fallback). */
     laborCost: number;
-    /** marketFee + fuel + propane + waste + laborCost. */
+    /** This event's share of fuel purchases. */
+    fuelCost: number;
+    /** This event's share of propane purchases. */
+    propaneCost: number;
+    /** This event's share of ice purchases. */
+    iceCost: number;
+    /**
+     * This event's share of food purchases — shown as a reality check against
+     * estFoodCost, never part of directCosts/contribution.
+     */
+    allocatedFoodCost: number;
+    /** This event's share of its month's card-processor fee. */
+    processorFee: number;
+    /** marketFee + waste + laborCost + fuel/propane/ice shares + processorFee. */
     directCosts: number;
     /** preTaxSales − estFoodCost − directCosts (§17.1 cash contribution). */
     contribution: number;
+}
+
+/** Whether a sale was paid by card (anything but cash), for fee weighting. */
+function isCardPayment(txn: Transaction): boolean {
+    return txn.method.toLowerCase() !== "cash";
+}
+
+interface SalesAccumulator {
+    orders: number;
+    grossSales: number;
+    cardGross: number;
+    estFoodCost: number;
+}
+
+/** Countable sales bucketed by `${date} ${market}` (override-aware). */
+function bucketSales(settings: Settings): Map<string, SalesAccumulator> {
+    const index = buildProfitIndex(settings);
+    const sales = new Map<string, SalesAccumulator>();
+    for (const txn of settings.transactions) {
+        if (!isCountable(txn)) continue;
+        const dateKey = localDateKey(txn.date);
+        const key = `${dateKey} ${resolveMarket(dateKey, settings.marketOverrides)}`;
+        const bucket = sales.get(key) ?? {
+            orders: 0,
+            grossSales: 0,
+            cardGross: 0,
+            estFoodCost: 0,
+        };
+        const resolved = resolveWithIndex(txn, index);
+        bucket.orders += 1;
+        bucket.grossSales += resolved.revenue;
+        if (isCardPayment(txn)) bucket.cardGross += resolved.revenue;
+        bucket.estFoodCost += resolved.cost;
+        sales.set(key, bucket);
+    }
+    return sales;
+}
+
+/** Every event key (sales-derived ∪ expense rows) as allocator input. */
+function allocationEvents(
+    sales: Map<string, SalesAccumulator>,
+    settings: Settings,
+): AllocationEvent[] {
+    const keys = new Set([
+        ...sales.keys(),
+        ...settings.events.map((event) => `${event.date} ${event.market}`),
+    ]);
+    return [...keys].map((key) => {
+        const [date] = key.split(" ");
+        const sold = sales.get(key);
+        return {
+            key,
+            date,
+            grossSales: sold?.grossSales ?? 0,
+            cardGross: sold?.cardGross ?? 0,
+        };
+    });
+}
+
+export interface EventAllocations {
+    purchases: PurchaseAllocation;
+    fees: FeeAllocation;
+}
+
+/**
+ * The purchase and fee allocations for the current settings — used inside
+ * buildEventReport, and by the editors to surface unallocated totals.
+ */
+export function buildEventAllocations(settings: Settings): EventAllocations {
+    const events = allocationEvents(bucketSales(settings), settings);
+    return {
+        purchases: allocatePurchases(settings.purchases, events),
+        fees: allocateProcessorFees(settings.processorFees, events),
+    };
 }
 
 /**
@@ -87,53 +349,39 @@ export interface EventReportRow {
  * Sorted newest-first.
  */
 export function buildEventReport(settings: Settings): EventReportRow[] {
-    const index = buildProfitIndex(settings);
-
-    interface SalesAccumulator {
-        orders: number;
-        grossSales: number;
-        estFoodCost: number;
-    }
-    const sales = new Map<string, SalesAccumulator>();
-    for (const txn of settings.transactions) {
-        if (!isCountable(txn)) continue;
-        const key = `${localDateKey(txn.date)} ${marketForTransaction(txn)}`;
-        const bucket = sales.get(key) ?? {
-            orders: 0,
-            grossSales: 0,
-            estFoodCost: 0,
-        };
-        const resolved = resolveWithIndex(txn, index);
-        bucket.orders += 1;
-        bucket.grossSales += resolved.revenue;
-        bucket.estFoodCost += resolved.cost;
-        sales.set(key, bucket);
-    }
-
+    const sales = bucketSales(settings);
     const expenseRows = new Map(
         settings.events.map((event) => [`${event.date} ${event.market}`, event]),
     );
+    const events = allocationEvents(sales, settings);
+    const purchaseAlloc = allocatePurchases(settings.purchases, events);
+    const feeAlloc = allocateProcessorFees(settings.processorFees, events);
 
-    const keys = new Set([...sales.keys(), ...expenseRows.keys()]);
     const rows: EventReportRow[] = [];
-    for (const key of keys) {
+    for (const { key } of events) {
         const [date, market] = key.split(" ") as [string, Market];
         const sold = sales.get(key) ?? {
             orders: 0,
             grossSales: 0,
+            cardGross: 0,
             estFoodCost: 0,
         };
         const expenses = expenseRows.get(key) ?? null;
-        const laborCost = expenses
-            ? expenses.employeeHours * settings.employeeHourlyRate
-            : 0;
-        const directCosts = expenses
-            ? expenses.marketFee +
-              expenses.fuel +
-              expenses.propane +
-              expenses.waste +
-              laborCost
-            : 0;
+        const hourlyRate =
+            settings.marketHourlyRates[market] ?? settings.employeeHourlyRate;
+        const laborCost = expenses ? expenses.employeeHours * hourlyRate : 0;
+        const allocated =
+            purchaseAlloc.byEvent.get(key) ?? emptyCategoryTotals();
+        const processorFee = feeAlloc.byEvent.get(key) ?? 0;
+        // Allocated costs land on the event whether or not an expense row was
+        // recorded — only the manually-entered fields need the row.
+        const directCosts =
+            (expenses ? expenses.marketFee + expenses.waste : 0) +
+            laborCost +
+            allocated.fuel +
+            allocated.propane +
+            allocated.ice +
+            processorFee;
         const preTaxSales = preTaxAmount(
             sold.grossSales,
             settings.salesTaxRatePercent,
@@ -147,6 +395,11 @@ export function buildEventReport(settings: Settings): EventReportRow[] {
             estFoodCost: sold.estFoodCost,
             expenses,
             laborCost,
+            fuelCost: allocated.fuel,
+            propaneCost: allocated.propane,
+            iceCost: allocated.ice,
+            allocatedFoodCost: allocated.food,
+            processorFee,
             directCosts,
             contribution: preTaxSales - sold.estFoodCost - directCosts,
         });
@@ -164,6 +417,7 @@ export interface MarketRollup {
     grossSales: number;
     preTaxSales: number;
     estFoodCost: number;
+    allocatedFoodCost: number;
     directCosts: number;
     contribution: number;
     avgContributionPerEvent: number;
@@ -186,6 +440,7 @@ export function rollupByMarket(
             grossSales: total((row) => row.grossSales),
             preTaxSales: total((row) => row.preTaxSales),
             estFoodCost: total((row) => row.estFoodCost),
+            allocatedFoodCost: total((row) => row.allocatedFoodCost),
             directCosts: total((row) => row.directCosts),
             contribution,
             avgContributionPerEvent:

@@ -7,14 +7,14 @@ acting on them.
 
 ## 1. Summary of decisions
 
-| Question | Recommendation | Revisit when |
-|---|---|---|
-| Backend server vs serverless? | **Neither for as long as possible; then one serverless function per need. Never a standing server.** | A feature needs websockets, long-lived jobs, or queue consumers — nothing on the roadmap does. |
-| Kotlin or TypeScript? | **TypeScript everywhere.** | Never for this project. |
-| Hosting? | **Vercel Pro ($20/mo) — decided.** Resolves the Hobby non-commercial ToS problem with zero migration; future serverless code is Vercel Functions. | If the bill ever stops being worth it — Cloudflare Pages + Workers remains the documented free alternative (§4). |
-| Keep Supabase Postgres + auth? | **Yes** (decided). Upgrade to Pro the day a *public* feature depends on the DB at runtime. | — |
-| ORM? | **No. supabase-js + generated types + Postgres RPC.** | P3, inside server functions only, and only if RPC proves insufficient. |
-| What about `settingsRepo`? | **Split by data lifecycle, incrementally, riding roadmap work** — see §7. | — |
+| Question                       | Recommendation                                                                                                                                    | Revisit when                                                                                                     |
+|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| Backend server vs serverless?  | **Neither for as long as possible; then one serverless function per need. Never a standing server.**                                              | A feature needs websockets, long-lived jobs, or queue consumers — nothing on the roadmap does.                   |
+| Kotlin or TypeScript?          | **TypeScript everywhere.**                                                                                                                        | Never for this project.                                                                                          |
+| Hosting?                       | **Vercel Pro ($20/mo) — decided.** Resolves the Hobby non-commercial ToS problem with zero migration; future serverless code is Vercel Functions. | If the bill ever stops being worth it — Cloudflare Pages + Workers remains the documented free alternative (§4). |
+| Keep Supabase Postgres + auth? | **Yes** (decided). Upgrade to Pro the day a *public* feature depends on the DB at runtime.                                                        | —                                                                                                                |
+| ORM?                           | **No. supabase-js + generated types + Postgres RPC.**                                                                                             | P3, inside server functions only, and only if RPC proves insufficient.                                           |
+| What about `settingsRepo`?     | **Split by data lifecycle, incrementally, riding roadmap work** — see §7.                                                                         | —                                                                                                                |
 
 The one-sentence rule that drives most of this document:
 
@@ -145,11 +145,11 @@ What to do instead — three moves that deliver most of what an ORM promises:
 `settingsRepo.ts` made sense when everything was "settings." It now conflates three data shapes
 with different lifecycles behind one 9-table `fetchSettings()` / `applyChangeSet()` gateway:
 
-| Data | Tables | Lifecycle | Right sync model |
-|---|---|---|---|
-| **Config document** | settings, ingredients, batch_lines, menu_items, variants, recipe_lines | Small, interdependent, edited as a whole | The existing whole-state optimistic sync — it's genuinely good for this |
-| **Transaction history** | transactions | Append-only, thousands of rows, imported weekly | Plain paged reads + insert-only import; should not ride the diff/journal machinery |
-| **Operational records** | events, market_classifications | Keyed rows, edited one at a time | Per-row upsert/delete, plain async calls |
+| Data                    | Tables                                                                 | Lifecycle                                       | Right sync model                                                                   |
+|-------------------------|------------------------------------------------------------------------|-------------------------------------------------|------------------------------------------------------------------------------------|
+| **Config document**     | settings, ingredients, batch_lines, menu_items, variants, recipe_lines | Small, interdependent, edited as a whole        | The existing whole-state optimistic sync — it's genuinely good for this            |
+| **Transaction history** | transactions                                                           | Append-only, thousands of rows, imported weekly | Plain paged reads + insert-only import; should not ride the diff/journal machinery |
+| **Operational records** | events, market_classifications                                         | Keyed rows, edited one at a time                | Per-row upsert/delete, plain async calls                                           |
 
 Loading the entire transactions table through `fetchSettings()` on every dashboard visit, and
 diffing it on every autosave, gets worse with every Square import. Sequenced fix — each step
@@ -196,26 +196,26 @@ Four layers, each with one hard rule:
 
 ## 9. Phase-by-phase triggers
 
-| Phase | Stays the same | Changes | Trigger being answered |
-|---|---|---|---|
-| **Now / P0** | Static SPA + supabase-js + RLS; zero server code | Upgrade Vercel to Pro (§4); add DB keep-alive ping (Vercel Cron); extract transactions/events repos; adopt generated types; delete dead code | Hobby ToS compliance; transactions-table growth |
-| **P1** | Admin path unchanged | **First Vercel Function** (catering inquiries: Turnstile + service-role insert + notification email). The first secret appears — server-side Vercel environment variables only, **never** in a `VITE_`-prefixed var (those compile into the public bundle) | First anonymous write + first secret |
-| **P2** | Admin stays direct-to-Supabase | More functions (preorders, Square payment links, list signup). **Upgrade Supabase to Pro** the day a public feature depends on the DB at runtime | Money flows through the site; a paused DB becomes an outage |
-| **P3** | Same shape — more functions, not a server | Square checkout + webhook functions; role-scoped RLS policies; Drizzle *permitted* inside functions if RPC proves insufficient | Order volume; multi-user access |
-| **Never** (on this roadmap) | — | A standing backend server | Would need websockets / long-running jobs / sustained throughput — none planned |
+| Phase                       | Stays the same                                   | Changes                                                                                                                                                                                                                                                    | Trigger being answered                                                          |
+|-----------------------------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| **Now / P0**                | Static SPA + supabase-js + RLS; zero server code | Upgrade Vercel to Pro (§4); add DB keep-alive ping (Vercel Cron); extract transactions/events repos; adopt generated types; delete dead code                                                                                                               | Hobby ToS compliance; transactions-table growth                                 |
+| **P1**                      | Admin path unchanged                             | **First Vercel Function** (catering inquiries: Turnstile + service-role insert + notification email). The first secret appears — server-side Vercel environment variables only, **never** in a `VITE_`-prefixed var (those compile into the public bundle) | First anonymous write + first secret                                            |
+| **P2**                      | Admin stays direct-to-Supabase                   | More functions (preorders, Square payment links, list signup). **Upgrade Supabase to Pro** the day a public feature depends on the DB at runtime                                                                                                           | Money flows through the site; a paused DB becomes an outage                     |
+| **P3**                      | Same shape — more functions, not a server        | Square checkout + webhook functions; role-scoped RLS policies; Drizzle *permitted* inside functions if RPC proves insufficient                                                                                                                             | Order volume; multi-user access                                                 |
+| **Never** (on this roadmap) | —                                                | A standing backend server                                                                                                                                                                                                                                  | Would need websockets / long-running jobs / sustained throughput — none planned |
 
 ## 10. Risks & gotchas register
 
-| # | Risk | Mitigation |
-|---|---|---|
-| 1 | **Vercel Hobby non-commercial ToS** — the site was out of compliance on the free plan | **Resolved by the Pro upgrade (§4)**; make the upgrade before adding any new public features |
-| 2 | **Supabase free-tier 7-day pause** | Scheduled ping now (Vercel Cron); build-time menu publish keeps the public site immune; hard Pro-upgrade trigger defined (§5) |
-| 3 | **RLS bypass via ORM / connection strings** — silently skips the entire security model | Codify "supabase-js or RPC only" until P3; no Postgres connection string ever ships in app code |
-| 4 | **Anon read policies leaking cost data** — RLS is row-level, not column-level | No anon policies on admin tables, ever; build-time publish or dedicated public views only |
-| 5 | **Catering-form spam** — a public POST endpoint will be found by bots | Turnstile + honeypot field + function-side rate limiting; insert-only table with no anon SELECT (inquiries contain customer PII) |
-| 6 | **Secrets-management debut** — the first Vercel Function introduces the service-role key | Server-side Vercel environment variables only; never in the repo; never `VITE_`-prefixed; rotate immediately if ever exposed |
-| 7 | **Non-transactional config saves** — acknowledged in `settingsRepo` today | `apply_config(jsonb)` RPC (§7) makes the save atomic |
-| 8 | **Dead code implying security that doesn't exist** — `/enter-password` references a nonexistent middleware; its password ships in the bundle | Delete `src/pages/enter-password/` and the unused `src/pages/order/Order.tsx` (already a ROADMAP cleanup item) |
+| # | Risk                                                                                                                                         | Mitigation                                                                                                                       |
+|---|----------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| 1 | **Vercel Hobby non-commercial ToS** — the site was out of compliance on the free plan                                                        | **Resolved by the Pro upgrade (§4)**; make the upgrade before adding any new public features                                     |
+| 2 | **Supabase free-tier 7-day pause**                                                                                                           | Scheduled ping now (Vercel Cron); build-time menu publish keeps the public site immune; hard Pro-upgrade trigger defined (§5)    |
+| 3 | **RLS bypass via ORM / connection strings** — silently skips the entire security model                                                       | Codify "supabase-js or RPC only" until P3; no Postgres connection string ever ships in app code                                  |
+| 4 | **Anon read policies leaking cost data** — RLS is row-level, not column-level                                                                | No anon policies on admin tables, ever; build-time publish or dedicated public views only                                        |
+| 5 | **Catering-form spam** — a public POST endpoint will be found by bots                                                                        | Turnstile + honeypot field + function-side rate limiting; insert-only table with no anon SELECT (inquiries contain customer PII) |
+| 6 | **Secrets-management debut** — the first Vercel Function introduces the service-role key                                                     | Server-side Vercel environment variables only; never in the repo; never `VITE_`-prefixed; rotate immediately if ever exposed     |
+| 7 | **Non-transactional config saves** — acknowledged in `settingsRepo` today                                                                    | `apply_config(jsonb)` RPC (§7) makes the save atomic                                                                             |
+| 8 | **Dead code implying security that doesn't exist** — `/enter-password` references a nonexistent middleware; its password ships in the bundle | Delete `src/pages/enter-password/` and the unused `src/pages/order/Order.tsx` (already a ROADMAP cleanup item)                   |
 
 ## 11. Immediate action list
 

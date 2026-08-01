@@ -124,8 +124,6 @@ describe("settingsToRows / rowsToSettings", () => {
                     date: "2026-07-25",
                     market: "grogans-mill",
                     marketFee: 20,
-                    fuel: 8,
-                    propane: 5,
                     waste: 12,
                     employeeHours: 4.5,
                     billysHours: 7,
@@ -144,11 +142,51 @@ describe("settingsToRows / rowsToSettings", () => {
         expect(back.salesTaxRatePercent).toBe(settings.salesTaxRatePercent);
     });
 
-    test("missing classification rows synthesize the all-null record", () => {
+    test("purchases, overrides, fees, and per-market rates survive the round-trip", () => {
+        const settings: Settings = {
+            ...DEFAULT_SETTINGS,
+            purchases: [
+                {
+                    id: "p1",
+                    date: "2026-07-20",
+                    category: "propane",
+                    amount: 30,
+                    note: "refill",
+                },
+                { id: "p2", date: "2026-07-22", category: "ice", amount: 6 },
+            ],
+            marketOverrides: { "2026-07-25": "new-caney" },
+            processorFees: [{ month: "2026-07", amount: 84.5 }],
+            marketHourlyRates: {
+                ...DEFAULT_SETTINGS.marketHourlyRates,
+                "grogans-mill": 15,
+            },
+        };
+        const back = normalize(settings);
+        expect(back.purchases).toEqual(settings.purchases);
+        expect(back.marketOverrides).toEqual(settings.marketOverrides);
+        expect(back.processorFees).toEqual(settings.processorFees);
+        expect(back.marketHourlyRates).toEqual(settings.marketHourlyRates);
+    });
+
+    test("purchase note maps between undefined and null", () => {
+        const settings: Settings = {
+            ...DEFAULT_SETTINGS,
+            purchases: [
+                { id: "p1", date: "2026-07-20", category: "fuel", amount: 40 },
+            ],
+        };
+        const snapshot = settingsToRows(settings);
+        expect(snapshot.purchases[0].note).toBeNull();
+        const back = rowsToSettings(snapshot).purchases[0];
+        expect("note" in back).toBe(false);
+    });
+
+    test("missing market_settings rows synthesize all-null records", () => {
         // An existing database migrated before any classification was chosen
-        // has an empty market_classifications table.
+        // has an empty market_settings table.
         const snapshot = settingsToRows(DEFAULT_SETTINGS);
-        snapshot.marketClassifications = [];
+        snapshot.marketSettings = [];
         const settings = rowsToSettings(snapshot);
         expect(settings.marketClassifications).toEqual({
             "grogans-mill": null,
@@ -156,6 +194,30 @@ describe("settingsToRows / rowsToSettings", () => {
             "fm-1488": null,
             other: null,
         });
+        expect(settings.marketHourlyRates).toEqual({
+            "grogans-mill": null,
+            "new-caney": null,
+            "fm-1488": null,
+            other: null,
+        });
+    });
+
+    test("purchase rows are emitted sorted by date+id for stable diffs", () => {
+        const purchase = (id: string, date: string) => ({
+            id,
+            date,
+            category: "fuel" as const,
+            amount: 10,
+        });
+        const a: Settings = {
+            ...DEFAULT_SETTINGS,
+            purchases: [purchase("b", "2026-07-25"), purchase("a", "2026-07-20")],
+        };
+        const b: Settings = {
+            ...DEFAULT_SETTINGS,
+            purchases: [purchase("a", "2026-07-20"), purchase("b", "2026-07-25")],
+        };
+        expect(settingsToRows(a).purchases).toEqual(settingsToRows(b).purchases);
     });
 
     test("event rows are emitted sorted by date+market for stable diffs", () => {
@@ -163,8 +225,6 @@ describe("settingsToRows / rowsToSettings", () => {
             date,
             market,
             marketFee: 0,
-            fuel: 0,
-            propane: 0,
             waste: 0,
             employeeHours: 0,
             billysHours: 0,

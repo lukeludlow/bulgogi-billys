@@ -52,6 +52,22 @@ test("editing a sell price updates the shared settings state", async () => {
     await expect.element(priceInput).toHaveValue(999);
 });
 
+test("meat amounts are entered as pounds and ounces", async () => {
+    const { getByLabelText } = await renderCalculator();
+
+    // The default recipe uses 0.15 lb of protein → 0 lb 2.4 oz.
+    const pounds = getByLabelText("Bulgogi Fries Small Protein (beef) amount lb");
+    const ounces = getByLabelText("Bulgogi Fries Small Protein (beef) amount oz");
+    await expect.element(pounds).toHaveValue(0);
+    await expect.element(ounces).toHaveValue(2.4);
+
+    // Editing the ounces half recomposes the stored decimal (8 oz = 0.5 lb)
+    // and round-trips back into the inputs from shared state.
+    await ounces.fill("8");
+    await expect.element(ounces).toHaveValue(8);
+    await expect.element(pounds).toHaveValue(0);
+});
+
 test("renders sidebar jump links for each section", async () => {
     const { getByRole } = await renderCalculator();
 

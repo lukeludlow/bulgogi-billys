@@ -47,6 +47,17 @@ test("readPendingJournal rejects a journal from a pre-events app version", () =>
     expect(readPendingJournal()).toBeNull();
 });
 
+test("readPendingJournal rejects a journal from a pre-purchases app version", () => {
+    // Journals from before the purchases log still carry per-event
+    // fuel/propane and lack the purchases/marketOverrides fields; replaying
+    // one would resurrect the removed columns.
+    const stale: Record<string, unknown> = { ...DEFAULT_SETTINGS };
+    delete stale.purchases;
+    delete stale.marketOverrides;
+    localStorage.setItem(PENDING_KEY, JSON.stringify(stale));
+    expect(readPendingJournal()).toBeNull();
+});
+
 test("clearPendingJournal removes the journal", () => {
     writePendingJournal(DEFAULT_SETTINGS);
     clearPendingJournal();

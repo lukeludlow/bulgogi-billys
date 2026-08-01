@@ -24,10 +24,12 @@ import {
 } from "@/components/catalyst-ui-kit/table.tsx";
 import { Text } from "@/components/catalyst-ui-kit/text.tsx";
 import { formatCurrency } from "./calculations.ts";
+import DualUnitField from "./DualUnitField.tsx";
 import {
     MARKET_LABELS,
     localDateKey,
     marketForDate,
+    parseLocalDate,
     type EventReportRow,
 } from "./eventAnalytics.ts";
 import NumberField from "./NumberField.tsx";
@@ -49,8 +51,6 @@ function emptyEvent(date: string, market: Market): MarketEvent {
         date,
         market,
         marketFee: 0,
-        fuel: 0,
-        propane: 0,
         waste: 0,
         employeeHours: 0,
         billysHours: 0,
@@ -59,8 +59,7 @@ function emptyEvent(date: string, market: Market): MarketEvent {
 
 /** "Sat, Jul 25, 2026" from a "YYYY-MM-DD" key, without UTC-parse day shift. */
 function formatEventDate(date: string): string {
-    const [year, month, day] = date.split("-").map(Number);
-    return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    return parseLocalDate(date).toLocaleDateString("en-US", {
         weekday: "short",
         month: "short",
         day: "numeric",
@@ -70,9 +69,10 @@ function formatEventDate(date: string): string {
 
 /**
  * One row per event (sales-derived and/or recorded expenses), with the
- * expense fields editable inline. The wide table scrolls horizontally on
- * mobile; the identifying and headline columns come first so they're visible
- * without scrolling.
+ * expense fields editable inline and the market reassignable when the
+ * schedule heuristic tagged a day wrong. The wide table scrolls horizontally
+ * on mobile; the identifying and headline columns come first so they're
+ * visible without scrolling.
  */
 export default function EventsTable({ settings, setSettings, report }: Props) {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -108,6 +108,67 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
                 (event) => !(event.date === date && event.market === market),
             ),
         }));
+    }
+
+    /**
+     * Set (or clear, selection = "") the day's market override, and move any
+     * expense row recorded under the old market along with it. If the target
+     * (date, market) already has an expense row, the two are merged by
+     * summing — both describe the same physical day.
+     */
+    function overrideMarket(
+        date: string,
+        currentMarket: Market,
+        selection: string,
+    ) {
+        setSettings((prev) => {
+            const marketOverrides = { ...prev.marketOverrides };
+            const newMarket =
+                selection === ""
+                    ? marketForDate(parseLocalDate(date))
+                    : (selection as Market);
+            if (selection === "") {
+                delete marketOverrides[date];
+            } else {
+                marketOverrides[date] = selection as Market;
+            }
+
+            let events = prev.events;
+            const moving = prev.events.find(
+                (event) =>
+                    event.date === date && event.market === currentMarket,
+            );
+            if (moving && newMarket !== currentMarket) {
+                const existing = prev.events.find(
+                    (event) =>
+                        event.date === date && event.market === newMarket,
+                );
+                const merged: MarketEvent = existing
+                    ? {
+                          ...existing,
+                          marketFee: existing.marketFee + moving.marketFee,
+                          waste: existing.waste + moving.waste,
+                          employeeHours:
+                              existing.employeeHours + moving.employeeHours,
+                          billysHours:
+                              existing.billysHours + moving.billysHours,
+                      }
+                    : { ...moving, market: newMarket };
+                events = [
+                    ...prev.events.filter(
+                        (event) =>
+                            !(
+                                event.date === date &&
+                                (event.market === currentMarket ||
+                                    event.market === newMarket)
+                            ),
+                    ),
+                    merged,
+                ];
+            }
+
+            return { ...prev, marketOverrides, events };
+        });
     }
 
     const duplicateNewEvent = settings.events.some(
@@ -156,16 +217,29 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
                             <TableHeader className="text-right">
                                 Est. food cost
                             </TableHeader>
+                            <TableHeader className="text-right">
+                                Fuel
+                            </TableHeader>
+                            <TableHeader className="text-right">
+                                Propane
+                            </TableHeader>
+                            <TableHeader className="text-right">Ice</TableHeader>
+                            <TableHeader className="text-right">
+                                Card fees
+                            </TableHeader>
+                            <TableHeader className="text-right">
+                                Food purch.
+                            </TableHeader>
                             <TableHeader>Market fee</TableHeader>
-                            <TableHeader>Fuel</TableHeader>
-                            <TableHeader>Propane</TableHeader>
                             <TableHeader>Waste</TableHeader>
                             <TableHeader>Emp. hours</TableHeader>
                             <TableHeader className="text-right">
                                 Labor
                             </TableHeader>
                             <TableHeader>Billy&apos;s hours</TableHeader>
-                            <TableHeader>
+                            {/* relative: anchors the absolutely-positioned
+                                sr-only span so it can't stretch the page. */}
+                            <TableHeader className="relative">
                                 <span className="sr-only">Actions</span>
                             </TableHeader>
                         </TableRow>
@@ -175,6 +249,11 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
                             <EventRow
                                 key={`${row.date} ${row.market}`}
                                 row={row}
+                                overridden={
+                                    settings.marketOverrides[row.date] !==
+                                    undefined
+                                }
+                                onOverrideMarket={overrideMarket}
                                 onUpdate={updateEvent}
                                 onAddExpenses={addExpenses}
                                 onRemoveExpenses={removeExpenses}
@@ -183,7 +262,7 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
                         {report.length === 0 && (
                             <TableRow>
                                 <TableCell
-                                    colSpan={13}
+                                    colSpan={16}
                                     className="text-center text-zinc-500 dark:text-zinc-400"
                                 >
                                     No events yet — import transactions or add
@@ -253,11 +332,19 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
 
 function EventRow({
     row,
+    overridden,
+    onOverrideMarket,
     onUpdate,
     onAddExpenses,
     onRemoveExpenses,
 }: {
     row: EventReportRow;
+    overridden: boolean;
+    onOverrideMarket: (
+        date: string,
+        currentMarket: Market,
+        selection: string,
+    ) => void;
     onUpdate: (
         date: string,
         market: Market,
@@ -268,13 +355,11 @@ function EventRow({
 }) {
     const { date, market, expenses } = row;
     const eventLabel = `${date} ${MARKET_LABELS[market]}`;
+    const autoMarket = marketForDate(parseLocalDate(date));
 
     function expenseField(
         label: string,
-        key: keyof Pick<
-            MarketEvent,
-            "marketFee" | "fuel" | "propane" | "waste"
-        >,
+        key: keyof Pick<MarketEvent, "marketFee" | "waste">,
     ) {
         return (
             <NumberField
@@ -288,15 +373,56 @@ function EventRow({
         );
     }
 
+    function allocatedCell(value: number, deEmphasized = false) {
+        return (
+            <TableCell
+                className={`text-right tabular-nums ${
+                    deEmphasized ? "text-zinc-400 dark:text-zinc-500" : ""
+                }`}
+            >
+                {formatCurrency(value)}
+            </TableCell>
+        );
+    }
+
     return (
         <TableRow>
             <TableCell className="whitespace-nowrap">
                 {formatEventDate(date)}
             </TableCell>
             <TableCell>
-                <Badge color={market === "other" ? "zinc" : "sky"}>
-                    {MARKET_LABELS[market]}
-                </Badge>
+                <div className="flex items-center gap-2">
+                    <Select
+                        aria-label={`Market for ${date}`}
+                        // min-w, not w/max-w: the control is w-full internally
+                        // and collapses inside an auto-sized table cell.
+                        className="min-w-40"
+                        value={overridden ? market : ""}
+                        onChange={(event) =>
+                            onOverrideMarket(date, market, event.target.value)
+                        }
+                    >
+                        <option value="">
+                            Auto — {MARKET_LABELS[autoMarket]}
+                        </option>
+                        {MARKETS.map((option) => (
+                            <option key={option} value={option}>
+                                {MARKET_LABELS[option]}
+                            </option>
+                        ))}
+                    </Select>
+                    <Badge
+                        color={
+                            overridden
+                                ? "amber"
+                                : market === "other"
+                                  ? "zinc"
+                                  : "sky"
+                        }
+                    >
+                        {MARKET_LABELS[market]}
+                    </Badge>
+                </div>
             </TableCell>
             <TableCell
                 className={`text-right font-medium tabular-nums ${
@@ -316,18 +442,24 @@ function EventRow({
             <TableCell className="text-right tabular-nums">
                 {formatCurrency(row.estFoodCost)}
             </TableCell>
+            {allocatedCell(row.fuelCost)}
+            {allocatedCell(row.propaneCost)}
+            {allocatedCell(row.iceCost)}
+            {allocatedCell(row.processorFee)}
+            {/* Reference only — never part of contribution. */}
+            {allocatedCell(row.allocatedFoodCost, true)}
             {expenses ? (
                 <>
                     <TableCell>{expenseField("Market fee", "marketFee")}</TableCell>
-                    <TableCell>{expenseField("Fuel", "fuel")}</TableCell>
-                    <TableCell>{expenseField("Propane", "propane")}</TableCell>
                     <TableCell>{expenseField("Waste", "waste")}</TableCell>
                     <TableCell>
-                        <NumberField
+                        <DualUnitField
                             aria-label={`Employee hours for ${eventLabel}`}
-                            suffix="hrs"
-                            step={0.25}
-                            className="w-28"
+                            majorSuffix="hr"
+                            minorSuffix="min"
+                            minorPerMajor={60}
+                            minorStep={5}
+                            className="w-44"
                             value={expenses.employeeHours}
                             onChange={(value) =>
                                 onUpdate(date, market, {
@@ -340,11 +472,13 @@ function EventRow({
                         {formatCurrency(row.laborCost)}
                     </TableCell>
                     <TableCell>
-                        <NumberField
+                        <DualUnitField
                             aria-label={`Billy's hours for ${eventLabel}`}
-                            suffix="hrs"
-                            step={0.25}
-                            className="w-28"
+                            majorSuffix="hr"
+                            minorSuffix="min"
+                            minorPerMajor={60}
+                            minorStep={5}
+                            className="w-44"
                             value={expenses.billysHours}
                             onChange={(value) =>
                                 onUpdate(date, market, { billysHours: value })
@@ -361,7 +495,7 @@ function EventRow({
                     </TableCell>
                 </>
             ) : (
-                <TableCell colSpan={8}>
+                <TableCell colSpan={6}>
                     <Button
                         outline
                         onClick={() => onAddExpenses(date, market)}

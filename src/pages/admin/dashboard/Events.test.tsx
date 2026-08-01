@@ -38,8 +38,6 @@ vi.mock("./persistence/settingsRepo.ts", async () => {
                         date: "2026-07-19",
                         market: "new-caney",
                         marketFee: 20,
-                        fuel: 0,
-                        propane: 0,
                         waste: 0,
                         employeeHours: 0,
                         billysHours: 0,
@@ -116,6 +114,83 @@ test("editing an expense updates the event's contribution", async () => {
 
     // $10 − $5 − $2 = $3.
     await expect.element(getByText("$3.00").first()).toBeInTheDocument();
+});
+
+test("employee hours entered as hours + minutes update labor cost", async () => {
+    const { getByText, getByLabelText } = await renderEvents();
+
+    // Sunday starts at $10 − $5 − $20 fee = −$15.
+    await expect.element(getByText("-$15.00").first()).toBeInTheDocument();
+
+    // 30 minutes at the global $10/hr adds $5 of labor → −$20.
+    const minutes = getByLabelText(
+        "Employee hours for 2026-07-19 New Caney min",
+    );
+    await minutes.fill("30");
+    await expect.element(getByText("-$20.00").first()).toBeInTheDocument();
+
+    // Bumping to 1 hr 30 min makes labor $15 → −$30.
+    const hours = getByLabelText("Employee hours for 2026-07-19 New Caney hr");
+    await hours.fill("1");
+    await expect.element(getByText("-$30.00").first()).toBeInTheDocument();
+});
+
+test("a per-market hourly rate overrides the global rate for that market", async () => {
+    const { getByText, getByLabelText } = await renderEvents();
+
+    const hours = getByLabelText("Employee hours for 2026-07-19 New Caney hr");
+    await hours.fill("1");
+    // 1 hr × global $10 → $10 labor; −$15 − $10 = −$25.
+    await expect.element(getByText("-$25.00").first()).toBeInTheDocument();
+
+    await getByLabelText("Hourly rate for New Caney").fill("20");
+    // 1 hr × market $20 → −$35.
+    await expect.element(getByText("-$35.00").first()).toBeInTheDocument();
+});
+
+test("overriding a day's market moves its expense row along", async () => {
+    const { getByLabelText } = await renderEvents();
+
+    // The Sunday event's expense row is keyed (2026-07-19, new-caney).
+    await expect
+        .element(getByLabelText("Market fee for 2026-07-19 New Caney"))
+        .toBeInTheDocument();
+
+    const select = getByLabelText("Market for 2026-07-19");
+    await select.selectOptions("Grogan's Mill");
+
+    // Sales and the expense row now live under Grogan's Mill.
+    await expect.element(select).toHaveValue("grogans-mill");
+    await expect
+        .element(getByLabelText("Market fee for 2026-07-19 Grogan's Mill"))
+        .toBeInTheDocument();
+});
+
+test("purchases can be added and removed", async () => {
+    const { getByRole, getByLabelText } = await renderEvents();
+
+    await getByRole("button", { name: "Add purchase" }).click();
+    await expect
+        .element(getByLabelText("Purchase amount"))
+        .toBeInTheDocument();
+    await getByLabelText("Purchase amount").fill("35");
+
+    await getByRole("button", { name: "Remove", exact: true }).first().click();
+    await expect
+        .element(getByLabelText("Purchase amount"))
+        .not.toBeInTheDocument();
+});
+
+test("a monthly processor fee can be added", async () => {
+    const { getByRole, getByLabelText } = await renderEvents();
+
+    const month = getByLabelText("Fee month");
+    await month.fill("2026-07");
+    await getByRole("button", { name: "Add month" }).click();
+
+    await expect
+        .element(getByLabelText("Processor fees for 2026-07"))
+        .toBeInTheDocument();
 });
 
 test("choosing a classification shows its badge", async () => {

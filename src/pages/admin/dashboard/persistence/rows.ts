@@ -9,6 +9,9 @@ import {
     type MarketClassification,
     type MarketEvent,
     type MenuItem,
+    type ProcessorFee,
+    type Purchase,
+    type PurchaseCategory,
     type Settings,
     type Transaction,
 } from "../types.ts";
@@ -79,16 +82,33 @@ export interface EventRow {
     date: string;
     market: string;
     market_fee: number;
-    fuel: number;
-    propane: number;
     waste: number;
     employee_hours: number;
     billys_hours: number;
 }
 
-export interface MarketClassificationRow {
+export interface PurchaseRow {
+    id: string;
+    date: string;
+    category: string;
+    amount: number;
+    note: string | null;
+}
+
+export interface MarketOverrideRow {
+    date: string;
+    market: string;
+}
+
+export interface ProcessorFeeRow {
+    month: string;
+    amount: number;
+}
+
+export interface MarketSettingsRow {
     market: string;
     classification: string | null;
+    employee_hourly_rate: number | null;
 }
 
 export interface DbSnapshot {
@@ -100,7 +120,10 @@ export interface DbSnapshot {
     recipeLines: RecipeLineRow[];
     transactions: TransactionRow[];
     events: EventRow[];
-    marketClassifications: MarketClassificationRow[];
+    purchases: PurchaseRow[];
+    marketOverrides: MarketOverrideRow[];
+    processorFees: ProcessorFeeRow[];
+    marketSettings: MarketSettingsRow[];
 }
 
 export function settingsToRows(settings: Settings): DbSnapshot {
@@ -181,10 +204,32 @@ export function settingsToRows(settings: Settings): DbSnapshot {
                 `${a.date} ${a.market}`.localeCompare(`${b.date} ${b.market}`),
             )
             .map(eventToRow),
-        marketClassifications: MARKETS.map((market) => ({
+        purchases: [...settings.purchases]
+            .sort((a, b) =>
+                `${a.date} ${a.id}`.localeCompare(`${b.date} ${b.id}`),
+            )
+            .map(purchaseToRow),
+        marketOverrides: Object.entries(settings.marketOverrides)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, market]) => ({ date, market })),
+        processorFees: [...settings.processorFees]
+            .sort((a, b) => a.month.localeCompare(b.month))
+            .map((fee) => ({ month: fee.month, amount: fee.amount })),
+        marketSettings: MARKETS.map((market) => ({
             market,
             classification: settings.marketClassifications[market],
+            employee_hourly_rate: settings.marketHourlyRates[market],
         })),
+    };
+}
+
+export function purchaseToRow(purchase: Purchase): PurchaseRow {
+    return {
+        id: purchase.id,
+        date: purchase.date,
+        category: purchase.category,
+        amount: purchase.amount,
+        note: purchase.note ?? null,
     };
 }
 
@@ -193,8 +238,6 @@ export function eventToRow(event: MarketEvent): EventRow {
         date: event.date,
         market: event.market,
         market_fee: event.marketFee,
-        fuel: event.fuel,
-        propane: event.propane,
         waste: event.waste,
         employee_hours: event.employeeHours,
         billys_hours: event.billysHours,
@@ -292,22 +335,47 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
             date: row.date,
             market: row.market as Market,
             marketFee: row.market_fee,
-            fuel: row.fuel,
-            propane: row.propane,
             waste: row.waste,
             employeeHours: row.employee_hours,
             billysHours: row.billys_hours,
         }));
+
+    const purchases: Purchase[] = [...snapshot.purchases]
+        .sort((a, b) => `${a.date} ${a.id}`.localeCompare(`${b.date} ${b.id}`))
+        .map((row) => {
+            const purchase: Purchase = {
+                id: row.id,
+                date: row.date,
+                category: row.category as PurchaseCategory,
+                amount: row.amount,
+            };
+            if (row.note !== null) purchase.note = row.note;
+            return purchase;
+        });
+
+    const marketOverrides: Record<string, Market> = {};
+    for (const row of snapshot.marketOverrides) {
+        marketOverrides[row.date] = row.market as Market;
+    }
+
+    const processorFees: ProcessorFee[] = [...snapshot.processorFees]
+        .sort((a, b) => a.month.localeCompare(b.month))
+        .map((row) => ({ month: row.month, amount: row.amount }));
 
     // Start from all-null so markets with no stored row (e.g. a database
     // migrated before any classification was chosen) are still present.
     const marketClassifications = Object.fromEntries(
         MARKETS.map((market) => [market, null]),
     ) as Record<Market, MarketClassification | null>;
-    for (const row of snapshot.marketClassifications) {
+    const marketHourlyRates = Object.fromEntries(
+        MARKETS.map((market) => [market, null]),
+    ) as Record<Market, number | null>;
+    for (const row of snapshot.marketSettings) {
         if ((MARKETS as string[]).includes(row.market)) {
             marketClassifications[row.market as Market] =
                 row.classification as MarketClassification | null;
+            marketHourlyRates[row.market as Market] =
+                row.employee_hourly_rate;
         }
     }
 
@@ -321,8 +389,12 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         transactions,
         blendedFoodCostPercent: snapshot.settings.blended_food_cost_percent,
         events,
+        purchases,
+        marketOverrides,
+        processorFees,
         marketClassifications,
         employeeHourlyRate: snapshot.settings.employee_hourly_rate,
         salesTaxRatePercent: snapshot.settings.sales_tax_rate_percent,
+        marketHourlyRates,
     };
 }

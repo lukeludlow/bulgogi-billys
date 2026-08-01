@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/catalyst-ui-kit/badge.tsx";
 import { Subheading } from "@/components/catalyst-ui-kit/heading.tsx";
 import { Text } from "@/components/catalyst-ui-kit/text.tsx";
+import DualUnitField from "./DualUnitField.tsx";
 import NumberField from "./NumberField.tsx";
 import {
     formatCurrency,
@@ -155,19 +156,48 @@ export default function MenuItemEditor({
                                     </span>
                                 </TableCell>
                                 {item.variants.map((variant) => (
-                                    <TableCell key={variant.id} className="w-32">
-                                        <NumberField
-                                            aria-label={`${item.name} ${variant.label} ${name} amount`}
-                                            value={amountFor(variant.id, ingredientId)}
-                                            suffix={unit}
-                                            onChange={(value) =>
-                                                onChangeRecipe(
+                                    <TableCell
+                                        key={variant.id}
+                                        className={unit === "lb" ? "w-48" : "w-32"}
+                                    >
+                                        {unit === "lb" ? (
+                                            // Billy weighs meat in lb + oz;
+                                            // stored value stays decimal lb.
+                                            <DualUnitField
+                                                aria-label={`${item.name} ${variant.label} ${name} amount`}
+                                                majorSuffix="lb"
+                                                minorSuffix="oz"
+                                                minorPerMajor={16}
+                                                minorStep={0.25}
+                                                value={amountFor(
                                                     variant.id,
                                                     ingredientId,
-                                                    value,
-                                                )
-                                            }
-                                        />
+                                                )}
+                                                onChange={(value) =>
+                                                    onChangeRecipe(
+                                                        variant.id,
+                                                        ingredientId,
+                                                        value,
+                                                    )
+                                                }
+                                            />
+                                        ) : (
+                                            <NumberField
+                                                aria-label={`${item.name} ${variant.label} ${name} amount`}
+                                                value={amountFor(
+                                                    variant.id,
+                                                    ingredientId,
+                                                )}
+                                                suffix={unit}
+                                                onChange={(value) =>
+                                                    onChangeRecipe(
+                                                        variant.id,
+                                                        ingredientId,
+                                                        value,
+                                                    )
+                                                }
+                                            />
+                                        )}
                                     </TableCell>
                                 ))}
                             </TableRow>

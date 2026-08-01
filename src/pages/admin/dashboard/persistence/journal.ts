@@ -19,6 +19,11 @@ function isUsableSettings(value: unknown): value is Settings {
         Array.isArray(candidate.ingredients) &&
         Array.isArray(candidate.items) &&
         Array.isArray(candidate.events) &&
+        // Also rejects pre-purchases journals whose events still carry
+        // per-event fuel/propane fields.
+        Array.isArray(candidate.purchases) &&
+        typeof candidate.marketOverrides === "object" &&
+        candidate.marketOverrides !== null &&
         typeof candidate.employeeHourlyRate === "number" &&
         typeof candidate.salesTaxRatePercent === "number"
     );
