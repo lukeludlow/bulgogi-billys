@@ -186,7 +186,7 @@ File-by-file mapping (moves only — no renames or refactors during the move):
 Two placement decisions worth calling out:
 
 - **The Supabase client and all repos live _inside_ `src/admin/data/`**, not a
-  top-level `src/data/`. This deliberately refines BACKEND_ARCHITECTURE's
+  top-level `src/data/`. This deliberately refines `BACKEND_ARCHITECTURE`'s
   "`src/data/<domain>.ts`" convention: §8 of that doc guarantees public code
   never touches the database at runtime (build-time publishing for menu prices,
   serverless functions for public writes), so the browser data layer _is_ admin
