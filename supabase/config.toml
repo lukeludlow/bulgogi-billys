@@ -1,3 +1,18 @@
 # Minimal Supabase CLI config. Regenerate with `supabase init` if you want the
 # full commented template; only project_id is required for link/db push.
 project_id = "bulgogi-billys"
+
+# Local stack only — the hosted project's auth settings live in the dashboard.
+# (`supabase config push` would send this block there, so don't run it.)
+# AdminLogin sends emailRedirectTo = <origin>/auth/callback; GoTrue drops a
+# redirect that isn't allowlisted and falls back to site_url, which silently
+# breaks magic-link sign-in against the dev server. 5199 is the port the
+# `verify` skill uses; 5173 is Vite's default.
+[auth]
+site_url = "http://localhost:5199"
+additional_redirect_urls = [
+    "http://localhost:5199/auth/callback",
+    "http://127.0.0.1:5199/auth/callback",
+    "http://localhost:5173/auth/callback",
+    "http://127.0.0.1:5173/auth/callback",
+]
