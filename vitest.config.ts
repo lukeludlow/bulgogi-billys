@@ -15,7 +15,7 @@ export default defineConfig({
         },
     },
     // Dummy Supabase config so modules that create the client at import time
-    // (src/lib/supabase.ts) load in tests without a real project. Tests that
+    // (src/admin/data/supabase.ts) load in tests without a real project. Tests that
     // exercise auth behavior mock @/lib/supabase.ts instead.
     define: {
         "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(

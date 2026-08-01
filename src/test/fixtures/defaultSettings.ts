@@ -3,7 +3,7 @@ import {
     type Ingredient,
     type MenuItem,
     type Settings,
-} from "@/pages/admin/dashboard/types.ts";
+} from "@/admin/domain/types.ts";
 
 // Best-guess starting numbers. Every value is editable in the UI — these are
 // deliberately round, plausible estimates for a Korean-fusion food operation,

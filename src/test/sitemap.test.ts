@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import sitemapXml from "../../public/sitemap.xml?raw";
 import robotsTxt from "../../public/robots.txt?raw";
-import { BASE_URL } from "@/components/PageMeta.tsx";
-import { posts } from "@/pages/blog/posts.ts";
+import { BASE_URL } from "@/shared/PageMeta.tsx";
+import { posts } from "@/site/pages/blog/posts.ts";
 
 function sitemapUrls(): string[] {
     const doc = new DOMParser().parseFromString(sitemapXml, "application/xml");

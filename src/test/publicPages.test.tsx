@@ -7,15 +7,15 @@
 import { expect, test } from "vitest";
 import { Route, Routes } from "react-router";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
-import Home from "@/pages/home/Home.tsx";
-import Menu from "@/pages/menu/Menu.tsx";
-import Schedule from "@/pages/schedule/Schedule.tsx";
-import OrderNow from "@/pages/order-now/OrderNow.tsx";
-import Contact from "@/pages/contact/Contact.tsx";
-import Blog from "@/pages/blog/Blog.tsx";
-import BlogPost from "@/pages/blog/BlogPost.tsx";
-import NotFound from "@/pages/not-found/NotFound.tsx";
-import { posts } from "@/pages/blog/posts.ts";
+import Home from "@/site/pages/home/Home.tsx";
+import Menu from "@/site/pages/menu/Menu.tsx";
+import Schedule from "@/site/pages/schedule/Schedule.tsx";
+import OrderNow from "@/site/pages/order-now/OrderNow.tsx";
+import Contact from "@/site/pages/contact/Contact.tsx";
+import Blog from "@/site/pages/blog/Blog.tsx";
+import BlogPost from "@/site/pages/blog/BlogPost.tsx";
+import NotFound from "@/site/pages/not-found/NotFound.tsx";
+import { posts } from "@/site/pages/blog/posts.ts";
 
 test("home page renders with its title", async () => {
     await renderWithProviders(<Home />);

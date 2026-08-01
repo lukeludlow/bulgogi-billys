@@ -1,0 +1,189 @@
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { render } from "vitest-browser-react";
+import { SettingsProvider, useSettings } from "@/admin/SettingsContext.tsx";
+import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
+import { rowsToSettings, settingsToRows } from "@/admin/data/rows.ts";
+import { applyChangeSet, fetchSettings } from "@/admin/data/settingsRepo.ts";
+
+vi.mock("@/admin/data/settingsRepo.ts", () => ({
+    fetchSettings: vi.fn(),
+    applyChangeSet: vi.fn(),
+}));
+
+const BASE = rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
+const PENDING_KEY = "bb_admin_pending";
+
+beforeEach(() => {
+    localStorage.removeItem(PENDING_KEY);
+    vi.mocked(fetchSettings).mockResolvedValue(structuredClone(BASE));
+    vi.mocked(applyChangeSet).mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+    localStorage.removeItem(PENDING_KEY);
+    vi.clearAllMocks();
+});
+
+/** Small consumer exposing state + a way to make an edit. */
+function Probe() {
+    const { settings, setSettings, syncStatus } = useSettings();
+    return (
+        <div>
+            <output aria-label="status">{syncStatus}</output>
+            <output aria-label="spend">{settings.groceryWeeklySpend}</output>
+            <button
+                onClick={() =>
+                    setSettings((prev) => ({
+                        ...prev,
+                        groceryWeeklySpend: prev.groceryWeeklySpend + 1,
+                    }))
+                }
+            >
+                bump
+            </button>
+        </div>
+    );
+}
+
+function renderProvider() {
+    return render(
+        <SettingsProvider>
+            <Probe />
+        </SettingsProvider>,
+    );
+}
+
+test("shows a loading state, then the children with the fetched settings", async () => {
+    let resolve!: (value: typeof BASE) => void;
+    vi.mocked(fetchSettings).mockReturnValue(
+        new Promise((r) => {
+            resolve = r;
+        }),
+    );
+    const screen = await renderProvider();
+
+    await expect
+        .element(screen.getByText("Loading dashboard…"))
+        .toBeInTheDocument();
+
+    resolve(structuredClone(BASE));
+    await expect
+        .element(screen.getByLabelText("spend"))
+        .toHaveTextContent(String(BASE.groceryWeeklySpend));
+    await expect
+        .element(screen.getByLabelText("status"))
+        .toHaveTextContent("saved");
+});
+
+test("an empty database shows the error screen instead of seeding", async () => {
+    vi.mocked(fetchSettings).mockResolvedValue(null);
+    const screen = await renderProvider();
+
+    await expect
+        .element(screen.getByText("Couldn’t load the dashboard data."))
+        .toBeInTheDocument();
+});
+
+test("shows an error with a retry that reloads", async () => {
+    vi.mocked(fetchSettings).mockRejectedValueOnce(new Error("network down"));
+    const screen = await renderProvider();
+
+    await expect
+        .element(screen.getByText("Couldn’t load the dashboard data."))
+        .toBeInTheDocument();
+
+    await screen.getByRole("button", { name: "Retry" }).click();
+    await expect
+        .element(screen.getByLabelText("spend"))
+        .toHaveTextContent(String(BASE.groceryWeeklySpend));
+});
+
+test("an edit autosaves exactly once after the debounce", async () => {
+    const screen = await renderProvider();
+    await expect
+        .element(screen.getByLabelText("status"))
+        .toHaveTextContent("saved");
+
+    await screen.getByRole("button", { name: "bump" }).click();
+    await expect
+        .element(screen.getByLabelText("status"), { timeout: 5_000 })
+        .toHaveTextContent("saved");
+
+    expect(applyChangeSet).toHaveBeenCalledOnce();
+    const changeSet = vi.mocked(applyChangeSet).mock.calls[0][0];
+    expect(changeSet.settings?.grocery_weekly_spend).toBe(
+        BASE.groceryWeeklySpend + 1,
+    );
+    expect(changeSet.config).toBeUndefined();
+});
+
+test("an edit made during a save is saved right after it", async () => {
+    let resolveFirst!: () => void;
+    vi.mocked(applyChangeSet).mockReturnValueOnce(
+        new Promise((r) => {
+            resolveFirst = () => r(undefined);
+        }),
+    );
+    const screen = await renderProvider();
+    await expect
+        .element(screen.getByLabelText("status"))
+        .toHaveTextContent("saved");
+
+    await screen.getByRole("button", { name: "bump" }).click();
+    await expect
+        .element(screen.getByLabelText("status"), { timeout: 5_000 })
+        .toHaveTextContent("saving");
+
+    // Second edit lands while the first request is still in flight.
+    await screen.getByRole("button", { name: "bump" }).click();
+    resolveFirst();
+
+    await expect
+        .element(screen.getByLabelText("status"), { timeout: 5_000 })
+        .toHaveTextContent("saved");
+    expect(applyChangeSet).toHaveBeenCalledTimes(2);
+    const second = vi.mocked(applyChangeSet).mock.calls[1][0];
+    expect(second.settings?.grocery_weekly_spend).toBe(
+        BASE.groceryWeeklySpend + 2,
+    );
+});
+
+test("a failed save shows an error and retries until it succeeds", async () => {
+    vi.mocked(applyChangeSet).mockRejectedValueOnce(new Error("offline"));
+    const screen = await renderProvider();
+    await expect
+        .element(screen.getByLabelText("status"))
+        .toHaveTextContent("saved");
+
+    await screen.getByRole("button", { name: "bump" }).click();
+    await expect
+        .element(screen.getByLabelText("status"), { timeout: 5_000 })
+        .toHaveTextContent("error");
+
+    // The 2s backoff retry runs against the now-working mock.
+    await expect
+        .element(screen.getByLabelText("status"), { timeout: 10_000 })
+        .toHaveTextContent("saved");
+    expect(applyChangeSet).toHaveBeenCalledTimes(2);
+});
+
+test("a journaled edit from a previous session is adopted and persisted", async () => {
+    const journaled = {
+        ...structuredClone(BASE),
+        groceryWeeklySpend: 777,
+    };
+    localStorage.setItem(PENDING_KEY, JSON.stringify(journaled));
+    const screen = await renderProvider();
+
+    // The journal wins over the DB copy and is written back through autosave.
+    await expect
+        .element(screen.getByLabelText("spend"))
+        .toHaveTextContent("777");
+    await expect
+        .element(screen.getByLabelText("status"), { timeout: 5_000 })
+        .toHaveTextContent("saved");
+    expect(applyChangeSet).toHaveBeenCalledOnce();
+    const changeSet = vi.mocked(applyChangeSet).mock.calls[0][0];
+    expect(changeSet.settings?.grocery_weekly_spend).toBe(777);
+    expect(localStorage.getItem(PENDING_KEY)).toBeNull();
+});

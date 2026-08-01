@@ -4,29 +4,29 @@ import { createRoot } from "react-dom/client";
 import "@fontsource-variable/inter";
 import "@/index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
-import App from "@/App.tsx";
-import Menu from "@/pages/menu/Menu.tsx";
-import Home from "@/pages/home/Home.tsx";
-import NotFound from "@/pages/not-found/NotFound.tsx";
-import Schedule from "@/pages/schedule/Schedule.tsx";
+import App from "@/site/App.tsx";
+import Menu from "@/site/pages/menu/Menu.tsx";
+import Home from "@/site/pages/home/Home.tsx";
+import NotFound from "@/site/pages/not-found/NotFound.tsx";
+import Schedule from "@/site/pages/schedule/Schedule.tsx";
 import { Analytics } from "@vercel/analytics/react";
-import OrderNow from "@/pages/order-now/OrderNow.tsx";
-import Contact from "@/pages/contact/Contact.tsx";
-import Blog from "@/pages/blog/Blog.tsx";
-import BlogPost from "@/pages/blog/BlogPost.tsx";
+import OrderNow from "@/site/pages/order-now/OrderNow.tsx";
+import Contact from "@/site/pages/contact/Contact.tsx";
+import Blog from "@/site/pages/blog/Blog.tsx";
+import BlogPost from "@/site/pages/blog/BlogPost.tsx";
 // Lazy-loaded so the charting library (recharts) and the Supabase client only
 // ship to the admin routes, keeping the public site bundle small.
-const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin.tsx"));
-const AuthCallback = lazy(() => import("@/pages/admin/AuthCallback.tsx"));
-const RequireAdmin = lazy(() => import("@/pages/admin/RequireAdmin.tsx"));
-const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout.tsx"));
+const AdminLogin = lazy(() => import("@/admin/AdminLogin.tsx"));
+const AuthCallback = lazy(() => import("@/admin/AuthCallback.tsx"));
+const RequireAdmin = lazy(() => import("@/admin/RequireAdmin.tsx"));
+const AdminLayout = lazy(() => import("@/admin/AdminLayout.tsx"));
 const ProfitCalculator = lazy(
-    () => import("@/pages/admin/dashboard/ProfitCalculator.tsx"),
+    () => import("@/admin/pages/ProfitCalculator.tsx"),
 );
 const TransactionHistory = lazy(
-    () => import("@/pages/admin/dashboard/TransactionHistory.tsx"),
+    () => import("@/admin/pages/TransactionHistory.tsx"),
 );
-const Events = lazy(() => import("@/pages/admin/dashboard/Events.tsx"));
+const Events = lazy(() => import("@/admin/pages/Events.tsx"));
 
 const router = createBrowserRouter([
     {
