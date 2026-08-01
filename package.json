@@ -8,8 +8,12 @@
         "build": "tsc -b && vite build",
         "lint": "eslint .",
         "preview": "vite preview",
-        "test": "vitest run --config=vitest.browser.config.ts --browser.headless --browser.ui=false",
-        "test:browser": "vitest --config=vitest.browser.config.ts"
+        "typecheck": "tsc -b",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "test": "vitest run",
+        "test:unit": "vitest run --project unit",
+        "test:browser": "vitest --project browser --browser.headless=false"
     },
     "dependencies": {
         "@fontsource-variable/inter": "^5.2.8",
@@ -37,6 +41,7 @@
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.2",
         "globals": "^17.5.0",
+        "happy-dom": "^20.11.1",
         "prettier": "^3.8.3",
         "supabase": "^2.110.0",
         "typescript": "~6.0.2",
