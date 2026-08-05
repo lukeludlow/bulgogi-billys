@@ -1,81 +1,22 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
+import { seedSettingsTables, stub } from "@/test/postgrestStub.ts";
 import { computeChangeSet } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
 import { applyChangeSet, fetchSettings } from "./settingsRepo.ts";
 
-// Chainable PostgREST stub: every method returns the same query object, and
-// awaiting it resolves to { data, error } configured per table. Each call is
-// recorded so tests can assert order and arguments.
-interface RecordedCall {
-    table: string;
-    method: string;
-    args: unknown[];
-}
-
-const mock = vi.hoisted(() => {
-    const calls: RecordedCall[] = [];
-    const data = new Map<string, unknown>();
-    const errors = new Map<string, string>();
-
-    function from(table: string) {
-        const query: Record<string, unknown> = {};
-        let range: [number, number] | null = null;
-        for (const method of [
-            "select",
-            "order",
-            "range",
-            "maybeSingle",
-            "upsert",
-            "insert",
-            "delete",
-            "eq",
-            "neq",
-            "gte",
-            "in",
-        ]) {
-            query[method] = (...args: unknown[]) => {
-                calls.push({ table, method, args });
-                if (method === "range") {
-                    range = args as [number, number];
-                }
-                return query;
-            };
-        }
-        query.then = (
-            onFulfilled: (value: unknown) => unknown,
-            onRejected?: (reason: unknown) => unknown,
-        ) => {
-            let rows = data.get(table) ?? null;
-            if (range && Array.isArray(rows)) {
-                rows = rows.slice(range[0], range[1] + 1);
-            }
-            return Promise.resolve({
-                data: rows,
-                error: errors.has(table)
-                    ? { message: errors.get(table) }
-                    : null,
-            }).then(onFulfilled, onRejected);
-        };
-        return query;
-    }
-
-    return { calls, data, errors, from };
+vi.mock("@/admin/data/supabase.ts", async () => {
+    const { stub } = await import("@/test/postgrestStub.ts");
+    return { supabase: { from: stub.from } };
 });
 
-vi.mock("@/admin/data/supabase.ts", () => ({
-    supabase: { from: mock.from },
-}));
-
 beforeEach(() => {
-    mock.calls.length = 0;
-    mock.data.clear();
-    mock.errors.clear();
+    stub.reset();
 });
 
 /** The mutation calls (table + method) in the order they were issued. */
 function mutationOrder(): string[] {
-    return mock.calls
+    return stub.calls
         .filter((call) => ["upsert", "insert", "delete"].includes(call.method))
         .map((call) => `${call.table}.${call.method}`);
 }
@@ -97,25 +38,13 @@ describe("fetchSettings", () => {
             "processor_fees",
             "market_settings",
         ]) {
-            mock.data.set(table, []);
+            stub.data.set(table, []);
         }
         expect(await fetchSettings()).toBeNull();
     });
 
     function seedAllTables() {
-        const snapshot = settingsToRows(DEFAULT_SETTINGS);
-        mock.data.set("settings", snapshot.settings);
-        mock.data.set("ingredients", snapshot.ingredients);
-        mock.data.set("batch_lines", snapshot.batchLines);
-        mock.data.set("menu_items", snapshot.menuItems);
-        mock.data.set("variants", snapshot.variants);
-        mock.data.set("recipe_lines", snapshot.recipeLines);
-        mock.data.set("transactions", snapshot.transactions);
-        mock.data.set("events", snapshot.events);
-        mock.data.set("purchases", snapshot.purchases);
-        mock.data.set("market_overrides", snapshot.marketOverrides);
-        mock.data.set("processor_fees", snapshot.processorFees);
-        mock.data.set("market_settings", snapshot.marketSettings);
+        seedSettingsTables(DEFAULT_SETTINGS);
     }
 
     test("assembles a full Settings object from the twelve tables", async () => {
@@ -124,13 +53,13 @@ describe("fetchSettings", () => {
     });
 
     test("throws when a select fails", async () => {
-        mock.errors.set("ingredients", "permission denied");
+        stub.errors.set("ingredients", "permission denied");
         await expect(fetchSettings()).rejects.toThrow("permission denied");
     });
 
     test("pages past the 1000-row cap to load every transaction", async () => {
         seedAllTables();
-        mock.data.set(
+        stub.data.set(
             "transactions",
             Array.from({ length: 2500 }, (_, index) => ({
                 id: String(index),
@@ -149,7 +78,7 @@ describe("fetchSettings", () => {
             Array.from({ length: 2500 }, (_, index) => String(index)),
         );
 
-        const rangeCalls = mock.calls.filter(
+        const rangeCalls = stub.calls.filter(
             (call) => call.table === "transactions" && call.method === "range",
         );
         expect(rangeCalls.map((call) => call.args)).toEqual([
@@ -163,7 +92,7 @@ describe("fetchSettings", () => {
         seedAllTables();
         await fetchSettings();
 
-        const rangeCalls = mock.calls.filter(
+        const rangeCalls = stub.calls.filter(
             (call) => call.table === "transactions" && call.method === "range",
         );
         expect(rangeCalls.map((call) => call.args)).toEqual([[0, 999]]);
@@ -171,7 +100,7 @@ describe("fetchSettings", () => {
 
     test("propagates errors from paginated fetches", async () => {
         seedAllTables();
-        mock.errors.set("transactions", "permission denied");
+        stub.errors.set("transactions", "permission denied");
         await expect(fetchSettings()).rejects.toThrow("permission denied");
     });
 
@@ -181,7 +110,7 @@ describe("fetchSettings", () => {
         // Settings.marketOverrides record would collapse.
         const date = (index: number) =>
             new Date(Date.UTC(2020, 0, 1 + index)).toISOString().slice(0, 10);
-        mock.data.set(
+        stub.data.set(
             "market_overrides",
             Array.from({ length: 2500 }, (_, index) => ({
                 date: date(index),
@@ -194,7 +123,7 @@ describe("fetchSettings", () => {
         expect(settings!.marketOverrides[date(0)]).toBe("new-caney");
         expect(settings!.marketOverrides[date(2499)]).toBe("new-caney");
 
-        const rangeCalls = mock.calls.filter(
+        const rangeCalls = stub.calls.filter(
             (call) =>
                 call.table === "market_overrides" && call.method === "range",
         );
@@ -207,7 +136,7 @@ describe("fetchSettings", () => {
 
     test("propagates errors from the market_overrides fetch", async () => {
         seedAllTables();
-        mock.errors.set("market_overrides", "permission denied");
+        stub.errors.set("market_overrides", "permission denied");
         await expect(fetchSettings()).rejects.toThrow("permission denied");
     });
 });
@@ -230,7 +159,7 @@ describe("applyChangeSet", () => {
             "variants.delete",
         ]);
 
-        const variantUpsert = mock.calls.find(
+        const variantUpsert = stub.calls.find(
             (call) => call.table === "variants" && call.method === "upsert",
         )!;
         expect(variantUpsert.args[1]).toEqual({ onConflict: "item_id,id" });
@@ -251,7 +180,7 @@ describe("applyChangeSet", () => {
         await applyChangeSet(computeChangeSet(BASE, next));
 
         expect(mutationOrder()).toEqual(["transactions.upsert"]);
-        const upsert = mock.calls.find(
+        const upsert = stub.calls.find(
             (call) => call.table === "transactions" && call.method === "upsert",
         )!;
         expect(upsert.args[1]).toEqual({
@@ -280,11 +209,11 @@ describe("applyChangeSet", () => {
         await applyChangeSet(computeChangeSet(prev, next));
 
         expect(mutationOrder()).toEqual(["events.upsert", "events.delete"]);
-        const upsert = mock.calls.find(
+        const upsert = stub.calls.find(
             (call) => call.table === "events" && call.method === "upsert",
         )!;
         expect(upsert.args[1]).toEqual({ onConflict: "date,market" });
-        const deleteEqs = mock.calls.filter(
+        const deleteEqs = stub.calls.filter(
             (call) => call.table === "events" && call.method === "eq",
         );
         expect(deleteEqs.map((call) => call.args)).toEqual([
@@ -314,11 +243,11 @@ describe("applyChangeSet", () => {
             "purchases.upsert",
             "purchases.delete",
         ]);
-        const upsert = mock.calls.find(
+        const upsert = stub.calls.find(
             (call) => call.table === "purchases" && call.method === "upsert",
         )!;
         expect(upsert.args[1]).toEqual({ onConflict: "id" });
-        const deleteIn = mock.calls.find(
+        const deleteIn = stub.calls.find(
             (call) => call.table === "purchases" && call.method === "in",
         )!;
         expect(deleteIn.args).toEqual(["id", ["p2"]]);
@@ -339,7 +268,7 @@ describe("applyChangeSet", () => {
             "market_overrides.upsert",
             "market_overrides.delete",
         ]);
-        const upsert = mock.calls.find(
+        const upsert = stub.calls.find(
             (call) =>
                 call.table === "market_overrides" && call.method === "upsert",
         )!;
@@ -357,7 +286,7 @@ describe("applyChangeSet", () => {
         await applyChangeSet(computeChangeSet(BASE, next));
 
         expect(mutationOrder()).toEqual(["processor_fees.upsert"]);
-        const upsert = mock.calls.find(
+        const upsert = stub.calls.find(
             (call) => call.table === "processor_fees",
         )!;
         expect(upsert.args[1]).toEqual({ onConflict: "month" });
@@ -369,14 +298,14 @@ describe("applyChangeSet", () => {
         await applyChangeSet(computeChangeSet(BASE, next));
 
         expect(mutationOrder()).toEqual(["market_settings.upsert"]);
-        const upsert = mock.calls.find(
+        const upsert = stub.calls.find(
             (call) => call.table === "market_settings",
         )!;
         expect(upsert.args[0]).toHaveLength(4);
     });
 
     test("propagates the first database error", async () => {
-        mock.errors.set("settings", "row level security violation");
+        stub.errors.set("settings", "row level security violation");
         const next = { ...BASE, groceryWeeklySpend: 999 };
         await expect(
             applyChangeSet(computeChangeSet(BASE, next)),
