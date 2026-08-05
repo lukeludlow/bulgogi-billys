@@ -181,13 +181,14 @@ dashboard visit, and diffing it on every autosave, gets worse with every Square
 import. Sequenced fix — each step rides roadmap work already touching that code,
 no big-bang rewrite:
 
-- **P0 (with roadmap 0.1, which touches transactions anyway):** extract
-  `transactionsRepo` (paged `fetchAllRows` reads + the `ignoreDuplicates` import
-  upsert — the code already exists, it just moves) and `eventsRepo` (keyed
-  upserts/deletes + classifications). Remove those sections from the `Settings`
-  object, `diff.ts`, and `SettingsContext`. The context and its crash journal
-  keep doing what they're good at, for the 6-table config document only —
-  `fetchSettings()` gets small and fast.
+- **P0 (with roadmap 0.1, which touches transactions anyway):** _transactions
+  half done (Aug 2026)_ — `src/admin/data/transactions.ts` (paged reads +
+  insert-only import) + `TransactionsProvider`, with transactions removed from
+  `Settings`, `diff.ts`, and the crash journal; shared paging helpers live in
+  `src/admin/data/postgrest.ts`. Still to do: `eventsRepo` (keyed
+  upserts/deletes + classifications), after which the context and its crash
+  journal keep doing what they're good at, for the 6-table config document only
+  — `fetchSettings()` gets small and fast.
 - **P0/P1 hardening:** replace `applyChangeSet`'s sequential delete-then-insert
   statements with a single Postgres function `apply_config(jsonb)` called via
   RPC — one atomic transaction, closing the partial-save risk `settingsRepo`'s
@@ -258,5 +259,7 @@ Small, ordered, all cheap:
 3. ~~**Adopt `supabase gen types typescript`** and retire the hand-written row
    types in `rows.ts`.~~ Done (Aug 2026, `npm run db:types`).
 4. **Extract `transactionsRepo` + `eventsRepo`** while building roadmap 0.1
-   (which touches that code anyway).
+   (which touches that code anyway). _transactionsRepo done (Aug 2026,
+   `src/admin/data/transactions.ts` + `TransactionsContext`); eventsRepo is
+   REFACTOR_PLAN Phase 4._
 5. **Add the `apply_config` RPC** to make config saves atomic.
