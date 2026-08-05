@@ -3,8 +3,15 @@ import { Route, Routes } from "react-router";
 import AdminLayout from "@/admin/AdminLayout.tsx";
 import TransactionHistory from "@/admin/pages/TransactionHistory.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
-import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
-import { seedSettingsTables, stub } from "@/test/postgrestStub.ts";
+import {
+    DEFAULT_RECORDS,
+    DEFAULT_SETTINGS,
+} from "@/test/fixtures/defaultSettings.ts";
+import {
+    seedRecordsTables,
+    seedSettingsTables,
+    stub,
+} from "@/test/postgrestStub.ts";
 
 // Stub the supabase client itself so the page loads through the real data
 // layer; the characterization below stays valid regardless of which module
@@ -41,6 +48,7 @@ function row(id: string, date: string, amount: number, type: string) {
 beforeEach(() => {
     stub.reset();
     seedSettingsTables(DEFAULT_SETTINGS);
+    seedRecordsTables(DEFAULT_RECORDS);
 });
 
 afterEach(() => {

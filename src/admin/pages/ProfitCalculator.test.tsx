@@ -1,9 +1,9 @@
 import { afterEach, expect, test, vi } from "vitest";
 import ProfitCalculator from "@/admin/pages/ProfitCalculator.tsx";
-import { SettingsProvider } from "@/admin/SettingsContext.tsx";
+import { AdminDataProviders } from "@/admin/AdminLayout.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 
-// Resolve the provider's mount-load instantly with the defaults so the page
+// Resolve every provider's mount-load instantly with the defaults so the page
 // renders without a database.
 vi.mock("@/admin/data/settingsRepo.ts", async () => {
     const { DEFAULT_SETTINGS } =
@@ -17,15 +17,30 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
     };
 });
 
+vi.mock("@/admin/data/recordsRepo.ts", async () => {
+    const { DEFAULT_RECORDS } =
+        await import("@/test/fixtures/defaultSettings.ts");
+    return {
+        fetchRecords: async () => structuredClone(DEFAULT_RECORDS),
+        applyRecordsChangeSet: async () => {},
+    };
+});
+
+vi.mock("@/admin/data/transactions.ts", () => ({
+    fetchAllTransactions: async () => [],
+    importTransactions: async () => {},
+}));
+
 afterEach(() => {
     localStorage.removeItem("bb_admin_config_pending");
+    localStorage.removeItem("bb_admin_records_pending");
 });
 
 function renderCalculator() {
     return renderWithProviders(
-        <SettingsProvider>
+        <AdminDataProviders>
             <ProfitCalculator />
-        </SettingsProvider>,
+        </AdminDataProviders>,
         { route: "/admin" },
     );
 }

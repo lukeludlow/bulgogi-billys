@@ -2,6 +2,7 @@ import {
     PROTEIN_INGREDIENT_ID,
     type Ingredient,
     type MenuItem,
+    type OperatingRecords,
     type Settings,
 } from "@/admin/domain/types.ts";
 
@@ -203,9 +204,7 @@ export const DEFAULT_SETTINGS: Settings = {
     packagingCostPerOrder: 0.25,
     blendedFoodCostPercent: 32,
     events: [],
-    purchases: [],
     marketOverrides: {},
-    processorFees: [],
     marketClassifications: {
         "grogans-mill": null,
         "new-caney": null,
@@ -222,4 +221,10 @@ export const DEFAULT_SETTINGS: Settings = {
         "fm-1488": null,
         other: null,
     },
+};
+
+/** The operational-record counterpart: everything starts empty. */
+export const DEFAULT_RECORDS: OperatingRecords = {
+    purchases: [],
+    processorFees: [],
 };

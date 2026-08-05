@@ -32,9 +32,7 @@ describe("fetchSettings", () => {
             "variants",
             "recipe_lines",
             "events",
-            "purchases",
             "market_overrides",
-            "processor_fees",
             "market_settings",
         ]) {
             stub.data.set(table, []);
@@ -46,7 +44,7 @@ describe("fetchSettings", () => {
         seedSettingsTables(DEFAULT_SETTINGS);
     }
 
-    test("assembles a full Settings object from the eleven tables", async () => {
+    test("assembles a full Settings object from the nine tables", async () => {
         seedAllTables();
         expect(await fetchSettings()).toEqual(BASE);
     });
@@ -150,37 +148,6 @@ describe("applyChangeSet", () => {
         ]);
     });
 
-    test("purchase edits upsert by id then delete removed ids", async () => {
-        const purchase = {
-            id: "p1",
-            date: "2026-07-20",
-            category: "fuel" as const,
-            amount: 30,
-        };
-        const prev = {
-            ...BASE,
-            purchases: [purchase, { ...purchase, id: "p2" }],
-        };
-        const next = {
-            ...BASE,
-            purchases: [{ ...purchase, amount: 45 }],
-        };
-        await applyChangeSet(computeChangeSet(prev, next));
-
-        expect(mutationOrder()).toEqual([
-            "purchases.upsert",
-            "purchases.delete",
-        ]);
-        const upsert = stub.calls.find(
-            (call) => call.table === "purchases" && call.method === "upsert",
-        )!;
-        expect(upsert.args[1]).toEqual({ onConflict: "id" });
-        const deleteIn = stub.calls.find(
-            (call) => call.table === "purchases" && call.method === "in",
-        )!;
-        expect(deleteIn.args).toEqual(["id", ["p2"]]);
-    });
-
     test("market override changes upsert and delete by date", async () => {
         const prev = {
             ...BASE,
@@ -204,20 +171,6 @@ describe("applyChangeSet", () => {
             { date: "2026-07-25", market: "new-caney" },
         ]);
         expect(upsert.args[1]).toEqual({ onConflict: "date" });
-    });
-
-    test("processor fee changes upsert by month", async () => {
-        const next = {
-            ...BASE,
-            processorFees: [{ month: "2026-07", amount: 84 }],
-        };
-        await applyChangeSet(computeChangeSet(BASE, next));
-
-        expect(mutationOrder()).toEqual(["processor_fees.upsert"]);
-        const upsert = stub.calls.find(
-            (call) => call.table === "processor_fees",
-        )!;
-        expect(upsert.args[1]).toEqual({ onConflict: "month" });
     });
 
     test("classification changes upsert the whole four-row set", async () => {

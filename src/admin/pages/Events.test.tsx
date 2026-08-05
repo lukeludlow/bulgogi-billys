@@ -38,6 +38,15 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
     };
 });
 
+vi.mock("@/admin/data/recordsRepo.ts", async () => {
+    const { DEFAULT_RECORDS } =
+        await import("@/test/fixtures/defaultSettings.ts");
+    return {
+        fetchRecords: async () => structuredClone(DEFAULT_RECORDS),
+        applyRecordsChangeSet: async () => {},
+    };
+});
+
 vi.mock("@/admin/data/transactions.ts", () => {
     const sale = (id: string, year: number, month: number, day: number) => ({
         id,
@@ -60,6 +69,7 @@ vi.mock("@/admin/data/transactions.ts", () => {
 
 afterEach(() => {
     localStorage.removeItem("bb_admin_config_pending");
+    localStorage.removeItem("bb_admin_records_pending");
 });
 
 function renderEvents() {

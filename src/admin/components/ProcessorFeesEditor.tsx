@@ -12,11 +12,9 @@ import {
 import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
 import { formatCurrency } from "@/admin/domain/calculations.ts";
 import NumberField from "@/admin/components/NumberField.tsx";
-import type { Settings } from "@/admin/domain/types.ts";
+import { useRecords } from "@/admin/RecordsContext.tsx";
 
 interface Props {
-    settings: Settings;
-    setSettings: (update: (prev: Settings) => Settings) => void;
     /** Fee dollars in months with no events to absorb them (from the allocator). */
     unallocated: number;
 }
@@ -41,30 +39,28 @@ function currentMonth(): string {
  * month's total is spread across that month's events proportional to card
  * sales.
  */
-export default function ProcessorFeesEditor({
-    settings,
-    setSettings,
-    unallocated,
-}: Props) {
+export default function ProcessorFeesEditor({ unallocated }: Props) {
+    const { records, setRecords } = useRecords();
+
     // Suggest the current month unless it already has an entry (a pre-filled
     // duplicate would show the warning before the user touched anything).
     const [newMonth, setNewMonth] = useState(() => {
         const suggestion = currentMonth();
-        return settings.processorFees.some((fee) => fee.month === suggestion)
+        return records.processorFees.some((fee) => fee.month === suggestion)
             ? ""
             : suggestion;
     });
 
-    const fees = [...settings.processorFees].sort((a, b) =>
+    const fees = [...records.processorFees].sort((a, b) =>
         b.month.localeCompare(a.month),
     );
-    const duplicateMonth = settings.processorFees.some(
+    const duplicateMonth = records.processorFees.some(
         (fee) => fee.month === newMonth,
     );
 
     function addFee() {
         if (!newMonth || duplicateMonth) return;
-        setSettings((prev) => ({
+        setRecords((prev) => ({
             ...prev,
             processorFees: [
                 ...prev.processorFees,
@@ -75,7 +71,7 @@ export default function ProcessorFeesEditor({
     }
 
     function updateFee(month: string, amount: number) {
-        setSettings((prev) => ({
+        setRecords((prev) => ({
             ...prev,
             processorFees: prev.processorFees.map((fee) =>
                 fee.month === month ? { ...fee, amount } : fee,
@@ -84,7 +80,7 @@ export default function ProcessorFeesEditor({
     }
 
     function removeFee(month: string) {
-        setSettings((prev) => ({
+        setRecords((prev) => ({
             ...prev,
             processorFees: prev.processorFees.filter(
                 (fee) => fee.month !== month,

@@ -12,8 +12,9 @@
 //         return { supabase: { from: stub.from } };
 //     });
 
+import { recordsToRows } from "@/admin/data/recordsRows.ts";
 import { settingsToRows } from "@/admin/data/rows.ts";
-import type { Settings } from "@/admin/domain/types.ts";
+import type { OperatingRecords, Settings } from "@/admin/domain/types.ts";
 
 export interface RecordedCall {
     table: string;
@@ -83,8 +84,13 @@ export function seedSettingsTables(settings: Settings) {
     data.set("variants", snapshot.variants);
     data.set("recipe_lines", snapshot.recipeLines);
     data.set("events", snapshot.events);
-    data.set("purchases", snapshot.purchases);
     data.set("market_overrides", snapshot.marketOverrides);
-    data.set("processor_fees", snapshot.processorFees);
     data.set("market_settings", snapshot.marketSettings);
+}
+
+/** Seed every table `fetchRecords` reads from an OperatingRecords fixture. */
+export function seedRecordsTables(records: OperatingRecords) {
+    const snapshot = recordsToRows(records);
+    data.set("purchases", snapshot.purchases);
+    data.set("processor_fees", snapshot.processorFees);
 }

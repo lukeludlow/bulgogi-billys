@@ -14,6 +14,7 @@ import {
     buildEventAllocations,
     buildEventReport,
 } from "@/admin/domain/eventAnalytics.ts";
+import { useRecords } from "@/admin/RecordsContext.tsx";
 import { useSettings } from "@/admin/SettingsContext.tsx";
 import { useTransactions } from "@/admin/TransactionsContext.tsx";
 import { MARKETS } from "@/admin/domain/types.ts";
@@ -27,15 +28,16 @@ const SECTIONS: NavSection[] = [
 
 export default function Events() {
     const { settings, setSettings } = useSettings();
+    const { records } = useRecords();
     const { transactions } = useTransactions();
 
     const report = useMemo(
-        () => buildEventReport(transactions, settings),
-        [transactions, settings],
+        () => buildEventReport(transactions, records, settings),
+        [transactions, records, settings],
     );
     const allocations = useMemo(
-        () => buildEventAllocations(transactions, settings),
-        [transactions, settings],
+        () => buildEventAllocations(transactions, records, settings),
+        [transactions, records, settings],
     );
 
     return (
@@ -81,8 +83,6 @@ export default function Events() {
                 description="Log fuel, propane, ice, and food spending when you buy it. Each purchase is split across the events between that shopping trip and the next one, in proportion to sales."
             >
                 <PurchasesEditor
-                    settings={settings}
-                    setSettings={setSettings}
                     unallocated={allocations.purchases.unallocated}
                 />
             </Section>
@@ -208,8 +208,6 @@ export default function Events() {
                     </div>
 
                     <ProcessorFeesEditor
-                        settings={settings}
-                        setSettings={setSettings}
                         unallocated={allocations.fees.unallocated}
                     />
                 </div>

@@ -6,24 +6,15 @@ import {
     MARKET_CLASSIFICATIONS,
     MARKETS,
     PROTEINS,
-    PURCHASE_CATEGORIES,
     UNITS,
     type Ingredient,
     type Market,
     type MarketClassification,
     type MarketEvent,
     type MenuItem,
-    type ProcessorFee,
-    type Purchase,
     type Settings,
 } from "@/admin/domain/types.ts";
-import type { Database } from "./database.types.ts";
-
-// Row shapes come straight from the generated schema types (`npm run
-// db:types`), so a migration that drifts from what the app expects fails
-// `tsc` instead of surfacing at runtime.
-type Row<T extends keyof Database["public"]["Tables"]> =
-    Database["public"]["Tables"][T]["Row"];
+import { oneOf, type Row } from "./schema.ts";
 
 // `updated_at` is DB-managed (default + trigger); the write path must never
 // send it, so the app-facing settings row omits it.
@@ -34,27 +25,11 @@ export type MenuItemRow = Row<"menu_items">;
 export type VariantRow = Row<"variants">;
 export type RecipeLineRow = Row<"recipe_lines">;
 export type EventRow = Row<"events">;
-export type PurchaseRow = Row<"purchases">;
 export type MarketOverrideRow = Row<"market_overrides">;
-export type ProcessorFeeRow = Row<"processor_fees">;
 export type MarketSettingsRow = Row<"market_settings">;
 
 /** How an ingredient's per-unit cost is set; mirrors the DB check constraint. */
 const PRICING_MODES = ["direct", "batch"] as const;
-
-// Check-constrained columns generate as plain `string`; narrow them here at
-// the boundary so schema/data drift fails loudly instead of leaking invalid
-// values into the app.
-function oneOf<T extends string>(
-    value: string,
-    allowed: readonly T[],
-    label: string,
-): T {
-    if (!(allowed as readonly string[]).includes(value)) {
-        throw new Error(`Unexpected ${label}: ${value}`);
-    }
-    return value as T;
-}
 
 export interface DbSnapshot {
     settings: SettingsRow;
@@ -64,9 +39,7 @@ export interface DbSnapshot {
     variants: VariantRow[];
     recipeLines: RecipeLineRow[];
     events: EventRow[];
-    purchases: PurchaseRow[];
     marketOverrides: MarketOverrideRow[];
-    processorFees: ProcessorFeeRow[];
     marketSettings: MarketSettingsRow[];
 }
 
@@ -145,32 +118,14 @@ export function settingsToRows(settings: Settings): DbSnapshot {
                 `${a.date} ${a.market}`.localeCompare(`${b.date} ${b.market}`),
             )
             .map(eventToRow),
-        purchases: [...settings.purchases]
-            .sort((a, b) =>
-                `${a.date} ${a.id}`.localeCompare(`${b.date} ${b.id}`),
-            )
-            .map(purchaseToRow),
         marketOverrides: Object.entries(settings.marketOverrides)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([date, market]) => ({ date, market })),
-        processorFees: [...settings.processorFees]
-            .sort((a, b) => a.month.localeCompare(b.month))
-            .map((fee) => ({ month: fee.month, amount: fee.amount })),
         marketSettings: MARKETS.map((market) => ({
             market,
             classification: settings.marketClassifications[market],
             employee_hourly_rate: settings.marketHourlyRates[market],
         })),
-    };
-}
-
-export function purchaseToRow(purchase: Purchase): PurchaseRow {
-    return {
-        id: purchase.id,
-        date: purchase.date,
-        category: purchase.category,
-        amount: purchase.amount,
-        note: purchase.note ?? null,
     };
 }
 
@@ -259,23 +214,6 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
             billysHours: row.billys_hours,
         }));
 
-    const purchases: Purchase[] = [...snapshot.purchases]
-        .sort((a, b) => `${a.date} ${a.id}`.localeCompare(`${b.date} ${b.id}`))
-        .map((row) => {
-            const purchase: Purchase = {
-                id: row.id,
-                date: row.date,
-                category: oneOf(
-                    row.category,
-                    PURCHASE_CATEGORIES,
-                    "purchase category",
-                ),
-                amount: row.amount,
-            };
-            if (row.note !== null) purchase.note = row.note;
-            return purchase;
-        });
-
     const marketOverrides: Record<string, Market> = {};
     for (const row of snapshot.marketOverrides) {
         marketOverrides[row.date] = oneOf(
@@ -284,10 +222,6 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
             "market override market",
         );
     }
-
-    const processorFees: ProcessorFee[] = [...snapshot.processorFees]
-        .sort((a, b) => a.month.localeCompare(b.month))
-        .map((row) => ({ month: row.month, amount: row.amount }));
 
     // Start from all-null so markets with no stored row (e.g. a database
     // migrated before any classification was chosen) are still present.
@@ -325,9 +259,7 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         packagingCostPerOrder: snapshot.settings.packaging_cost_per_order,
         blendedFoodCostPercent: snapshot.settings.blended_food_cost_percent,
         events,
-        purchases,
         marketOverrides,
-        processorFees,
         marketClassifications,
         employeeHourlyRate: snapshot.settings.employee_hourly_rate,
         salesTaxRatePercent: snapshot.settings.sales_tax_rate_percent,

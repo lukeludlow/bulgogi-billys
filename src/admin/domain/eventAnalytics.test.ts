@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
+import {
+    DEFAULT_RECORDS,
+    DEFAULT_SETTINGS,
+} from "@/test/fixtures/defaultSettings.ts";
 import {
     allocatePurchases,
     allocateProcessorFees,
@@ -15,6 +18,7 @@ import {
 } from "@/admin/domain/eventAnalytics.ts";
 import type {
     MarketEvent,
+    OperatingRecords,
     Purchase,
     Settings,
     Transaction,
@@ -343,6 +347,8 @@ const SETTINGS: Settings = {
     events: [SATURDAY_EXPENSES],
 };
 
+const RECORDS: OperatingRecords = DEFAULT_RECORDS;
+
 const TRANSACTIONS: Transaction[] = [
     sale("1", new Date(2026, 6, 25), 10), // Saturday → Grogan's Mill
     sale("2", new Date(2026, 6, 25), 10),
@@ -352,7 +358,7 @@ const TRANSACTIONS: Transaction[] = [
 
 describe("buildEventReport", () => {
     test("groups sales into events and computes contribution", () => {
-        const report = buildEventReport(TRANSACTIONS, SETTINGS);
+        const report = buildEventReport(TRANSACTIONS, RECORDS, SETTINGS);
         expect(report).toHaveLength(2);
 
         const saturday = report.find((row) => row.market === "grogans-mill")!;
@@ -375,7 +381,7 @@ describe("buildEventReport", () => {
     });
 
     test("applies the sales-tax rate to pre-tax sales and contribution", () => {
-        const taxed = buildEventReport(TRANSACTIONS, {
+        const taxed = buildEventReport(TRANSACTIONS, RECORDS, {
             ...SETTINGS,
             salesTaxRatePercent: 25,
         });
@@ -386,7 +392,7 @@ describe("buildEventReport", () => {
     });
 
     test("an expense row with no sales still produces a report row", () => {
-        const report = buildEventReport([], SETTINGS);
+        const report = buildEventReport([], RECORDS, SETTINGS);
         expect(report).toHaveLength(1);
         const row = report[0];
         expect(row.orders).toBe(0);
@@ -395,7 +401,7 @@ describe("buildEventReport", () => {
     });
 
     test("a market override re-tags the day's sales and expense row", () => {
-        const report = buildEventReport(TRANSACTIONS, {
+        const report = buildEventReport(TRANSACTIONS, RECORDS, {
             ...SETTINGS,
             events: [{ ...SATURDAY_EXPENSES, market: "new-caney" }],
             marketOverrides: { "2026-07-25": "new-caney" },
@@ -411,11 +417,14 @@ describe("buildEventReport", () => {
     });
 
     test("allocated purchases and fees land on events without expense rows", () => {
-        const report = buildEventReport(TRANSACTIONS, {
-            ...SETTINGS,
-            purchases: [purchase("p1", "2026-07-19", "propane", 8)],
-            processorFees: [{ month: "2026-07", amount: 6 }],
-        });
+        const report = buildEventReport(
+            TRANSACTIONS,
+            {
+                purchases: [purchase("p1", "2026-07-19", "propane", 8)],
+                processorFees: [{ month: "2026-07", amount: 6 }],
+            },
+            SETTINGS,
+        );
         const sunday = report.find((row) => row.market === "new-caney")!;
         expect(sunday.expenses).toBeNull();
         // Propane span covers the Sunday (19th) up to the next purchase
@@ -428,11 +437,15 @@ describe("buildEventReport", () => {
     });
 
     test("food purchases show as reference but never hit contribution", () => {
-        const base = buildEventReport(TRANSACTIONS, SETTINGS);
-        const withFood = buildEventReport(TRANSACTIONS, {
-            ...SETTINGS,
-            purchases: [purchase("p1", "2026-07-19", "food", 100)],
-        });
+        const base = buildEventReport(TRANSACTIONS, RECORDS, SETTINGS);
+        const withFood = buildEventReport(
+            TRANSACTIONS,
+            {
+                ...RECORDS,
+                purchases: [purchase("p1", "2026-07-19", "food", 100)],
+            },
+            SETTINGS,
+        );
         const sunday = withFood.find((row) => row.market === "new-caney")!;
         expect(sunday.allocatedFoodCost).toBeCloseTo(100 * (10 / 30));
         expect(sunday.contribution).toBe(
@@ -441,7 +454,7 @@ describe("buildEventReport", () => {
     });
 
     test("labor uses the per-market rate when set, global otherwise", () => {
-        const report = buildEventReport(TRANSACTIONS, {
+        const report = buildEventReport(TRANSACTIONS, RECORDS, {
             ...SETTINGS,
             marketHourlyRates: {
                 ...SETTINGS.marketHourlyRates,
@@ -455,7 +468,7 @@ describe("buildEventReport", () => {
     });
 
     test("rows are sorted newest-first", () => {
-        const report = buildEventReport(TRANSACTIONS, SETTINGS);
+        const report = buildEventReport(TRANSACTIONS, RECORDS, SETTINGS);
         expect(report.map((row) => row.date)).toEqual([
             "2026-07-25",
             "2026-07-19",
@@ -465,11 +478,14 @@ describe("buildEventReport", () => {
 
 describe("buildEventAllocations", () => {
     test("surfaces unallocated purchase and fee totals", () => {
-        const { purchases, fees } = buildEventAllocations(TRANSACTIONS, {
-            ...SETTINGS,
-            purchases: [purchase("p1", "2026-07-28", "fuel", 45)],
-            processorFees: [{ month: "2026-05", amount: 33 }],
-        });
+        const { purchases, fees } = buildEventAllocations(
+            TRANSACTIONS,
+            {
+                purchases: [purchase("p1", "2026-07-28", "fuel", 45)],
+                processorFees: [{ month: "2026-05", amount: 33 }],
+            },
+            SETTINGS,
+        );
         expect(purchases.unallocated.fuel).toBe(45);
         expect(fees.unallocated).toBe(33);
     });
@@ -485,7 +501,7 @@ describe("rollupByMarket", () => {
             },
         };
         const rollups = rollupByMarket(
-            buildEventReport(TRANSACTIONS, settings),
+            buildEventReport(TRANSACTIONS, RECORDS, settings),
             settings,
         );
 

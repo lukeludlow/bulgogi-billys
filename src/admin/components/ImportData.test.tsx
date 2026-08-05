@@ -4,8 +4,15 @@ import AdminLayout from "@/admin/AdminLayout.tsx";
 import TransactionHistory from "@/admin/pages/TransactionHistory.tsx";
 import { parseTransactionsCsv } from "@/admin/import/parseTransactionsCsv.ts";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
-import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
-import { seedSettingsTables, stub } from "@/test/postgrestStub.ts";
+import {
+    DEFAULT_RECORDS,
+    DEFAULT_SETTINGS,
+} from "@/test/fixtures/defaultSettings.ts";
+import {
+    seedRecordsTables,
+    seedSettingsTables,
+    stub,
+} from "@/test/postgrestStub.ts";
 
 // Stub the supabase client itself (not a repo module) so these tests pin the
 // end-to-end import contract — what actually reaches the `transactions`
@@ -40,6 +47,7 @@ const EXISTING_ROW = {
 beforeEach(() => {
     stub.reset();
     seedSettingsTables(DEFAULT_SETTINGS);
+    seedRecordsTables(DEFAULT_RECORDS);
     stub.data.set("transactions", [EXISTING_ROW]);
 });
 

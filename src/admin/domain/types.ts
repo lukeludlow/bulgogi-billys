@@ -177,15 +177,11 @@ export interface Settings {
     blendedFoodCostPercent: number;
     /** Per-event expense records, keyed by (date, market). */
     events: MarketEvent[];
-    /** Shopping-trip spend, allocated across events between trips. */
-    purchases: Purchase[];
     /**
      * Days whose auto-tagged market was wrong: local "YYYY-MM-DD" → the market
      * that day actually was. Absent = trust `marketForDate`.
      */
     marketOverrides: Record<string, Market>;
-    /** Monthly card-processor fee totals, spread across the month's events. */
-    processorFees: ProcessorFee[];
     /** Manually chosen classification per market; null = not yet classified. */
     marketClassifications: Record<Market, MarketClassification | null>;
     /** Dollars per hour used to cost `MarketEvent.employeeHours`. */
@@ -197,6 +193,18 @@ export interface Settings {
      * Pre-tax sales = amount ÷ (1 + rate/100).
      */
     salesTaxRatePercent: number;
+}
+
+/**
+ * The keyed logs the dashboard appends to as the season goes on. Unlike the
+ * config document these grow without bound and are edited one row at a time,
+ * so they live outside Settings on their own sync engine.
+ */
+export interface OperatingRecords {
+    /** Shopping-trip spend, allocated across events between trips. */
+    purchases: Purchase[];
+    /** Monthly card-processor fee totals, spread across the month's events. */
+    processorFees: ProcessorFee[];
 }
 
 /** A single item×size combination with its computed economics. */

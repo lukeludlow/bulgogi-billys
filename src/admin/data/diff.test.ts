@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
-import type { MarketEvent, Purchase, Settings } from "@/admin/domain/types.ts";
+import type { MarketEvent, Settings } from "@/admin/domain/types.ts";
 import { computeChangeSet, isEmptyChangeSet } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
 
@@ -15,10 +15,6 @@ function makeEvent(date: string, market: MarketEvent["market"]): MarketEvent {
         employeeHours: 0,
         billysHours: 0,
     };
-}
-
-function makePurchase(id: string, amount = 25): Purchase {
-    return { id, date: "2026-07-20", category: "propane", amount };
 }
 
 const EVENTS_BASE: Settings = {
@@ -153,39 +149,6 @@ describe("computeChangeSet", () => {
         expect(changeSet.settings).toBeUndefined();
     });
 
-    test("editing one purchase upserts exactly that row", () => {
-        const prev = {
-            ...BASE,
-            purchases: [makePurchase("p1"), makePurchase("p2")],
-        };
-        const next = {
-            ...prev,
-            purchases: [makePurchase("p1"), makePurchase("p2", 40)],
-        };
-        const changeSet = computeChangeSet(prev, next);
-        expect(changeSet.purchases?.upserts).toEqual([
-            {
-                id: "p2",
-                date: "2026-07-20",
-                category: "propane",
-                amount: 40,
-                note: null,
-            },
-        ]);
-        expect(changeSet.purchases?.deletes).toEqual([]);
-    });
-
-    test("removing a purchase deletes by id", () => {
-        const prev = {
-            ...BASE,
-            purchases: [makePurchase("p1"), makePurchase("p2")],
-        };
-        const next = { ...prev, purchases: [makePurchase("p1")] };
-        const changeSet = computeChangeSet(prev, next);
-        expect(changeSet.purchases?.upserts).toEqual([]);
-        expect(changeSet.purchases?.deletes).toEqual(["p2"]);
-    });
-
     test("setting and clearing a market override upserts and deletes by date", () => {
         const withOverride = {
             ...BASE,
@@ -200,25 +163,6 @@ describe("computeChangeSet", () => {
         const cleared = computeChangeSet(withOverride, BASE);
         expect(cleared.marketOverrides?.upserts).toEqual([]);
         expect(cleared.marketOverrides?.deletes).toEqual(["2026-07-25"]);
-    });
-
-    test("processor fee edits upsert and delete by month", () => {
-        const prev = {
-            ...BASE,
-            processorFees: [
-                { month: "2026-06", amount: 70 },
-                { month: "2026-07", amount: 80 },
-            ],
-        };
-        const next = {
-            ...prev,
-            processorFees: [{ month: "2026-07", amount: 92 }],
-        };
-        const changeSet = computeChangeSet(prev, next);
-        expect(changeSet.processorFees?.upserts).toEqual([
-            { month: "2026-07", amount: 92 },
-        ]);
-        expect(changeSet.processorFees?.deletes).toEqual(["2026-06"]);
     });
 
     test("hourly rate and tax rate ride the settings row", () => {

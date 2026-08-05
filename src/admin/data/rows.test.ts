@@ -103,44 +103,18 @@ describe("settingsToRows / rowsToSettings", () => {
         expect(back.salesTaxRatePercent).toBe(settings.salesTaxRatePercent);
     });
 
-    test("purchases, overrides, fees, and per-market rates survive the round-trip", () => {
+    test("overrides and per-market rates survive the round-trip", () => {
         const settings: Settings = {
             ...DEFAULT_SETTINGS,
-            purchases: [
-                {
-                    id: "p1",
-                    date: "2026-07-20",
-                    category: "propane",
-                    amount: 30,
-                    note: "refill",
-                },
-                { id: "p2", date: "2026-07-22", category: "ice", amount: 6 },
-            ],
             marketOverrides: { "2026-07-25": "new-caney" },
-            processorFees: [{ month: "2026-07", amount: 84.5 }],
             marketHourlyRates: {
                 ...DEFAULT_SETTINGS.marketHourlyRates,
                 "grogans-mill": 15,
             },
         };
         const back = normalize(settings);
-        expect(back.purchases).toEqual(settings.purchases);
         expect(back.marketOverrides).toEqual(settings.marketOverrides);
-        expect(back.processorFees).toEqual(settings.processorFees);
         expect(back.marketHourlyRates).toEqual(settings.marketHourlyRates);
-    });
-
-    test("purchase note maps between undefined and null", () => {
-        const settings: Settings = {
-            ...DEFAULT_SETTINGS,
-            purchases: [
-                { id: "p1", date: "2026-07-20", category: "fuel", amount: 40 },
-            ],
-        };
-        const snapshot = settingsToRows(settings);
-        expect(snapshot.purchases[0].note).toBeNull();
-        const back = rowsToSettings(snapshot).purchases[0];
-        expect("note" in back).toBe(false);
     });
 
     test("missing market_settings rows synthesize all-null records", () => {
@@ -161,32 +135,6 @@ describe("settingsToRows / rowsToSettings", () => {
             "fm-1488": null,
             other: null,
         });
-    });
-
-    test("purchase rows are emitted sorted by date+id for stable diffs", () => {
-        const purchase = (id: string, date: string) => ({
-            id,
-            date,
-            category: "fuel" as const,
-            amount: 10,
-        });
-        const a: Settings = {
-            ...DEFAULT_SETTINGS,
-            purchases: [
-                purchase("b", "2026-07-25"),
-                purchase("a", "2026-07-20"),
-            ],
-        };
-        const b: Settings = {
-            ...DEFAULT_SETTINGS,
-            purchases: [
-                purchase("a", "2026-07-20"),
-                purchase("b", "2026-07-25"),
-            ],
-        };
-        expect(settingsToRows(a).purchases).toEqual(
-            settingsToRows(b).purchases,
-        );
     });
 
     test("event rows are emitted sorted by date+market for stable diffs", () => {

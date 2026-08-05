@@ -17,8 +17,6 @@ import {
     type MarketOverrideRow,
     type MarketSettingsRow,
     type MenuItemRow,
-    type ProcessorFeeRow,
-    type PurchaseRow,
     type RecipeLineRow,
     type SettingsRow,
     type VariantRow,
@@ -34,9 +32,7 @@ export async function fetchSettings(): Promise<Settings | null> {
         variants,
         recipeLines,
         events,
-        purchases,
         marketOverrides,
-        processorFees,
         marketSettings,
     ] = await Promise.all([
         supabase
@@ -70,15 +66,10 @@ export async function fetchSettings(): Promise<Settings | null> {
             .order("position")
             .then(unwrap<RecipeLineRow[]>),
         fetchAllRows<EventRow>("events", "date", "market"),
-        fetchAllRows<PurchaseRow>("purchases", "date", "id"),
         // One row per corrected day, growing without bound — paged like the
         // tables above. `date` is the primary key, so it needs no tiebreaker.
         fetchAllRows<MarketOverrideRow>("market_overrides", "date"),
-        // Genuinely small tables (a handful of rows) — no paging needed.
-        supabase
-            .from("processor_fees")
-            .select("*")
-            .then(unwrap<ProcessorFeeRow[]>),
+        // A genuinely small table (four rows) — no paging needed.
         supabase
             .from("market_settings")
             .select("*")
@@ -95,9 +86,7 @@ export async function fetchSettings(): Promise<Settings | null> {
         variants,
         recipeLines,
         events,
-        purchases,
         marketOverrides,
-        processorFees,
         marketSettings,
     };
     return rowsToSettings(snapshot);
@@ -172,26 +161,6 @@ export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
         }
     }
 
-    if (changeSet.purchases) {
-        if (changeSet.purchases.upserts.length > 0) {
-            unwrap(
-                await supabase
-                    .from("purchases")
-                    .upsert(changeSet.purchases.upserts, {
-                        onConflict: "id",
-                    }),
-            );
-        }
-        if (changeSet.purchases.deletes.length > 0) {
-            unwrap(
-                await supabase
-                    .from("purchases")
-                    .delete()
-                    .in("id", changeSet.purchases.deletes),
-            );
-        }
-    }
-
     if (changeSet.marketOverrides) {
         if (changeSet.marketOverrides.upserts.length > 0) {
             unwrap(
@@ -208,26 +177,6 @@ export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
                     .from("market_overrides")
                     .delete()
                     .in("date", changeSet.marketOverrides.deletes),
-            );
-        }
-    }
-
-    if (changeSet.processorFees) {
-        if (changeSet.processorFees.upserts.length > 0) {
-            unwrap(
-                await supabase
-                    .from("processor_fees")
-                    .upsert(changeSet.processorFees.upserts, {
-                        onConflict: "month",
-                    }),
-            );
-        }
-        if (changeSet.processorFees.deletes.length > 0) {
-            unwrap(
-                await supabase
-                    .from("processor_fees")
-                    .delete()
-                    .in("month", changeSet.processorFees.deletes),
             );
         }
     }

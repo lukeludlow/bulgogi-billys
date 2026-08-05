@@ -16,11 +16,11 @@ import {
     type CategoryTotals,
 } from "@/admin/domain/eventAnalytics.ts";
 import NumberField from "@/admin/components/NumberField.tsx";
+import { useRecords } from "@/admin/RecordsContext.tsx";
 import {
     PURCHASE_CATEGORIES,
     type Purchase,
     type PurchaseCategory,
-    type Settings,
 } from "@/admin/domain/types.ts";
 
 export const CATEGORY_LABELS: Record<PurchaseCategory, string> = {
@@ -31,8 +31,6 @@ export const CATEGORY_LABELS: Record<PurchaseCategory, string> = {
 };
 
 interface Props {
-    settings: Settings;
-    setSettings: (update: (prev: Settings) => Settings) => void;
     /** Per-category totals no event has absorbed yet (from the allocator). */
     unallocated: CategoryTotals;
 }
@@ -42,13 +40,11 @@ interface Props {
  * between it and the next purchase of the same category, so costs are entered
  * when money is spent, not re-guessed per event.
  */
-export default function PurchasesEditor({
-    settings,
-    setSettings,
-    unallocated,
-}: Props) {
+export default function PurchasesEditor({ unallocated }: Props) {
+    const { records, setRecords } = useRecords();
+
     function updatePurchase(id: string, patch: Partial<Purchase>) {
-        setSettings((prev) => ({
+        setRecords((prev) => ({
             ...prev,
             purchases: prev.purchases.map((purchase) =>
                 purchase.id === id ? { ...purchase, ...patch } : purchase,
@@ -57,14 +53,14 @@ export default function PurchasesEditor({
     }
 
     function removePurchase(id: string) {
-        setSettings((prev) => ({
+        setRecords((prev) => ({
             ...prev,
             purchases: prev.purchases.filter((purchase) => purchase.id !== id),
         }));
     }
 
     function addPurchase() {
-        setSettings((prev) => ({
+        setRecords((prev) => ({
             ...prev,
             purchases: [
                 ...prev.purchases,
@@ -79,7 +75,7 @@ export default function PurchasesEditor({
     }
 
     // Newest first, matching the events table.
-    const purchases = [...settings.purchases].sort((a, b) =>
+    const purchases = [...records.purchases].sort((a, b) =>
         `${b.date} ${b.id}`.localeCompare(`${a.date} ${a.id}`),
     );
 

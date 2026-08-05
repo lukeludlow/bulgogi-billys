@@ -30,6 +30,7 @@ import {
     type ProcessorFee,
     type Purchase,
     type PurchaseCategory,
+    type OperatingRecords,
     type Settings,
     type Transaction,
 } from "@/admin/domain/types.ts";
@@ -343,6 +344,7 @@ export interface EventAllocations {
  */
 export function buildEventAllocations(
     transactions: Transaction[],
+    records: OperatingRecords,
     settings: Settings,
 ): EventAllocations {
     const events = allocationEvents(
@@ -350,8 +352,8 @@ export function buildEventAllocations(
         settings,
     );
     return {
-        purchases: allocatePurchases(settings.purchases, events),
-        fees: allocateProcessorFees(settings.processorFees, events),
+        purchases: allocatePurchases(records.purchases, events),
+        fees: allocateProcessorFees(records.processorFees, events),
     };
 }
 
@@ -363,6 +365,7 @@ export function buildEventAllocations(
  */
 export function buildEventReport(
     transactions: Transaction[],
+    records: OperatingRecords,
     settings: Settings,
 ): EventReportRow[] {
     const sales = bucketSales(transactions, settings);
@@ -373,8 +376,8 @@ export function buildEventReport(
         ]),
     );
     const events = allocationEvents(sales, settings);
-    const purchaseAlloc = allocatePurchases(settings.purchases, events);
-    const feeAlloc = allocateProcessorFees(settings.processorFees, events);
+    const purchaseAlloc = allocatePurchases(records.purchases, events);
+    const feeAlloc = allocateProcessorFees(records.processorFees, events);
 
     const rows: EventReportRow[] = [];
     for (const { key } of events) {

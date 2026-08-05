@@ -6,10 +6,13 @@
 // shape guard, so a payload written by an older app version — or by the other
 // engine — is dropped instead of being half-adopted.
 
-import type { Settings } from "@/admin/domain/types.ts";
+import type { OperatingRecords, Settings } from "@/admin/domain/types.ts";
 
 /** The config document (settings + menu/recipe tables). */
 export const CONFIG_JOURNAL_KEY = "bb_admin_config_pending";
+
+/** The operational records (purchases, fees, …). */
+export const RECORDS_JOURNAL_KEY = "bb_admin_records_pending";
 
 /**
  * The pre-Supabase settings cache and the single pre-split journal; both are
@@ -30,13 +33,20 @@ export function isUsableSettings(value: unknown): value is Settings {
         Array.isArray(candidate.ingredients) &&
         Array.isArray(candidate.items) &&
         Array.isArray(candidate.events) &&
-        // Also rejects pre-purchases journals whose events still carry
-        // per-event fuel/propane fields.
-        Array.isArray(candidate.purchases) &&
         typeof candidate.marketOverrides === "object" &&
         candidate.marketOverrides !== null &&
         typeof candidate.employeeHourlyRate === "number" &&
         typeof candidate.salesTaxRatePercent === "number"
+    );
+}
+
+/** The same check for the records engine's payload. */
+export function isUsableRecords(value: unknown): value is OperatingRecords {
+    if (typeof value !== "object" || value === null) return false;
+    const candidate = value as Partial<OperatingRecords>;
+    return (
+        Array.isArray(candidate.purchases) &&
+        Array.isArray(candidate.processorFees)
     );
 }
 

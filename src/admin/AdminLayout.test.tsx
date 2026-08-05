@@ -19,6 +19,15 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
     };
 });
 
+vi.mock("@/admin/data/recordsRepo.ts", async () => {
+    const { DEFAULT_RECORDS } =
+        await import("@/test/fixtures/defaultSettings.ts");
+    return {
+        fetchRecords: async () => structuredClone(DEFAULT_RECORDS),
+        applyRecordsChangeSet: async () => {},
+    };
+});
+
 vi.mock("@/admin/data/transactions.ts", () => ({
     fetchAllTransactions: async () => [],
     importTransactions: async () => {},

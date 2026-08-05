@@ -1,6 +1,8 @@
 import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
 import { Select } from "@/shared/catalyst-ui-kit/select.tsx";
-import { useSettings, type SyncStatus } from "@/admin/SettingsContext.tsx";
+import { useRecordsStatus } from "@/admin/RecordsContext.tsx";
+import { useSettings } from "@/admin/SettingsContext.tsx";
+import { combineStatus, type SyncStatus } from "@/admin/syncStatus.ts";
 import type { Protein } from "@/admin/domain/types.ts";
 import { supabase } from "@/admin/data/supabase.ts";
 
@@ -18,6 +20,9 @@ const STATUS_LABEL: Record<SyncStatus, string> = {
  */
 export default function SyncStatusBar() {
     const { settings, setSettings, syncStatus } = useSettings();
+    // The config and the operational records save independently; the bar
+    // reports the worse of the two so a stuck save is never hidden.
+    const status = combineStatus(syncStatus, useRecordsStatus());
 
     async function handleLogout() {
         await supabase.auth.signOut();
@@ -54,12 +59,12 @@ export default function SyncStatusBar() {
             <div
                 aria-live="polite"
                 className={
-                    syncStatus === "error"
+                    status === "error"
                         ? "text-sm text-red-600 dark:text-red-400"
                         : "text-sm text-zinc-500 dark:text-zinc-400"
                 }
             >
-                {STATUS_LABEL[syncStatus]}
+                {STATUS_LABEL[status]}
             </div>
 
             <div className="ml-auto">
