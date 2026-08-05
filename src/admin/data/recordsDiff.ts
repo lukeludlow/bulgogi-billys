@@ -10,6 +10,7 @@ import {
     type MarketSettingsRow,
     type ProcessorFeeRow,
     type PurchaseRow,
+    type ReserveTransferRow,
 } from "./recordsRows.ts";
 import type { OperatingRecords } from "@/admin/domain/types.ts";
 
@@ -27,6 +28,7 @@ export interface RecordsChangeSet {
     processorFees?: KeyedChange<ProcessorFeeRow>;
     /** Wholesale on any change — the row set is fixed at four markets. */
     marketSettings?: MarketSettingsRow[];
+    reserveTransfers?: KeyedChange<ReserveTransferRow>;
 }
 
 export function isEmptyRecordsChangeSet(changeSet: RecordsChangeSet): boolean {
@@ -35,7 +37,8 @@ export function isEmptyRecordsChangeSet(changeSet: RecordsChangeSet): boolean {
         !changeSet.purchases &&
         !changeSet.marketOverrides &&
         !changeSet.processorFees &&
-        !changeSet.marketSettings
+        !changeSet.marketSettings &&
+        !changeSet.reserveTransfers
     );
 }
 
@@ -96,6 +99,13 @@ export function computeRecordsChangeSet(
     ) {
         changeSet.marketSettings = nextRows.marketSettings;
     }
+
+    const reserveTransfers = keyedChange(
+        prevRows.reserveTransfers,
+        nextRows.reserveTransfers,
+        (row) => row.id,
+    );
+    if (reserveTransfers) changeSet.reserveTransfers = reserveTransfers;
 
     return changeSet;
 }

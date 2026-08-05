@@ -67,16 +67,21 @@ export default function WeeklySales() {
     return (
         <div className="flex flex-col gap-4">
             {/* Weekly totals */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                 <StatCard
                     label="Units sold"
                     value={stats.unitsSold.toString()}
                     sub="this week"
                 />
                 <StatCard
-                    label="Revenue"
+                    label="Pre-tax revenue"
                     value={formatCurrency(stats.revenue)}
-                    sub="this week"
+                    sub="this week, tax backed out"
+                />
+                <StatCard
+                    label="Sales tax"
+                    value={formatCurrency(stats.salesTax)}
+                    sub="set aside — not income"
                 />
                 <StatCard
                     label="Cost of goods"
@@ -107,7 +112,7 @@ export default function WeeklySales() {
                             <TableHeader>Item &amp; size</TableHeader>
                             <TableHeader>Sold</TableHeader>
                             <TableHeader className="text-right">
-                                Revenue
+                                Pre-tax revenue
                             </TableHeader>
                             <TableHeader className="text-right">
                                 Profit

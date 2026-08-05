@@ -140,6 +140,25 @@ export interface ProcessorFee {
     amount: number;
 }
 
+/** The two cash reserves the growth plan prescribes (§14.2). */
+export const RESERVE_FUNDS = ["emergency", "expansion"] as const;
+export type ReserveFund = (typeof RESERVE_FUNDS)[number];
+
+/**
+ * One movement in or out of a reserve fund. Reserves are a ledger, not a
+ * mutable balance — balance = sum(amount) — so every transfer keeps its date
+ * and reason, and an opening balance is just the first row.
+ */
+export interface ReserveTransfer {
+    id: string;
+    /** Local calendar day, "YYYY-MM-DD". */
+    date: string;
+    fund: ReserveFund;
+    /** Dollars; negative for a withdrawal. */
+    amount: number;
+    note?: string;
+}
+
 /**
  * A single real sale imported from the card/cash processor export. The processor
  * only records the order total, not what was in it.
@@ -182,6 +201,13 @@ export interface Settings {
      * Pre-tax sales = amount ÷ (1 + rate/100).
      */
     salesTaxRatePercent: number;
+    /**
+     * Percent of a week's pre-tax sales to transfer to the emergency reserve,
+     * e.g. 3 = 3% (growth plan §15.1).
+     */
+    emergencyReservePercent: number;
+    /** Likewise for the expansion fund, e.g. 2 = 2% (§15.2). */
+    expansionFundPercent: number;
 }
 
 /**
@@ -205,6 +231,8 @@ export interface OperatingRecords {
     marketClassifications: Record<Market, MarketClassification | null>;
     /** Per-market hourly rate; null = use the global `employeeHourlyRate`. */
     marketHourlyRates: Record<Market, number | null>;
+    /** The reserve ledger; balances are sums over it. */
+    reserveTransfers: ReserveTransfer[];
 }
 
 /** A single item×size combination with its computed economics. */
@@ -217,6 +245,9 @@ export interface Combination {
     label: string;
     /** "Fries · Large" (compact, for chart axes) */
     shortLabel: string;
+    /** Menu price charged to the customer — tax-inclusive. */
+    sellPrice: number;
+    /** Pre-tax revenue: `sellPrice` with the sales tax backed out. */
     revenue: number;
     cost: number;
     grossProfit: number;

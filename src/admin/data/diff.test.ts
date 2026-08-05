@@ -89,4 +89,15 @@ describe("computeConfigChange", () => {
         expect(change?.settings.employee_hourly_rate).toBe(15);
         expect(change?.settings.sales_tax_rate_percent).toBe(6.25);
     });
+
+    test("the reserve transfer rates ride the settings row", () => {
+        const next = {
+            ...BASE,
+            emergencyReservePercent: 4,
+            expansionFundPercent: 1,
+        };
+        const change = computeConfigChange(BASE, next);
+        expect(change?.settings.emergency_reserve_percent).toBe(4);
+        expect(change?.settings.expansion_fund_percent).toBe(1);
+    });
 });

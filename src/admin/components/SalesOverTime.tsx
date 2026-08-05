@@ -51,16 +51,21 @@ export default function SalesOverTime({ settings, inRange, range }: Props) {
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                 <StatCard
                     label="Orders"
                     value={summary.orders.toLocaleString()}
                     sub="approved sales"
                 />
                 <StatCard
-                    label="Revenue"
+                    label="Pre-tax revenue"
                     value={formatCurrency(summary.revenue)}
-                    sub="in range"
+                    sub="tax backed out"
+                />
+                <StatCard
+                    label="Sales tax"
+                    value={formatCurrency(summary.salesTax)}
+                    sub="set aside — not income"
                 />
                 <StatCard
                     label="Est. profit"
@@ -71,14 +76,14 @@ export default function SalesOverTime({ settings, inRange, range }: Props) {
                 <StatCard
                     label="Avg order"
                     value={formatCurrency(summary.avgOrderValue)}
-                    sub="revenue ÷ orders"
+                    sub="pre-tax revenue ÷ orders"
                 />
             </div>
 
             {chartData.length > 0 ? (
                 <ChartCard
                     title="Revenue & profit over time"
-                    description="Each point is one period. Revenue is what you took in; profit is after estimated food cost."
+                    description="Each point is one period. Revenue is pre-tax — the sales tax is backed out; profit is after estimated food cost."
                     minWidth={minWidth}
                 >
                     <ResponsiveContainer width="100%" height="100%">
@@ -128,7 +133,7 @@ export default function SalesOverTime({ settings, inRange, range }: Props) {
                             <Line
                                 type="monotone"
                                 dataKey="revenue"
-                                name="Revenue"
+                                name="Pre-tax revenue"
                                 stroke={theme.blue}
                                 strokeWidth={2}
                                 dot={false}

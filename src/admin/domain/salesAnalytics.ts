@@ -6,8 +6,14 @@
 // best-effort, in priority order:
 //   1. matched  — the amount equals one or more menu prices; use their avg cost,
 //   2. blended  — fall back to the adjustable food-cost % of the amount.
+//
+// Order totals are tax-inclusive (menu prices bake the sales tax in), so
+// `revenue` and `profit` are pre-tax throughout — the tax portion is reported
+// separately as `salesTax`, money set aside for the state, not income. Price
+// matching still happens on the gross amount, because that is what both the
+// processor and the menu record.
 
-import { allCombinations } from "@/admin/domain/calculations.ts";
+import { allCombinations, preTaxAmount } from "@/admin/domain/calculations.ts";
 import type { Settings, Transaction } from "@/admin/domain/types.ts";
 
 export type Granularity = "day" | "week" | "month";
@@ -20,8 +26,14 @@ export interface TimeRange {
 }
 
 export interface TransactionProfit {
+    /** The order total as charged — tax-inclusive. */
+    grossRevenue: number;
+    /** Pre-tax revenue: `grossRevenue` with the sales tax backed out. */
     revenue: number;
+    /** The tax portion of the order — set aside, not income. */
+    salesTax: number;
     cost: number;
+    /** Pre-tax revenue less cost. */
     profit: number;
     basis: ProfitBasis;
 }
@@ -31,14 +43,19 @@ export interface PeriodBucket {
     periodStart: string;
     label: string;
     orders: number;
+    /** Pre-tax revenue. */
     revenue: number;
+    salesTax: number;
     profit: number;
 }
 
 export interface PricePoint {
+    /** The order amount as charged — the tax-inclusive menu price. */
     price: number;
     orders: number;
+    /** Pre-tax revenue. */
     revenue: number;
+    salesTax: number;
     profit: number;
     /** How the profit was derived for sales at this price. */
     basis: ProfitBasis;
@@ -46,8 +63,12 @@ export interface PricePoint {
 
 export interface SalesSummary {
     orders: number;
+    /** Pre-tax revenue. */
     revenue: number;
+    /** Sales tax collected — "set aside $X". */
+    salesTax: number;
     profit: number;
+    /** Pre-tax revenue ÷ orders. */
     avgOrderValue: number;
 }
 
@@ -65,16 +86,18 @@ export function isCountable(txn: Transaction): boolean {
 
 /** Precomputed cost lookups so per-transaction resolution stays O(1). */
 export interface ProfitIndex {
+    /** Keyed by the tax-inclusive menu price — what `txn.amount` records. */
     costByPrice: Map<number, number>;
     blendedFoodCostPercent: number;
+    salesTaxRatePercent: number;
 }
 
 export function buildProfitIndex(settings: Settings): ProfitIndex {
     const priceGroups = new Map<number, number[]>();
     for (const combination of allCombinations(settings)) {
-        const group = priceGroups.get(combination.revenue) ?? [];
+        const group = priceGroups.get(combination.sellPrice) ?? [];
         group.push(combination.cost);
-        priceGroups.set(combination.revenue, group);
+        priceGroups.set(combination.sellPrice, group);
     }
     const costByPrice = new Map<number, number>();
     for (const [price, costs] of priceGroups) {
@@ -83,6 +106,7 @@ export function buildProfitIndex(settings: Settings): ProfitIndex {
     return {
         costByPrice,
         blendedFoodCostPercent: settings.blendedFoodCostPercent,
+        salesTaxRatePercent: settings.salesTaxRatePercent,
     };
 }
 
@@ -90,20 +114,26 @@ export function resolveWithIndex(
     txn: Transaction,
     index: ProfitIndex,
 ): TransactionProfit {
-    const revenue = txn.amount;
+    const grossRevenue = txn.amount;
+    const revenue = preTaxAmount(grossRevenue, index.salesTaxRatePercent);
+    const salesTax = grossRevenue - revenue;
 
     const matched = index.costByPrice.get(txn.amount);
-    if (matched !== undefined) {
-        return {
-            revenue,
-            cost: matched,
-            profit: revenue - matched,
-            basis: "matched",
-        };
-    }
-
-    const cost = revenue * (index.blendedFoodCostPercent / 100);
-    return { revenue, cost, profit: revenue - cost, basis: "blended" };
+    // The blended fallback stays a percent of the GROSS amount — that is how
+    // the "blended food cost %" setting has always been calibrated, and it
+    // keeps cost estimates identical to the pre-tax-separation dashboard.
+    const cost =
+        matched !== undefined
+            ? matched
+            : grossRevenue * (index.blendedFoodCostPercent / 100);
+    return {
+        grossRevenue,
+        revenue,
+        salesTax,
+        cost,
+        profit: revenue - cost,
+        basis: matched !== undefined ? "matched" : "blended",
+    };
 }
 
 /** Public single-transaction resolver (builds the index on demand). */
@@ -143,19 +173,29 @@ export function filterByRange(
     });
 }
 
-function startOf(date: Date, granularity: Granularity): Date {
+/**
+ * Local midnight on the Monday of the week containing `date` — THE definition
+ * of a week for the whole dashboard (weekly buckets here, the Weekly Review's
+ * boundaries in weeklyReview.ts).
+ */
+export function startOfWeek(date: Date): Date {
     const result = new Date(
         date.getFullYear(),
         date.getMonth(),
         date.getDate(),
     );
-    if (granularity === "month") {
-        result.setDate(1);
-    } else if (granularity === "week") {
-        // Week starts Monday.
-        const day = (result.getDay() + 6) % 7;
-        result.setDate(result.getDate() - day);
-    }
+    result.setDate(result.getDate() - ((result.getDay() + 6) % 7));
+    return result;
+}
+
+function startOf(date: Date, granularity: Granularity): Date {
+    if (granularity === "week") return startOfWeek(date);
+    const result = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+    );
+    if (granularity === "month") result.setDate(1);
     return result;
 }
 
@@ -191,11 +231,13 @@ export function bucketByPeriod(
                 label: bucketLabel(start, granularity),
                 orders: 0,
                 revenue: 0,
+                salesTax: 0,
                 profit: 0,
             } satisfies PeriodBucket);
         const resolved = resolveWithIndex(txn, index);
         bucket.orders += 1;
         bucket.revenue += resolved.revenue;
+        bucket.salesTax += resolved.salesTax;
         bucket.profit += resolved.profit;
         buckets.set(key, bucket);
     }
@@ -213,7 +255,13 @@ export function pricePointBreakdown(
     const index = buildProfitIndex(settings);
     const points = new Map<
         number,
-        { orders: number; revenue: number; profit: number; basis: ProfitBasis }
+        {
+            orders: number;
+            revenue: number;
+            salesTax: number;
+            profit: number;
+            basis: ProfitBasis;
+        }
     >();
 
     for (const txn of txns) {
@@ -222,6 +270,7 @@ export function pricePointBreakdown(
         const point = points.get(txn.amount) ?? {
             orders: 0,
             revenue: 0,
+            salesTax: 0,
             profit: 0,
             // Basis depends only on the amount, so it's the same for every sale
             // at this price.
@@ -229,6 +278,7 @@ export function pricePointBreakdown(
         };
         point.orders += 1;
         point.revenue += resolved.revenue;
+        point.salesTax += resolved.salesTax;
         point.profit += resolved.profit;
         points.set(txn.amount, point);
     }
@@ -246,17 +296,20 @@ export function salesSummary(
     const index = buildProfitIndex(settings);
     let orders = 0;
     let revenue = 0;
+    let salesTax = 0;
     let profit = 0;
     for (const txn of txns) {
         if (!isCountable(txn)) continue;
         const resolved = resolveWithIndex(txn, index);
         orders += 1;
         revenue += resolved.revenue;
+        salesTax += resolved.salesTax;
         profit += resolved.profit;
     }
     return {
         orders,
         revenue,
+        salesTax,
         profit,
         avgOrderValue: orders > 0 ? revenue / orders : 0,
     };

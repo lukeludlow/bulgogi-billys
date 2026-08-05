@@ -34,7 +34,11 @@ _sales_; it cannot yet see _events_, _taxes_, or _contribution_. These three
 deliverables close that gap and directly power the weekly Monday review Billy is
 supposed to run (§21).
 
-### 0.1 Market tagging + Event Contribution report — **the highest-value item on this list** (§17.1–17.3, §12.1)
+### 0.1 Market tagging + Event Contribution report — **the highest-value item on this list** (§17.1–17.3, §12.1) — ✅ done (Aug 2026)
+
+Shipped as `/admin/events`, beyond the spec below: purchase allocation across
+events by sales share, monthly processor-fee allocation weighted by card volume,
+per-market hourly rates, and the §17.2 classification badges.
 
 - Auto-assign every imported transaction to a market from its timestamp — the
   schedules don't overlap: **Saturday → Grogan's Mill**, **1st/3rd Sunday → New
@@ -51,7 +55,12 @@ supposed to run (§21).
 - Builds on: `src/admin/domain/salesAnalytics.ts` (bucketing, countable sales),
   `TransactionHistory.tsx`, the `transactions` table.
 
-### 0.2 Sales-tax separation everywhere (§13.2, §14.2, §26 rule #1)
+### 0.2 Sales-tax separation everywhere (§13.2, §14.2, §26 rule #1) — ✅ done (Aug 2026)
+
+Revenue, profit, and margins are pre-tax everywhere — `salesAnalytics.ts`,
+`calculations.ts` (Profit Calculator margins and break-even included), and the
+event report share one `preTaxAmount`. Price matching still uses the gross
+amount, and the blended food-cost % stays calibrated against gross.
 
 - Menu prices are **tax-inclusive**, but the dashboard currently treats gross
   receipts as revenue. Add a sales-tax rate setting; show **pre-tax sales** and
@@ -62,7 +71,12 @@ supposed to run (§21).
 - **Why now:** "Sales tax is not business income" is Key Financial Rule #1, and
   protecting tax money is step 1 of the cash-allocation order (§14.1).
 
-### 0.3 Weekly review page (§21, §15)
+### 0.3 Weekly review page (§21, §15) — ✅ done (Aug 2026)
+
+Shipped as `/admin/weekly`: week picker, per-event contribution, tax set-aside,
+the prescribed 3%/2% transfers (rates editable in settings) with a one-click
+"record both", and a `reserve_transfers` ledger driving balances and the §27
+target ladder.
 
 - An auto-generated Monday summary: sales by event, tax to set aside, event
   contributions, and the prescribed transfers (3% of pre-tax sales → emergency
@@ -161,9 +175,9 @@ Only after the earlier phases prove out (§24 expansion gates):
 
 ## Suggested build order (high-value deliverables)
 
-1. Market tagging + Event Contribution report (0.1)
-2. Sales-tax separation (0.2)
-3. Weekly review page with reserve tracking (0.3)
+1. ~~Market tagging + Event Contribution report (0.1)~~ ✅
+2. ~~Sales-tax separation (0.2)~~ ✅
+3. ~~Weekly review page with reserve tracking (0.3)~~ ✅
 4. Public menu prices (1.3) — small, ships alongside the above
 5. Catering page + structured inquiries (1.4)
 6. Menu engineering view (1.1)

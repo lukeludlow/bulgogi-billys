@@ -149,6 +149,17 @@ const PROBES: Record<string, Probe> = {
         filter: { market: "other" },
         patch: { classification: "core" },
     },
+    reserve_transfers: {
+        row: {
+            id: "probe",
+            date: "2026-07-01",
+            fund: "emergency",
+            amount: 100,
+            note: null,
+        },
+        filter: { id: "probe" },
+        patch: { amount: 250 },
+    },
 };
 
 const TABLES = Object.keys(PROBES);

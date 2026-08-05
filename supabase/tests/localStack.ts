@@ -42,6 +42,7 @@ export const DATA_TABLES = [
     "market_overrides",
     "processor_fees",
     "market_settings",
+    "reserve_transfers",
 ] as const;
 
 /** An account that exists in auth but not in public.admin_users. */

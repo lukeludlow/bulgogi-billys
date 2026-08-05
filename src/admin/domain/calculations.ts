@@ -12,6 +12,15 @@ function shortItemName(name: string): string {
     return name.replace(/^Bulgogi\s+/i, "");
 }
 
+/**
+ * Menu prices are tax-inclusive; back the tax out of a gross amount. That tax
+ * money is set aside for the state, not revenue — so every margin here is
+ * computed on the pre-tax amount (§13.2, §26 rule #1).
+ */
+export function preTaxAmount(gross: number, taxRatePercent: number): number {
+    return gross / (1 + taxRatePercent / 100);
+}
+
 function resolveIngredient(
     ingredientId: string,
     ingredients: Ingredient[],
@@ -64,6 +73,9 @@ export function variantCost(
 }
 
 export interface Margin {
+    /** Menu price charged to the customer — tax-inclusive. */
+    sellPrice: number;
+    /** Pre-tax revenue: `sellPrice` with the sales tax backed out. */
     revenue: number;
     cost: number;
     grossProfit: number;
@@ -76,8 +88,10 @@ export function variantMargin(
     ingredients: Ingredient[],
     protein: Protein,
     packagingCostPerOrder: number,
+    salesTaxRatePercent: number,
 ): Margin {
-    const revenue = variant.sellPrice || 0;
+    const sellPrice = variant.sellPrice || 0;
+    const revenue = preTaxAmount(sellPrice, salesTaxRatePercent);
     const cost = variantCost(
         variant,
         ingredients,
@@ -87,13 +101,25 @@ export function variantMargin(
     const grossProfit = revenue - cost;
     const marginPercent = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
     const foodCostPercent = revenue > 0 ? (cost / revenue) * 100 : 0;
-    return { revenue, cost, grossProfit, marginPercent, foodCostPercent };
+    return {
+        sellPrice,
+        revenue,
+        cost,
+        grossProfit,
+        marginPercent,
+        foodCostPercent,
+    };
 }
 
 /** Every item×size combination flattened, with its economics — for charts/tables. */
 export function allCombinations(settings: Settings): Combination[] {
-    const { ingredients, items, selectedProtein, packagingCostPerOrder } =
-        settings;
+    const {
+        ingredients,
+        items,
+        selectedProtein,
+        packagingCostPerOrder,
+        salesTaxRatePercent,
+    } = settings;
     const combinations: Combination[] = [];
     for (const item of items) {
         for (const variant of item.variants) {
@@ -102,6 +128,7 @@ export function allCombinations(settings: Settings): Combination[] {
                 ingredients,
                 selectedProtein,
                 packagingCostPerOrder,
+                salesTaxRatePercent,
             );
             combinations.push({
                 itemId: item.id,
@@ -181,7 +208,10 @@ export interface WeeklyLine {
 
 export interface WeeklyStats {
     unitsSold: number;
+    /** Pre-tax revenue for the week's units. */
     revenue: number;
+    /** Sales tax collected on those units — set aside, not income. */
+    salesTax: number;
     ingredientCost: number;
     grossProfit: number;
     /** Gross profit less the week's grocery spend. */
@@ -210,10 +240,20 @@ export function weeklyStats(settings: Settings): WeeklyStats {
         (acc, line) => ({
             unitsSold: acc.unitsSold + line.unitsSold,
             revenue: acc.revenue + line.revenue,
+            salesTax:
+                acc.salesTax +
+                (line.combination.sellPrice - line.combination.revenue) *
+                    line.unitsSold,
             ingredientCost: acc.ingredientCost + line.ingredientCost,
             grossProfit: acc.grossProfit + line.grossProfit,
         }),
-        { unitsSold: 0, revenue: 0, ingredientCost: 0, grossProfit: 0 },
+        {
+            unitsSold: 0,
+            revenue: 0,
+            salesTax: 0,
+            ingredientCost: 0,
+            grossProfit: 0,
+        },
     );
 
     return {

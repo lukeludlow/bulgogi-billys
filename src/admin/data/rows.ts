@@ -94,6 +94,8 @@ export function settingsToRows(settings: Settings): DbSnapshot {
             blended_food_cost_percent: settings.blendedFoodCostPercent,
             employee_hourly_rate: settings.employeeHourlyRate,
             sales_tax_rate_percent: settings.salesTaxRatePercent,
+            emergency_reserve_percent: settings.emergencyReservePercent,
+            expansion_fund_percent: settings.expansionFundPercent,
         },
         ingredients,
         batchLines,
@@ -177,5 +179,7 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         blendedFoodCostPercent: snapshot.settings.blended_food_cost_percent,
         employeeHourlyRate: snapshot.settings.employee_hourly_rate,
         salesTaxRatePercent: snapshot.settings.sales_tax_rate_percent,
+        emergencyReservePercent: snapshot.settings.emergency_reserve_percent,
+        expansionFundPercent: snapshot.settings.expansion_fund_percent,
     };
 }

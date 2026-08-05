@@ -51,6 +51,8 @@ function settings(
         blendedFoodCostPercent: 32,
         employeeHourlyRate: 15,
         salesTaxRatePercent: 8.25,
+        emergencyReservePercent: 3,
+        expansionFundPercent: 2,
     };
 }
 

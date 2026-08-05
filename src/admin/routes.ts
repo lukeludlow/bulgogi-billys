@@ -65,6 +65,21 @@ export const ADMIN_ROUTES: AdminRoute[] = [
         Component: lazy(() => import("@/admin/pages/TransactionHistory.tsx")),
     },
     {
+        path: "/admin/weekly",
+        label: "Weekly Review",
+        heading: "Weekly Review",
+        intro: "The Monday routine in one place — last week's events, the tax to set aside, and the reserve transfers, as dollar amounts.",
+        description: "Bulgogi Billy's internal weekly financial review.",
+        sections: [
+            { id: "week", label: "The Week" },
+            { id: "events", label: "Events" },
+            { id: "set-aside", label: "Set Aside & Transfer" },
+            { id: "reserves", label: "Reserves" },
+            { id: "assumptions", label: "Assumptions" },
+        ],
+        Component: lazy(() => import("@/admin/pages/WeeklyReview.tsx")),
+    },
+    {
         path: "/admin/events",
         label: "Events",
         heading: "Events",

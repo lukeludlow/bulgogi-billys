@@ -4,6 +4,7 @@ import type {
     MarketEvent,
     OperatingRecords,
     Purchase,
+    ReserveTransfer,
 } from "@/admin/domain/types.ts";
 import {
     computeRecordsChangeSet,
@@ -12,6 +13,10 @@ import {
 
 function makePurchase(id: string, amount = 25): Purchase {
     return { id, date: "2026-07-20", category: "propane", amount };
+}
+
+function makeTransfer(id: string, amount = 30): ReserveTransfer {
+    return { id, date: "2026-07-20", fund: "emergency", amount };
 }
 
 const BASE: OperatingRecords = DEFAULT_RECORDS;
@@ -53,6 +58,29 @@ test("removing a purchase deletes by id", () => {
     const changeSet = computeRecordsChangeSet(prev, next);
     expect(changeSet.purchases?.upserts).toEqual([]);
     expect(changeSet.purchases?.deletes).toEqual(["p2"]);
+});
+
+test("reserve transfer edits upsert and delete by id", () => {
+    const prev = {
+        ...BASE,
+        reserveTransfers: [makeTransfer("r1"), makeTransfer("r2")],
+    };
+    const next = {
+        ...prev,
+        reserveTransfers: [makeTransfer("r1", -10)], // r1 edited, r2 removed
+    };
+    const changeSet = computeRecordsChangeSet(prev, next);
+    expect(changeSet.reserveTransfers?.upserts).toEqual([
+        {
+            id: "r1",
+            date: "2026-07-20",
+            fund: "emergency",
+            amount: -10,
+            note: null,
+        },
+    ]);
+    expect(changeSet.reserveTransfers?.deletes).toEqual(["r2"]);
+    expect(isEmptyRecordsChangeSet(changeSet)).toBe(false);
 });
 
 test("processor fee edits upsert and delete by month", () => {

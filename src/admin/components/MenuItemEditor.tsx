@@ -52,6 +52,7 @@ export default function MenuItemEditor({ item }: { item: MenuItem }) {
                 ingredients={settings.ingredients}
                 selectedProtein={settings.selectedProtein}
                 packagingCostPerOrder={settings.packagingCostPerOrder}
+                salesTaxRatePercent={settings.salesTaxRatePercent}
                 onChangePrice={onChangePrice}
             />
 

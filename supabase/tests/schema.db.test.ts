@@ -104,6 +104,12 @@ describe("constraints", () => {
             // market_classifications → market_settings rename.
             /market_classifications_classification_check/,
         ],
+        [
+            "an unknown reserve fund",
+            `insert into public.reserve_transfers (id, date, fund, amount)
+             values ('bad', '2026-07-01', 'vacation', 1);`,
+            /reserve_transfers_fund_check/,
+        ],
     ])("rejects %s", (_label, sql, expected) => {
         expect(sqlError(sql)).toMatch(expected);
     });

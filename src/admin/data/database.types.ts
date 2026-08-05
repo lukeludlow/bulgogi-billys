@@ -260,10 +260,36 @@ export type Database = {
                     },
                 ];
             };
+            reserve_transfers: {
+                Row: {
+                    amount: number;
+                    date: string;
+                    fund: string;
+                    id: string;
+                    note: string | null;
+                };
+                Insert: {
+                    amount: number;
+                    date: string;
+                    fund: string;
+                    id: string;
+                    note?: string | null;
+                };
+                Update: {
+                    amount?: number;
+                    date?: string;
+                    fund?: string;
+                    id?: string;
+                    note?: string | null;
+                };
+                Relationships: [];
+            };
             settings: {
                 Row: {
                     blended_food_cost_percent: number;
+                    emergency_reserve_percent: number;
                     employee_hourly_rate: number;
+                    expansion_fund_percent: number;
                     grocery_weekly_spend: number;
                     id: number;
                     packaging_cost_per_order: number;
@@ -273,7 +299,9 @@ export type Database = {
                 };
                 Insert: {
                     blended_food_cost_percent?: number;
+                    emergency_reserve_percent?: number;
                     employee_hourly_rate?: number;
+                    expansion_fund_percent?: number;
                     grocery_weekly_spend?: number;
                     id?: number;
                     packaging_cost_per_order?: number;
@@ -283,7 +311,9 @@ export type Database = {
                 };
                 Update: {
                     blended_food_cost_percent?: number;
+                    emergency_reserve_percent?: number;
                     employee_hourly_rate?: number;
+                    expansion_fund_percent?: number;
                     grocery_weekly_spend?: number;
                     id?: number;
                     packaging_cost_per_order?: number;

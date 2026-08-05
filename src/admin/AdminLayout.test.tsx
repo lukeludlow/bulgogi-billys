@@ -3,6 +3,7 @@ import { Route } from "react-router";
 import Events from "@/admin/pages/Events.tsx";
 import ProfitCalculator from "@/admin/pages/ProfitCalculator.tsx";
 import TransactionHistory from "@/admin/pages/TransactionHistory.tsx";
+import WeeklyReview from "@/admin/pages/WeeklyReview.tsx";
 import { ADMIN_ROUTES } from "@/admin/routes.ts";
 import { renderAdminPage } from "@/test/renderAdminPage.tsx";
 
@@ -45,6 +46,7 @@ function renderAdmin(route = "/admin") {
         <>
             <Route index element={<ProfitCalculator />} />
             <Route path="transactions" element={<TransactionHistory />} />
+            <Route path="weekly" element={<WeeklyReview />} />
             <Route path="events" element={<Events />} />
         </>,
     );

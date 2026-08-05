@@ -107,4 +107,5 @@ export function seedRecordsTables(records: OperatingRecords) {
     data.set("market_overrides", snapshot.marketOverrides);
     data.set("processor_fees", snapshot.processorFees);
     data.set("market_settings", snapshot.marketSettings);
+    data.set("reserve_transfers", snapshot.reserveTransfers);
 }

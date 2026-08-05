@@ -130,7 +130,7 @@ export default function PricePointAnalysis({ settings, inRange }: Props) {
                                     Orders
                                 </TableHeader>
                                 <TableHeader className="text-right">
-                                    Revenue
+                                    Pre-tax revenue
                                 </TableHeader>
                                 <TableHeader className="text-right">
                                     Est. profit

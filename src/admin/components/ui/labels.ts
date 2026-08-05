@@ -3,7 +3,11 @@
 // values (domain/eventAnalytics.ts) or in the editor that first needed them
 // (PurchasesEditor.tsx).
 
-import type { Market, PurchaseCategory } from "@/admin/domain/types.ts";
+import type {
+    Market,
+    PurchaseCategory,
+    ReserveFund,
+} from "@/admin/domain/types.ts";
 
 export const MARKET_LABELS: Record<Market, string> = {
     "grogans-mill": "Grogan's Mill",
@@ -17,4 +21,9 @@ export const CATEGORY_LABELS: Record<PurchaseCategory, string> = {
     fuel: "Fuel",
     propane: "Propane",
     ice: "Ice",
+};
+
+export const FUND_LABELS: Record<ReserveFund, string> = {
+    emergency: "Emergency reserve",
+    expansion: "Expansion fund",
 };

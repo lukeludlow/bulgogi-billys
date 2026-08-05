@@ -16,6 +16,7 @@ import {
     type MarketSettingsRow,
     type ProcessorFeeRow,
     type PurchaseRow,
+    type ReserveTransferRow,
 } from "./recordsRows.ts";
 import type { RecordsChangeSet } from "./recordsDiff.ts";
 import type { OperatingRecords } from "@/admin/domain/types.ts";
@@ -25,29 +26,38 @@ import type { OperatingRecords } from "@/admin/domain/types.ts";
  * started yet has no purchases — so this never returns null.
  */
 export async function fetchRecords(): Promise<OperatingRecords> {
-    const [events, purchases, marketOverrides, processorFees, marketSettings] =
-        await Promise.all([
-            fetchAllRows<EventRow>("events", "date", "market"),
-            fetchAllRows<PurchaseRow>("purchases", "date", "id"),
-            // One row per corrected day, growing without bound — paged like
-            // the tables above. `date` is the primary key, so no tiebreaker.
-            fetchAllRows<MarketOverrideRow>("market_overrides", "date"),
-            // Genuinely small tables (a handful of rows) — no paging needed.
-            supabase
-                .from("processor_fees")
-                .select("*")
-                .then(unwrap<ProcessorFeeRow[]>),
-            supabase
-                .from("market_settings")
-                .select("*")
-                .then(unwrap<MarketSettingsRow[]>),
-        ]);
+    const [
+        events,
+        purchases,
+        marketOverrides,
+        processorFees,
+        marketSettings,
+        reserveTransfers,
+    ] = await Promise.all([
+        fetchAllRows<EventRow>("events", "date", "market"),
+        fetchAllRows<PurchaseRow>("purchases", "date", "id"),
+        // One row per corrected day, growing without bound — paged like
+        // the tables above. `date` is the primary key, so no tiebreaker.
+        fetchAllRows<MarketOverrideRow>("market_overrides", "date"),
+        // Genuinely small tables (a handful of rows) — no paging needed.
+        supabase
+            .from("processor_fees")
+            .select("*")
+            .then(unwrap<ProcessorFeeRow[]>),
+        supabase
+            .from("market_settings")
+            .select("*")
+            .then(unwrap<MarketSettingsRow[]>),
+        // A few rows a week, but unbounded across seasons — paged.
+        fetchAllRows<ReserveTransferRow>("reserve_transfers", "date", "id"),
+    ]);
     return rowsToRecords({
         events,
         purchases,
         marketOverrides,
         processorFees,
         marketSettings,
+        reserveTransfers,
     });
 }
 
@@ -143,5 +153,25 @@ export async function applyRecordsChangeSet(
                 .from("market_settings")
                 .upsert(changeSet.marketSettings, { onConflict: "market" }),
         );
+    }
+
+    if (changeSet.reserveTransfers) {
+        if (changeSet.reserveTransfers.upserts.length > 0) {
+            unwrap(
+                await supabase
+                    .from("reserve_transfers")
+                    .upsert(changeSet.reserveTransfers.upserts, {
+                        onConflict: "id",
+                    }),
+            );
+        }
+        if (changeSet.reserveTransfers.deletes.length > 0) {
+            unwrap(
+                await supabase
+                    .from("reserve_transfers")
+                    .delete()
+                    .in("id", changeSet.reserveTransfers.deletes),
+            );
+        }
     }
 }

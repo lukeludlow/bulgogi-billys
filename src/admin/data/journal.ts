@@ -33,7 +33,9 @@ export function isUsableSettings(value: unknown): value is Settings {
         Array.isArray(candidate.ingredients) &&
         Array.isArray(candidate.items) &&
         typeof candidate.employeeHourlyRate === "number" &&
-        typeof candidate.salesTaxRatePercent === "number"
+        typeof candidate.salesTaxRatePercent === "number" &&
+        typeof candidate.emergencyReservePercent === "number" &&
+        typeof candidate.expansionFundPercent === "number"
     );
 }
 
@@ -45,6 +47,7 @@ export function isUsableRecords(value: unknown): value is OperatingRecords {
         Array.isArray(candidate.events) &&
         Array.isArray(candidate.purchases) &&
         Array.isArray(candidate.processorFees) &&
+        Array.isArray(candidate.reserveTransfers) &&
         typeof candidate.marketOverrides === "object" &&
         candidate.marketOverrides !== null &&
         typeof candidate.marketClassifications === "object" &&

@@ -88,6 +88,20 @@ describe("an allowlisted admin", () => {
         expect(readRows("settings")[0].updated_at).not.toBe(before);
     });
 
+    test("writes the reserve transfer rates with the settings row", async () => {
+        // The columns arrived after the function did; a stale function body
+        // would silently keep the defaults instead of the caller's rates.
+        const config = currentPayload();
+        (config.settings as Payload).emergency_reserve_percent = 4;
+        (config.settings as Payload).expansion_fund_percent = 1.5;
+
+        expect((await rpcAs("admin", config)).error).toBeNull();
+        expect(readRows("settings")[0]).toMatchObject({
+            emergency_reserve_percent: 4,
+            expansion_fund_percent: 1.5,
+        });
+    });
+
     test("emptying a list is honored, not treated as a mistake", async () => {
         const config = currentPayload();
         config.batch_lines = [];

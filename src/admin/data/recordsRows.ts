@@ -8,12 +8,14 @@ import {
     MARKET_CLASSIFICATIONS,
     MARKETS,
     PURCHASE_CATEGORIES,
+    RESERVE_FUNDS,
     type Market,
     type MarketClassification,
     type MarketEvent,
     type OperatingRecords,
     type ProcessorFee,
     type Purchase,
+    type ReserveTransfer,
 } from "@/admin/domain/types.ts";
 import { oneOf, type Row } from "./schema.ts";
 
@@ -22,6 +24,7 @@ export type PurchaseRow = Row<"purchases">;
 export type MarketOverrideRow = Row<"market_overrides">;
 export type ProcessorFeeRow = Row<"processor_fees">;
 export type MarketSettingsRow = Row<"market_settings">;
+export type ReserveTransferRow = Row<"reserve_transfers">;
 
 export interface RecordsSnapshot {
     events: EventRow[];
@@ -29,6 +32,7 @@ export interface RecordsSnapshot {
     marketOverrides: MarketOverrideRow[];
     processorFees: ProcessorFeeRow[];
     marketSettings: MarketSettingsRow[];
+    reserveTransfers: ReserveTransferRow[];
 }
 
 export function recordsToRows(records: OperatingRecords): RecordsSnapshot {
@@ -56,6 +60,11 @@ export function recordsToRows(records: OperatingRecords): RecordsSnapshot {
         processorFees: [...records.processorFees]
             .sort((a, b) => a.month.localeCompare(b.month))
             .map((fee) => ({ month: fee.month, amount: fee.amount })),
+        reserveTransfers: [...records.reserveTransfers]
+            .sort((a, b) =>
+                `${a.date} ${a.id}`.localeCompare(`${b.date} ${b.id}`),
+            )
+            .map(reserveTransferToRow),
     };
 }
 
@@ -127,6 +136,19 @@ export function rowsToRecords(snapshot: RecordsSnapshot): OperatingRecords {
         .sort((a, b) => a.month.localeCompare(b.month))
         .map((row) => ({ month: row.month, amount: row.amount }));
 
+    const reserveTransfers: ReserveTransfer[] = [...snapshot.reserveTransfers]
+        .sort((a, b) => `${a.date} ${a.id}`.localeCompare(`${b.date} ${b.id}`))
+        .map((row) => {
+            const transfer: ReserveTransfer = {
+                id: row.id,
+                date: row.date,
+                fund: oneOf(row.fund, RESERVE_FUNDS, "reserve fund"),
+                amount: row.amount,
+            };
+            if (row.note !== null) transfer.note = row.note;
+            return transfer;
+        });
+
     return {
         events,
         purchases,
@@ -134,6 +156,7 @@ export function rowsToRecords(snapshot: RecordsSnapshot): OperatingRecords {
         processorFees,
         marketClassifications,
         marketHourlyRates,
+        reserveTransfers,
     };
 }
 
@@ -155,5 +178,15 @@ function purchaseToRow(purchase: Purchase): PurchaseRow {
         category: purchase.category,
         amount: purchase.amount,
         note: purchase.note ?? null,
+    };
+}
+
+function reserveTransferToRow(transfer: ReserveTransfer): ReserveTransferRow {
+    return {
+        id: transfer.id,
+        date: transfer.date,
+        fund: transfer.fund,
+        amount: transfer.amount,
+        note: transfer.note ?? null,
     };
 }

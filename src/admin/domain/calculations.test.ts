@@ -47,7 +47,7 @@ test("variantCost ignores unknown ingredient ids", () => {
 });
 
 test("variantMargin derives profit, margin %, and food cost %", () => {
-    const margin = variantMargin(variant, ingredients, "beef", 0.25);
+    const margin = variantMargin(variant, ingredients, "beef", 0.25, 0);
     expect(margin.revenue).toBe(10);
     expect(margin.cost).toBeCloseTo(4.75);
     expect(margin.grossProfit).toBeCloseTo(5.25);
@@ -55,9 +55,20 @@ test("variantMargin derives profit, margin %, and food cost %", () => {
     expect(margin.foodCostPercent).toBeCloseTo(47.5);
 });
 
+test("variantMargin backs the sales tax out of the sell price", () => {
+    // 25% tax keeps the arithmetic exact: $10 on the menu is $8 pre-tax.
+    const margin = variantMargin(variant, ingredients, "beef", 0.25, 25);
+    expect(margin.sellPrice).toBe(10); // what the customer pays, unchanged
+    expect(margin.revenue).toBeCloseTo(8);
+    expect(margin.cost).toBeCloseTo(4.75); // cost is real dollars, tax-free
+    expect(margin.grossProfit).toBeCloseTo(3.25);
+    expect(margin.marginPercent).toBeCloseTo(40.625);
+    expect(margin.foodCostPercent).toBeCloseTo(59.375);
+});
+
 test("variantMargin is safe when the sell price is zero", () => {
     const free: Variant = { ...variant, sellPrice: 0 };
-    const margin = variantMargin(free, ingredients, "beef", 0);
+    const margin = variantMargin(free, ingredients, "beef", 0, 8.25);
     expect(margin.marginPercent).toBe(0);
     expect(margin.foodCostPercent).toBe(0);
 });
@@ -143,6 +154,7 @@ test("weeklyStats scales each combination by units sold and nets grocery spend",
         ...DEFAULT_SETTINGS,
         groceryWeeklySpend: 100,
         packagingCostPerOrder: 0,
+        salesTaxRatePercent: 0, // keeps the revenue arithmetic exact below
         ingredients: [],
         items: [
             {
@@ -172,10 +184,18 @@ test("weeklyStats scales each combination by units sold and nets grocery spend",
     // 3 sold @ $10 + 2 sold @ $5 = $40 revenue, no cost => $40 gross profit
     expect(stats.unitsSold).toBe(5);
     expect(stats.revenue).toBeCloseTo(40);
+    expect(stats.salesTax).toBeCloseTo(0);
     expect(stats.ingredientCost).toBeCloseTo(0);
     expect(stats.grossProfit).toBeCloseTo(40);
     expect(stats.net).toBeCloseTo(-60); // 40 - 100 grocery spend
     expect(stats.lines).toHaveLength(2);
+
+    // The same week at a 25% tax rate: $40 gross splits $32 revenue + $8 tax.
+    const taxed = weeklyStats({ ...settings, salesTaxRatePercent: 25 });
+    expect(taxed.revenue).toBeCloseTo(32);
+    expect(taxed.salesTax).toBeCloseTo(8);
+    expect(taxed.grossProfit).toBeCloseTo(32);
+    expect(taxed.net).toBeCloseTo(-68);
 });
 
 test("summaryStats picks the highest and lowest margin combinations", () => {

@@ -207,6 +207,9 @@ export const DEFAULT_SETTINGS: Settings = {
     // migration so a migrated database and a fresh seed agree.
     employeeHourlyRate: 12,
     salesTaxRatePercent: 8.25,
+    // Must match the reserve_transfers migration's column defaults (§15.1–2).
+    emergencyReservePercent: 3,
+    expansionFundPercent: 2,
 };
 
 /** The operational-record counterpart: nothing has been recorded yet. */
@@ -227,4 +230,5 @@ export const DEFAULT_RECORDS: OperatingRecords = {
         "fm-1488": null,
         other: null,
     },
+    reserveTransfers: [],
 };

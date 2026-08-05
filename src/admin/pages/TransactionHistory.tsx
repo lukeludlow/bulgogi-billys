@@ -82,7 +82,7 @@ export default function TransactionHistory() {
             <Section
                 id="assumptions"
                 title="Assumptions"
-                description="How profit is estimated for sales whose amount matches no menu price."
+                description="How revenue and profit are derived from the imported order totals."
             >
                 <Card>
                     <div className="max-w-xs">
@@ -103,9 +103,17 @@ export default function TransactionHistory() {
                         </div>
                         <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                             Used to estimate profit for a sale whose amount
-                            matches no menu price.
+                            matches no menu price, as a percent of the amount
+                            charged.
                         </p>
                     </div>
+                    <p className="mt-5 text-xs text-zinc-500 dark:text-zinc-400">
+                        Menu prices are tax-inclusive, so revenue and profit
+                        here are pre-tax: revenue = amount ÷ (1 +{" "}
+                        {settings.salesTaxRatePercent}% tax). The tax portion is
+                        set aside, not income — the rate is set on the Events
+                        page.
+                    </p>
                 </Card>
             </Section>
         </>

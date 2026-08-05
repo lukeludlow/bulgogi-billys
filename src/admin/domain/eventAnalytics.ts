@@ -16,6 +16,7 @@
 // importer's local-time parse — the whole dashboard assumes it is imported
 // and viewed in the business's own timezone.
 
+import { preTaxAmount } from "@/admin/domain/calculations.ts";
 import {
     buildProfitIndex,
     isCountable,
@@ -77,10 +78,9 @@ export function marketForTransaction(
     return resolveMarket(localDateKey(txn.date), overrides);
 }
 
-/** Menu prices are tax-inclusive; back the tax out of a gross amount. */
-export function preTaxAmount(gross: number, taxRatePercent: number): number {
-    return gross / (1 + taxRatePercent / 100);
-}
+// The tax math lives in calculations.ts (the bottom of the domain import
+// chain); re-exported here for the event-report callers that always used it.
+export { preTaxAmount };
 
 /** Per-category dollar allocation, all categories present (0 when none). */
 export type CategoryTotals = Record<PurchaseCategory, number>;
@@ -298,8 +298,10 @@ function bucketSales(
         };
         const resolved = resolveWithIndex(txn, index);
         bucket.orders += 1;
-        bucket.grossSales += resolved.revenue;
-        if (isCardPayment(txn)) bucket.cardGross += resolved.revenue;
+        // Gross, not resolved.revenue (pre-tax) — buildEventReport backs the
+        // tax out of the summed gross itself, exactly once.
+        bucket.grossSales += resolved.grossRevenue;
+        if (isCardPayment(txn)) bucket.cardGross += resolved.grossRevenue;
         bucket.estFoodCost += resolved.cost;
         sales.set(key, bucket);
     }

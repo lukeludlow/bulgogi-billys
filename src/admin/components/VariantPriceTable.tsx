@@ -23,6 +23,7 @@ interface Props {
     ingredients: Ingredient[];
     selectedProtein: Protein;
     packagingCostPerOrder: number;
+    salesTaxRatePercent: number;
     onChangePrice: (variantId: string, value: number) => void;
 }
 
@@ -32,6 +33,7 @@ export default function VariantPriceTable({
     ingredients,
     selectedProtein,
     packagingCostPerOrder,
+    salesTaxRatePercent,
     onChangePrice,
 }: Props) {
     return (
@@ -52,6 +54,7 @@ export default function VariantPriceTable({
                         ingredients,
                         selectedProtein,
                         packagingCostPerOrder,
+                        salesTaxRatePercent,
                     );
                     return (
                         <TableRow key={variant.id}>

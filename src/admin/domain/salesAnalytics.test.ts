@@ -12,7 +12,15 @@ import type { Settings, Transaction } from "@/admin/domain/types.ts";
 
 // DEFAULT prices: fries/rice regular = $9, tacos one = $4. $9 matches a menu
 // price; $100 matches nothing so it falls back to the blended %.
-const settings: Settings = { ...DEFAULT_SETTINGS, blendedFoodCostPercent: 32 };
+// Tax rate 0 keeps the long-standing arithmetic exact; the tax split has its
+// own tests below at an exact 25%.
+const settings: Settings = {
+    ...DEFAULT_SETTINGS,
+    blendedFoodCostPercent: 32,
+    salesTaxRatePercent: 0,
+};
+
+const taxed: Settings = { ...settings, salesTaxRatePercent: 25 };
 
 const DAY = 24 * 60 * 60 * 1000;
 const LATEST = new Date(2026, 6, 11, 12, 0).getTime(); // Jul 11 2026, local noon
@@ -51,6 +59,28 @@ test("resolveTransactionProfit matches a menu price to its recipe cost", () => {
     expect(resolved.basis).toBe("matched");
     expect(resolved.cost).toBeGreaterThan(0);
     expect(resolved.cost).toBeLessThan(9);
+});
+
+test("the tax comes out of revenue, but matching still uses the gross amount", () => {
+    // $9 IS a menu price. If matching used the pre-tax $7.20 instead of the
+    // gross $9, this sale would silently degrade to the blended fallback.
+    const resolved = resolveTransactionProfit(txn(9), taxed);
+    expect(resolved.basis).toBe("matched");
+    expect(resolved.grossRevenue).toBe(9);
+    expect(resolved.revenue).toBeCloseTo(7.2);
+    expect(resolved.salesTax).toBeCloseTo(1.8);
+    expect(resolved.profit).toBeCloseTo(7.2 - resolved.cost);
+});
+
+test("the blended fallback stays a percent of the gross amount under tax", () => {
+    // Cost estimates must not shift when the tax rate changes — the blended %
+    // was calibrated against gross amounts.
+    const resolved = resolveTransactionProfit(txn(100), taxed);
+    expect(resolved.basis).toBe("blended");
+    expect(resolved.cost).toBeCloseTo(32); // 32% of the $100 gross
+    expect(resolved.revenue).toBeCloseTo(80);
+    expect(resolved.salesTax).toBeCloseTo(20);
+    expect(resolved.profit).toBeCloseTo(48);
 });
 
 test("filterByRange anchors the window to the latest transaction", () => {
@@ -99,5 +129,14 @@ test("salesSummary totals revenue, profit, and average order value", () => {
     const summary = salesSummary(txns, settings);
     expect(summary.orders).toBe(2);
     expect(summary.revenue).toBe(109);
+    expect(summary.salesTax).toBe(0);
     expect(summary.avgOrderValue).toBeCloseTo(54.5);
+});
+
+test("salesSummary reports pre-tax revenue and the tax set-aside", () => {
+    const summary = salesSummary([txn(9), txn(100)], taxed);
+    expect(summary.revenue).toBeCloseTo((9 + 100) / 1.25);
+    expect(summary.salesTax).toBeCloseTo(109 - 109 / 1.25);
+    // revenue + salesTax always reassembles the gross takings.
+    expect(summary.revenue + summary.salesTax).toBeCloseTo(109);
 });
