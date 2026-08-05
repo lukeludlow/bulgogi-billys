@@ -174,29 +174,34 @@ three data shapes with different lifecycles behind one 9-table `fetchSettings()`
 | ----------------------- | ---------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------- |
 | **Config document**     | settings, ingredients, batch_lines, menu_items, variants, recipe_lines | Small, interdependent, edited as a whole        | The existing whole-state optimistic sync — it's genuinely good for this            |
 | **Transaction history** | transactions                                                           | Append-only, thousands of rows, imported weekly | Plain paged reads + insert-only import; should not ride the diff/journal machinery |
-| **Operational records** | events, market_classifications                                         | Keyed rows, edited one at a time                | Per-row upsert/delete, plain async calls                                           |
+| **Operational records** | events, purchases, market_overrides, processor_fees, market_settings   | Keyed rows, edited one at a time                | Keyed upsert/delete on their own sync engine, separate from the config document    |
 
 Loading the entire transactions table through `fetchSettings()` on every
 dashboard visit, and diffing it on every autosave, gets worse with every Square
 import. Sequenced fix — each step rides roadmap work already touching that code,
 no big-bang rewrite:
 
-- **P0 (with roadmap 0.1, which touches transactions anyway):** _transactions
-  half done (Aug 2026)_ — `src/admin/data/transactions.ts` (paged reads +
-  insert-only import) + `TransactionsProvider`, with transactions removed from
-  `Settings`, `diff.ts`, and the crash journal; shared paging helpers live in
-  `src/admin/data/postgrest.ts`. Still to do: `eventsRepo` (keyed
-  upserts/deletes + classifications), after which the context and its crash
-  journal keep doing what they're good at, for the 6-table config document only
-  — `fetchSettings()` gets small and fast.
+- **P0 (with roadmap 0.1, which touches transactions anyway):** _done
+  (Aug 2026)_ — `src/admin/data/transactions.ts` (paged reads + insert-only
+  import) + `TransactionsProvider`, and `src/admin/data/recordsRepo.ts` (keyed
+  upserts/deletes for events, purchases, overrides, fees and classifications) +
+  `RecordsProvider`. Shared paging helpers live in
+  `src/admin/data/postgrest.ts`. `Settings` is now the 6-table config document
+  and nothing else, so `fetchSettings()` is six small selects and the config
+  crash journal holds only config. The whole-state sync engine itself was
+  extracted to `useOptimisticSync` and now runs one instance per document — the
+  config and the records share no table, so their saves cannot interleave
+  destructively.
 - **P0/P1 hardening:** replace `applyChangeSet`'s sequential delete-then-insert
   statements with a single Postgres function `apply_config(jsonb)` called via
   RPC — one atomic transaction, closing the partial-save risk `settingsRepo`'s
   own comment acknowledges. Transactionality without a server or an ORM.
 - **Standing convention:** every new domain (catering_inquiries, preorders, KPI
   snapshots, inventory) gets its own module under `src/data/<domain>.ts` from
-  day one and never enters the Settings blob. Migrate the existing repos into
-  `src/data/` opportunistically when touched.
+  day one and never enters the Settings blob. A domain that is edited row by row
+  can mount `useOptimisticSync` with its own diff and journal key rather than
+  growing an existing document. Migrate the existing repos into `src/data/`
+  opportunistically when touched.
 - **Payoff at P3:** family roles become an RLS-policy change, not a repo rewrite
   — the domain split is exactly what makes "David sees events + inventory only"
   cheap.
@@ -258,8 +263,10 @@ Small, ordered, all cheap:
 2. **Add a daily DB keep-alive ping** via Vercel Cron Jobs.
 3. ~~**Adopt `supabase gen types typescript`** and retire the hand-written row
    types in `rows.ts`.~~ Done (Aug 2026, `npm run db:types`).
-4. **Extract `transactionsRepo` + `eventsRepo`** while building roadmap 0.1
-   (which touches that code anyway). _transactionsRepo done (Aug 2026,
-   `src/admin/data/transactions.ts` + `TransactionsContext`); eventsRepo is
-   REFACTOR_PLAN Phase 4._
+4. ~~**Extract `transactionsRepo` + `eventsRepo`** while building roadmap 0.1
+   (which touches that code anyway).~~ Done (Aug 2026):
+   `src/admin/data/transactions.ts` + `TransactionsContext`, and
+   `src/admin/data/recordsRepo.ts` + `RecordsContext` — one repo for the five
+   operational tables rather than two, since they share a change set and
+   `overrideMarket` writes across them.
 5. **Add the `apply_config` RPC** to make config saves atomic.

@@ -287,20 +287,40 @@ It ends up owning only what it's good at: the 6-table config document.
   green; verify-skill runtime pass of Import + Transaction History + Events
   (Events consumes transactions for contribution).
 
-### B4 — Extract events + operational records
+### B4 — Extract events + operational records ✅ Done (Aug 5 2026)
 
-- `src/admin/data/events.ts` (events, market_settings) and
-  `src/admin/data/operations.ts` (purchases, market_overrides, processor_fees).
-  Per-row `upsert`/`delete`, plain awaited calls; the in-memory optimistic
-  pattern the pages rely on is preserved (state updates immediately, the awaited
-  row write replaces the debounced diff), and the existing sync-status UI
-  reports in-flight state.
-- **Prerequisite:** pin `EventsTable.overrideMarket`'s expense-row-summing merge
-  with a unit test _before_ touching it — the branch is uncovered today.
-- Remove events/purchases/overrides/fees from `Settings`, `diff.ts`, `rows.ts`.
-  `Settings` is now purely the 6-table config document; `fetchSettings()` is 6
-  small tables (fast, as §7 promises); the crash journal is config-only.
-- **Gate:** Events page characterization tests green; verify-skill runtime pass.
+Built as **one** `src/admin/data/recordsRepo.ts` (+ `recordsRows.ts`,
+`recordsDiff.ts`) rather than the `events.ts` / `operations.ts` split this
+section originally named. The five tables share one change set, one save, one
+journal, one page, and one retry loop — and `overrideMarket` writes _across_
+that proposed split line, so cutting there would have cut through the atomic
+unit. `OperatingRecords` is the domain type; `RecordsContext` is its provider.
+
+The "per-row upsert/delete, **plain awaited calls**" wording was also not
+implemented as written, because it contradicts the sentence that follows it:
+literal per-row awaited writes fire on every keystroke, and drop both the retry
+and the crash journal. What shipped keeps the optimistic pattern intact — an 800
+ms coalescing debounce, backoff retry, and a `pagehide` journal — by giving the
+records their own instance of the existing sync engine, now extracted to
+`useOptimisticSync` and shared with the config document. The per-row
+`upsert`/`delete` statements the section asks for are exactly what
+`applyRecordsChangeSet` issues; they are just _derived_ from a diff rather than
+hand-enumerated at each call site, which is what makes it impossible to forget
+one.
+
+- **Prerequisite (done first):** `EventsTable.overrideMarket`'s
+  expense-row-summing merge pinned in `eventMutations.test.ts`, along with its
+  clear-to-auto, no-expense-row and same-market branches.
+- events/purchases/overrides/fees/market_settings are out of `Settings`,
+  `diff.ts` and `rows.ts`. `Settings` is now purely the 6-table config document;
+  `fetchSettings()` is 6 small selects; the config crash journal carries no
+  operational data (and moved to a new key, so a pre-split payload is discarded
+  rather than half-adopted).
+- Rode along, per §4: the 508-line `EventsTable` split into `EventsTable` +
+  `EventRow` + `AddEventDialog`, its four mutators extracted as pure functions,
+  and the four `setSettings`-drilled editors converted to `useRecords()`.
+- **Gate:** ✅ `./verify.sh --dist` green; verify-skill runtime pass 20/20,
+  including the merge branch writing one summed row to Postgres.
 
 ### B5 — `apply_config(jsonb)` RPC: atomic config saves
 
@@ -430,7 +450,7 @@ tests pass unmodified (mechanical import-path updates excepted):
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Phase 1 (moves)  | Public-page smoke tests (render each of the 8 site pages, assert PageMeta title — currently zero public-page tests except ContactForm); dist-chunk assertion that the public bundle stays admin-free |
 | Phase 3 (B3)     | ImportData flow test + TransactionHistory characterization test                                                                                                                                      |
-| Phase 4 (B4)     | `overrideMarket` expense-merge unit test (becomes the extracted mutator's test)                                                                                                                      |
+| Phase 4 (B4)     | ✅ `overrideMarket` expense-merge unit test (became the extracted mutator's test)                                                                                                                    |
 | Phase 5 (B5)     | SettingsContext save-shape test; db-tier atomicity test written to _fail_ against sequential writes and _pass_ against the RPC                                                                       |
 | Phase 1, ongoing | Sitemap test rewritten to consume `src/site/routes.ts` — route drift becomes impossible                                                                                                              |
 
@@ -453,7 +473,7 @@ tests pass unmodified (mechanical import-path updates excepted):
 | 1   | **Boundary restructure**                   | `git mv` per the §2.1 mapping (moves only); ESLint boundary rules; `site/routes.ts` + `admin/routes.ts` consumed by `main.tsx`; manifest-driven sitemap test; public-page smoke tests; dist-chunk assertion                                                                                                                                                                                                                                                                                                                                                      | 1–2 days                      | 0                                             | ✅ Done (Aug 1 2026) |
 | 2   | **Generated types + pagination**           | B1 + B2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | 0.5–1 day                     | 0 (1 first is recommended so paths are final) | ✅ Done (Aug 5 2026) |
 | 3   | **transactionsRepo**                       | B3 — natural to ride ROADMAP 0.1 follow-up work, which touches transactions anyway                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 2–3 days                      | 2                                             | ✅ Done (Aug 5 2026) |
-| 4   | **eventsRepo + EventsTable decomposition** | B4 + settingsMutations (events side) + EventsTable split                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 2–3 days                      | 3                                             | —                    |
+| 4   | **eventsRepo + EventsTable decomposition** | B4 + settingsMutations (events side) + EventsTable split                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 2–3 days                      | 3                                             | ✅ Done (Aug 5 2026) |
 | 5   | **apply_config RPC**                       | B5 + diff.ts collapse + config-only journal + db-tier atomicity tests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 1–2 days                      | 3, 4                                          | —                    |
 | 6   | **Admin UI consolidation**                 | settingsMutations (ProfitCalculator side); `ui/` primitives (Card, StatCard, chart theme, labels, format, units); chrome into AdminLayout; targeted memoization; then items 6–8 opportunistically                                                                                                                                                                                                                                                                                                                                                                | 2–4 days, splittable per item | 1; independent of 2–5                         | —                    |
 
@@ -495,14 +515,21 @@ The flexibility goal, made concrete:
 
 ## 8. Immediate next action
 
-Phase 4 (B4, extract events + operational records, plus the EventsTable
-decomposition it unlocks). **Prerequisite per §5.4: pin
-`EventsTable.overrideMarket`'s expense-row-summing merge with a unit test before
-touching it — that branch is uncovered today.** Phases 0–3 all landed by Aug 5
-2026: the safety net (`verify.sh`, vitest split, grants migration), the boundary
-restructure (`src/site` · `src/admin` · `src/shared`, ESLint boundary rules,
-route manifests, smoke tests), generated DB types (`npm run db:types`, part of
-every migration's definition of done) + paged `market_overrides`, and the
-transactions extraction (`src/admin/data/transactions.ts` +
-`TransactionsContext`; transactions no longer ride the Settings blob, the
-autosave diff, or the crash journal).
+Phase 5 (B5, the `apply_config(jsonb)` RPC), which is now a small change: after
+Phase 4 the config document is exactly the six tables the RPC covers, `diff.ts`
+is config-only, and `useOptimisticSync` takes `apply` as a parameter — so the
+sequential `applyChangeSet` becomes a one-line swap for a single
+`supabase.rpc("apply_config", …)` call. It also brings the `db` test tier (§5.3)
+that nothing has needed until now; write the atomicity test to _fail_ against
+sequential writes and _pass_ against the RPC.
+
+Phases 0–4 all landed by Aug 5 2026: the safety net (`verify.sh`, vitest split,
+grants migration), the boundary restructure (`src/site` · `src/admin` ·
+`src/shared`, ESLint boundary rules, route manifests, smoke tests), generated DB
+types + paged `market_overrides`, the transactions extraction
+(`src/admin/data/transactions.ts` + `TransactionsContext`), and the operational
+records extraction (`src/admin/data/recordsRepo.ts` + `RecordsContext`, on the
+`useOptimisticSync` engine shared with the config document). Phase 6 (admin UI
+consolidation) can interleave whenever — `settingsMutations` for the
+ProfitCalculator side is the natural next slice of it, since the events side
+already has `eventMutations.ts` as the pattern to copy.
