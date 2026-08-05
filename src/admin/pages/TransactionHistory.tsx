@@ -1,6 +1,4 @@
 import { useState } from "react";
-import PageMeta from "@/shared/PageMeta.tsx";
-import DashboardShell from "@/admin/components/DashboardShell.tsx";
 import Section from "@/admin/components/Section.tsx";
 import ImportData from "@/admin/components/ImportData.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
@@ -8,21 +6,13 @@ import PricePointAnalysis from "@/admin/components/PricePointAnalysis.tsx";
 import SalesOverTime from "@/admin/components/SalesOverTime.tsx";
 import TimeRangeSelector from "@/admin/components/TimeRangeSelector.tsx";
 import TransactionsTable from "@/admin/components/TransactionsTable.tsx";
-import type { NavSection } from "@/admin/components/DashboardNav.tsx";
 import type { TimeRange } from "@/admin/domain/salesAnalytics.ts";
 import { useSettings } from "@/admin/SettingsContext.tsx";
 import { useTransactions } from "@/admin/TransactionsContext.tsx";
 import Card from "@/admin/components/ui/Card.tsx";
 import FieldLabel from "@/admin/components/ui/FieldLabel.tsx";
 
-const SECTIONS: NavSection[] = [
-    { id: "sales-over-time", label: "Sales Over Time" },
-    { id: "price-points", label: "Price Points" },
-    { id: "transactions", label: "Transactions" },
-    { id: "import-data", label: "Import Data" },
-    { id: "assumptions", label: "Assumptions" },
-];
-
+/** Content for /admin/transactions; AdminLayout supplies the chrome. */
 export default function TransactionHistory() {
     const { settings, setSettings } = useSettings();
     const { transactions, importTransactions } = useTransactions();
@@ -33,18 +23,7 @@ export default function TransactionHistory() {
     });
 
     return (
-        <DashboardShell
-            title="Transaction History"
-            heading="Transaction History"
-            intro="Real sales, imported from your processor — revenue, profit, and price-point performance over time."
-            sections={SECTIONS}
-        >
-            <PageMeta
-                title="Admin | Transaction History"
-                description="Bulgogi Billy's internal sales history and analytics."
-                noindex
-            />
-
+        <>
             {/* One sticky range selector drives every section below. */}
             <div className="sticky top-0 z-10 -mx-6 mt-8 bg-white/95 px-6 py-3 backdrop-blur lg:-mx-10 lg:px-10 dark:bg-zinc-900/95">
                 <TimeRangeSelector value={range} onChange={setRange} />
@@ -126,6 +105,6 @@ export default function TransactionHistory() {
                     </div>
                 </Card>
             </Section>
-        </DashboardShell>
+        </>
     );
 }

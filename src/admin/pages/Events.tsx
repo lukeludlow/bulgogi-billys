@@ -1,14 +1,11 @@
 import { useMemo } from "react";
-import PageMeta from "@/shared/PageMeta.tsx";
 import { Input } from "@/shared/catalyst-ui-kit/input.tsx";
-import DashboardShell from "@/admin/components/DashboardShell.tsx";
 import Section from "@/admin/components/Section.tsx";
 import EventsTable from "@/admin/components/EventsTable.tsx";
 import MarketRollups from "@/admin/components/MarketRollups.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
 import ProcessorFeesEditor from "@/admin/components/ProcessorFeesEditor.tsx";
 import PurchasesEditor from "@/admin/components/PurchasesEditor.tsx";
-import type { NavSection } from "@/admin/components/DashboardNav.tsx";
 import {
     buildEventAllocations,
     buildEventReport,
@@ -21,13 +18,7 @@ import { MARKETS } from "@/admin/domain/types.ts";
 import Card from "@/admin/components/ui/Card.tsx";
 import FieldLabel from "@/admin/components/ui/FieldLabel.tsx";
 
-const SECTIONS: NavSection[] = [
-    { id: "market-rollups", label: "Markets" },
-    { id: "events", label: "Events" },
-    { id: "purchases", label: "Purchases" },
-    { id: "assumptions", label: "Assumptions" },
-];
-
+/** Content for /admin/events; AdminLayout supplies the chrome. */
 export default function Events() {
     const { settings, setSettings } = useSettings();
     // The Assumptions card below edits both engines side by side: the two
@@ -45,18 +36,7 @@ export default function Events() {
     );
 
     return (
-        <DashboardShell
-            title="Events"
-            heading="Events"
-            intro="Cash contribution per market event — every sale assigned to its market automatically, minus food cost and the direct costs you record here."
-            sections={SECTIONS}
-        >
-            <PageMeta
-                title="Admin | Events"
-                description="Bulgogi Billy's internal event contribution report."
-                noindex
-            />
-
+        <>
             <Section
                 id="market-rollups"
                 title="Markets"
@@ -202,6 +182,6 @@ export default function Events() {
                     />
                 </div>
             </Section>
-        </DashboardShell>
+        </>
     );
 }

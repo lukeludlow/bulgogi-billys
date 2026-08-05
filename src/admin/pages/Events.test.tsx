@@ -1,8 +1,8 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { page } from "vitest/browser";
+import { Route } from "react-router";
 import Events from "@/admin/pages/Events.tsx";
-import { AdminDataProviders } from "@/admin/AdminLayout.tsx";
-import { renderWithProviders } from "@/test/renderWithProviders.tsx";
+import { renderAdminPage } from "@/test/renderAdminPage.tsx";
 
 // Resolve both providers' mount-loads instantly with fixture data: one
 // Saturday sale with no expense record yet, and one Sunday sale whose event
@@ -82,11 +82,9 @@ afterEach(() => {
 });
 
 function renderEvents() {
-    return renderWithProviders(
-        <AdminDataProviders>
-            <Events />
-        </AdminDataProviders>,
-        { route: "/admin/events" },
+    return renderAdminPage(
+        "/admin/events",
+        <Route path="events" element={<Events />} />,
     );
 }
 

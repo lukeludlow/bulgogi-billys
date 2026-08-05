@@ -1,7 +1,7 @@
 import { afterEach, expect, test, vi } from "vitest";
+import { Route } from "react-router";
 import ProfitCalculator from "@/admin/pages/ProfitCalculator.tsx";
-import { AdminDataProviders } from "@/admin/AdminLayout.tsx";
-import { renderWithProviders } from "@/test/renderWithProviders.tsx";
+import { renderAdminPage } from "@/test/renderAdminPage.tsx";
 
 // Resolve every provider's mount-load instantly with the defaults so the page
 // renders without a database.
@@ -37,11 +37,9 @@ afterEach(() => {
 });
 
 function renderCalculator() {
-    return renderWithProviders(
-        <AdminDataProviders>
-            <ProfitCalculator />
-        </AdminDataProviders>,
-        { route: "/admin" },
+    return renderAdminPage(
+        "/admin",
+        <Route index element={<ProfitCalculator />} />,
     );
 }
 

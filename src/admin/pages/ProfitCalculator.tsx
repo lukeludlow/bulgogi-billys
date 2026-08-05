@@ -1,5 +1,3 @@
-import PageMeta from "@/shared/PageMeta.tsx";
-import DashboardShell from "@/admin/components/DashboardShell.tsx";
 import Section from "@/admin/components/Section.tsx";
 import SummaryCards from "@/admin/components/SummaryCards.tsx";
 import MarginCharts from "@/admin/components/MarginCharts.tsx";
@@ -7,19 +5,11 @@ import WeeklySales from "@/admin/components/WeeklySales.tsx";
 import IngredientsEditor from "@/admin/components/IngredientsEditor.tsx";
 import MenuItemEditor from "@/admin/components/MenuItemEditor.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
-import type { NavSection } from "@/admin/components/DashboardNav.tsx";
 import { useSettings } from "@/admin/SettingsContext.tsx";
 import Card from "@/admin/components/ui/Card.tsx";
 import FieldLabel from "@/admin/components/ui/FieldLabel.tsx";
 
-const SECTIONS: NavSection[] = [
-    { id: "visualizations", label: "Visualizations" },
-    { id: "this-week", label: "This Week" },
-    { id: "menu-items", label: "Menu Items" },
-    { id: "ingredients", label: "Ingredients" },
-    { id: "other-costs", label: "Other Costs" },
-];
-
+/** Content for the /admin index route; AdminLayout supplies the chrome. */
 export default function ProfitCalculator() {
     // The two whole-menu costs below are the only edits this page still makes
     // itself; everything structural lives in its editor and goes through
@@ -27,18 +17,7 @@ export default function ProfitCalculator() {
     const { settings, setSettings } = useSettings();
 
     return (
-        <DashboardShell
-            title="Profit Calculator"
-            heading="Profit Margin Calculator"
-            intro="Bulgogi Billy's — model your menu economics. Edits save automatically."
-            sections={SECTIONS}
-        >
-            <PageMeta
-                title="Admin | Profit Margin Calculator"
-                description="Bulgogi Billy's internal profit margin calculator."
-                noindex
-            />
-
+        <>
             {/* Sticky so the headline metrics stay visible while you edit the
                 numbers that drive them. */}
             <div className="mt-8 hidden lg:sticky lg:top-0 lg:z-10 lg:-mx-10 lg:block lg:bg-white/95 lg:px-10 lg:py-3 lg:backdrop-blur dark:lg:bg-zinc-900/95">
@@ -124,6 +103,6 @@ export default function ProfitCalculator() {
                     </div>
                 </Card>
             </Section>
-        </DashboardShell>
+        </>
     );
 }

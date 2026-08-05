@@ -1,8 +1,7 @@
 import { beforeEach, afterEach, expect, test, vi } from "vitest";
-import { Route, Routes } from "react-router";
-import AdminLayout from "@/admin/AdminLayout.tsx";
+import { Route } from "react-router";
 import TransactionHistory from "@/admin/pages/TransactionHistory.tsx";
-import { renderWithProviders } from "@/test/renderWithProviders.tsx";
+import { renderAdminPage } from "@/test/renderAdminPage.tsx";
 import {
     DEFAULT_RECORDS,
     DEFAULT_SETTINGS,
@@ -56,13 +55,9 @@ afterEach(() => {
 });
 
 function renderHistory() {
-    return renderWithProviders(
-        <Routes>
-            <Route path="/admin" element={<AdminLayout />}>
-                <Route path="transactions" element={<TransactionHistory />} />
-            </Route>
-        </Routes>,
-        { route: "/admin/transactions" },
+    return renderAdminPage(
+        "/admin/transactions",
+        <Route path="transactions" element={<TransactionHistory />} />,
     );
 }
 

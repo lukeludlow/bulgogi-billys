@@ -1,5 +1,7 @@
 import { Suspense, type ReactNode } from "react";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
+import DashboardShell from "@/admin/components/DashboardShell.tsx";
+import { routeFor } from "@/admin/routes.ts";
 import { RecordsGate, RecordsProvider } from "@/admin/RecordsContext.tsx";
 import { SettingsProvider } from "@/admin/SettingsContext.tsx";
 import {
@@ -30,15 +32,20 @@ export function AdminDataProviders({ children }: { children: ReactNode }) {
 
 /**
  * Layout route for /admin: shared dashboard state above the pages, so edits
- * survive navigating between them. Each page renders its
- * own chrome via DashboardShell.
+ * survive navigating between them, plus the chrome every page wears — built
+ * from the route manifest rather than repeated per page. The shell sits inside
+ * the providers because its sync bar reads them.
  */
 export default function AdminLayout() {
+    const route = routeFor(useLocation().pathname);
+
     return (
         <AdminDataProviders>
-            <Suspense fallback={null}>
-                <Outlet />
-            </Suspense>
+            <DashboardShell route={route}>
+                <Suspense fallback={null}>
+                    <Outlet />
+                </Suspense>
+            </DashboardShell>
         </AdminDataProviders>
     );
 }

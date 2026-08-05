@@ -8,11 +8,7 @@ import {
     SidebarHeading,
     SidebarSection,
 } from "@/shared/catalyst-ui-kit/sidebar.tsx";
-
-export interface NavSection {
-    id: string;
-    label: string;
-}
+import type { NavSection } from "@/admin/routes.ts";
 
 interface Props {
     title: string;
