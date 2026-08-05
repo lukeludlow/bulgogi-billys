@@ -150,9 +150,12 @@ RLS works:
 
 What to do instead — three moves that deliver most of what an ORM promises:
 
-1. **Generated types:** adopt `supabase gen types typescript` and replace the ~9
-   hand-maintained `*Row` interfaces in `src/admin/data/rows.ts`. Typed rows and
-   compile-time schema-drift detection — 80% of ORM value, 0% of the RLS risk.
+1. **Generated types** _(done, Aug 2026)_: `npm run db:types` generates
+   `src/admin/data/database.types.ts` from the local schema; the `*Row` types in
+   `src/admin/data/rows.ts` are aliases onto it and the client is
+   `createClient<Database>`. Typed rows and compile-time schema-drift detection
+   — 80% of ORM value, 0% of the RLS risk. Regenerating is part of every
+   migration's definition of done.
 2. **Postgres views/functions via `supabase.rpc()`** when queries outgrow
    PostgREST filters (event-contribution rollups, 13-week forecast seeding).
    Still RLS-governed, transactional for free, no new dependency.
@@ -252,8 +255,8 @@ Small, ordered, all cheap:
 
 1. **Upgrade the Vercel account to Pro** (§4).
 2. **Add a daily DB keep-alive ping** via Vercel Cron Jobs.
-3. **Adopt `supabase gen types typescript`** and retire the hand-written row
-   types in `rows.ts`.
+3. ~~**Adopt `supabase gen types typescript`** and retire the hand-written row
+   types in `rows.ts`.~~ Done (Aug 2026, `npm run db:types`).
 4. **Extract `transactionsRepo` + `eventsRepo`** while building roadmap 0.1
    (which touches that code anyway).
 5. **Add the `apply_config` RPC** to make config saves atomic.
