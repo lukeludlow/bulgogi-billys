@@ -174,6 +174,42 @@ describe("fetchSettings", () => {
         mock.errors.set("transactions", "permission denied");
         await expect(fetchSettings()).rejects.toThrow("permission denied");
     });
+
+    test("pages past the 1000-row cap to load every market override", async () => {
+        seedAllTables();
+        // One override per corrected day — distinct dates, or the keyed
+        // Settings.marketOverrides record would collapse.
+        const date = (index: number) =>
+            new Date(Date.UTC(2020, 0, 1 + index)).toISOString().slice(0, 10);
+        mock.data.set(
+            "market_overrides",
+            Array.from({ length: 2500 }, (_, index) => ({
+                date: date(index),
+                market: "new-caney",
+            })),
+        );
+
+        const settings = await fetchSettings();
+        expect(Object.keys(settings!.marketOverrides)).toHaveLength(2500);
+        expect(settings!.marketOverrides[date(0)]).toBe("new-caney");
+        expect(settings!.marketOverrides[date(2499)]).toBe("new-caney");
+
+        const rangeCalls = mock.calls.filter(
+            (call) =>
+                call.table === "market_overrides" && call.method === "range",
+        );
+        expect(rangeCalls.map((call) => call.args)).toEqual([
+            [0, 999],
+            [1000, 1999],
+            [2000, 2999],
+        ]);
+    });
+
+    test("propagates errors from the market_overrides fetch", async () => {
+        seedAllTables();
+        mock.errors.set("market_overrides", "permission denied");
+        await expect(fetchSettings()).rejects.toThrow("permission denied");
+    });
 });
 
 describe("applyChangeSet", () => {

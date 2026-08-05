@@ -26,23 +26,25 @@ import {
 } from "./rows.ts";
 
 // PostgREST caps each response at 1000 rows (db.max-rows), so large tables
-// must be fetched in pages. The tiebreaker column keeps the sort order total;
-// with date alone, rows sharing a date could shift between pages and be
-// skipped or duplicated.
+// must be fetched in pages. The tiebreaker column keeps the sort order total
+// when the sort column alone isn't unique; rows sharing a sort value could
+// otherwise shift between pages and be skipped or duplicated. Omit it only
+// when the sort column is a single-column primary key.
 const PAGE_SIZE = 1000;
 
 async function fetchAllRows<T>(
     table: keyof Database["public"]["Tables"],
-    tiebreaker: string,
+    sortColumn: string,
+    tiebreaker?: string,
 ): Promise<T[]> {
     const rows: T[] = [];
     for (let from = 0; ; from += PAGE_SIZE) {
-        const { data, error } = await supabase
+        let query = supabase
             .from(table)
             .select("*")
-            .order("date", { ascending: false })
-            .order(tiebreaker, { ascending: true })
-            .range(from, from + PAGE_SIZE - 1);
+            .order(sortColumn, { ascending: false });
+        if (tiebreaker) query = query.order(tiebreaker, { ascending: true });
+        const { data, error } = await query.range(from, from + PAGE_SIZE - 1);
         if (error) throw new Error(error.message);
         rows.push(...((data ?? []) as T[]));
         if (!data || data.length < PAGE_SIZE) return rows;
@@ -106,15 +108,13 @@ export async function fetchSettings(): Promise<Settings | null> {
             .select("*")
             .order("position")
             .then(unwrap<RecipeLineRow[]>),
-        fetchAllRows<TransactionRow>("transactions", "id"),
-        fetchAllRows<EventRow>("events", "market"),
-        fetchAllRows<PurchaseRow>("purchases", "id"),
-        // Small tables (a handful of rows) — no paging needed, and
-        // processor_fees has no `date` column for fetchAllRows to order by.
-        supabase
-            .from("market_overrides")
-            .select("*")
-            .then(unwrap<MarketOverrideRow[]>),
+        fetchAllRows<TransactionRow>("transactions", "date", "id"),
+        fetchAllRows<EventRow>("events", "date", "market"),
+        fetchAllRows<PurchaseRow>("purchases", "date", "id"),
+        // One row per corrected day, growing without bound — paged like the
+        // tables above. `date` is the primary key, so it needs no tiebreaker.
+        fetchAllRows<MarketOverrideRow>("market_overrides", "date"),
+        // Genuinely small tables (a handful of rows) — no paging needed.
         supabase
             .from("processor_fees")
             .select("*")
