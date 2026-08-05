@@ -1,25 +1,18 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 import { seedSettingsTables, stub } from "@/test/postgrestStub.ts";
-import { computeChangeSet } from "./diff.ts";
+import { computeConfigChange } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
-import { applyChangeSet, fetchSettings } from "./settingsRepo.ts";
+import { applyConfig, fetchSettings } from "./settingsRepo.ts";
 
 vi.mock("@/admin/data/supabase.ts", async () => {
     const { stub } = await import("@/test/postgrestStub.ts");
-    return { supabase: { from: stub.from } };
+    return { supabase: { from: stub.from, rpc: stub.rpc } };
 });
 
 beforeEach(() => {
     stub.reset();
 });
-
-/** The mutation calls (table + method) in the order they were issued. */
-function mutationOrder(): string[] {
-    return stub.calls
-        .filter((call) => ["upsert", "insert", "delete"].includes(call.method))
-        .map((call) => `${call.table}.${call.method}`);
-}
 
 const BASE = rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
 
@@ -37,12 +30,8 @@ describe("fetchSettings", () => {
         expect(await fetchSettings()).toBeNull();
     });
 
-    function seedAllTables() {
-        seedSettingsTables(DEFAULT_SETTINGS);
-    }
-
     test("assembles a full Settings object from the six config tables", async () => {
-        seedAllTables();
+        seedSettingsTables(DEFAULT_SETTINGS);
         expect(await fetchSettings()).toEqual(BASE);
     });
 
@@ -52,35 +41,32 @@ describe("fetchSettings", () => {
     });
 });
 
-describe("applyChangeSet", () => {
-    test("config rewrite runs FK-safe: parent upserts, line rewrites, then deletes", async () => {
+describe("applyConfig", () => {
+    test("sends the whole document as one RPC call", async () => {
         const next = structuredClone(BASE);
         next.ingredients[0].costPerUnit = 9;
         next.items[0].variants.pop();
-        await applyChangeSet(computeChangeSet(BASE, next));
+        await applyConfig(computeConfigChange(BASE, next)!);
 
-        expect(mutationOrder()).toEqual([
-            "ingredients.upsert",
-            "menu_items.upsert",
-            "variants.upsert",
-            "batch_lines.delete",
-            "batch_lines.insert",
-            "recipe_lines.delete",
-            "recipe_lines.insert",
-            "variants.delete",
-        ]);
-
-        const variantUpsert = stub.calls.find(
-            (call) => call.table === "variants" && call.method === "upsert",
-        )!;
-        expect(variantUpsert.args[1]).toEqual({ onConflict: "item_id,id" });
+        // One statement, not a sequence — that is what makes it atomic.
+        expect(stub.calls).toHaveLength(1);
+        const [call] = stub.calls;
+        expect(call.table).toBe("rpc:apply_config");
+        const { config } = call.args[0] as {
+            config: Record<string, unknown[]>;
+        };
+        expect(config.ingredients[0]).toMatchObject({ cost_per_unit: 9 });
+        // The dropped variant is absent rather than listed for deletion.
+        expect(config.variants).toHaveLength(
+            settingsToRows(BASE).variants.length - 1,
+        );
     });
 
-    test("propagates the first database error", async () => {
-        stub.errors.set("settings", "row level security violation");
+    test("propagates a database error", async () => {
+        stub.errors.set("rpc:apply_config", "row level security violation");
         const next = { ...BASE, groceryWeeklySpend: 999 };
         await expect(
-            applyChangeSet(computeChangeSet(BASE, next)),
+            applyConfig(computeConfigChange(BASE, next)!),
         ).rejects.toThrow("row level security violation");
     });
 });

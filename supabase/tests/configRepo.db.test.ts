@@ -11,8 +11,8 @@
 // must keep passing, unedited, once one apply_config RPC replaces them.
 
 import { beforeEach, expect, test, vi } from "vitest";
-import { computeChangeSet } from "@/admin/data/diff.ts";
-import { applyChangeSet, fetchSettings } from "@/admin/data/settingsRepo.ts";
+import { computeConfigChange } from "@/admin/data/diff.ts";
+import { applyConfig, fetchSettings } from "@/admin/data/settingsRepo.ts";
 import type { Settings } from "@/admin/domain/types.ts";
 import { readRows, resetData } from "./localStack.ts";
 
@@ -26,7 +26,7 @@ vi.mock("@/admin/data/supabase.ts", async () => {
  * below never mention how a save is issued.
  */
 async function save(base: Settings, next: Settings): Promise<void> {
-    await applyChangeSet(computeChangeSet(base, next));
+    await applyConfig(computeConfigChange(base, next)!);
 }
 
 /** Load, mutate, save, reload — the exact cycle the sync engine performs. */
@@ -149,6 +149,22 @@ test("an added ingredient and variant come back in the order they were placed", 
         sellPrice: 20,
         recipe: [{ ingredientId: "kimchi", amount: 2 }],
     });
+});
+
+test("a save that fails partway leaves the previous config intact", async () => {
+    // The §5.4 atomicity test: written to fail against the sequential
+    // PostgREST statements and pass against the apply_config RPC.
+    //
+    // The ingredient edit is written early and the protein is written last, so
+    // a sequential save commits the first and then trips the settings check
+    // constraint — leaving a config nobody asked for. One transaction can't.
+    const before = await fetchSettings();
+    const next = structuredClone(before!);
+    next.ingredients[0].costPerUnit = 99;
+    next.selectedProtein = "chicken" as Settings["selectedProtein"];
+
+    await expect(save(before!, next)).rejects.toThrow();
+    expect(await fetchSettings()).toEqual(before);
 });
 
 test("a full round-trip through the save leaves the document identical", async () => {

@@ -24,7 +24,7 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
         );
     return {
         fetchSettings: async () => fixture(),
-        applyChangeSet: async () => {},
+        applyConfig: async () => {},
     };
 });
 

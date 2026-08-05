@@ -1,13 +1,14 @@
-// Supabase reads/writes for the config document. Statements run sequentially
-// in FK-safe order (parents before children, deletes after the child rewrite).
-// Not transactional over PostgREST — a mid-save failure leaves a partial
-// config until the caller's retry succeeds, which the tiny data size makes
-// acceptable.
+// Supabase reads and writes for the config document: six small selects in,
+// one apply_config(jsonb) call out. The RPC rewrites all six tables inside a
+// single Postgres transaction, so a failed save changes nothing at all — the
+// sequential statements this replaced could leave a half-written config
+// behind, most sharply between a child table's delete-all and its insert.
 
 import { supabase } from "@/admin/data/supabase.ts";
 import { unwrap } from "@/admin/data/postgrest.ts";
 import type { Settings } from "@/admin/domain/types.ts";
-import type { ChangeSet } from "./diff.ts";
+import type { Json } from "./database.types.ts";
+import type { ConfigPayload } from "./diff.ts";
 import {
     rowsToSettings,
     type BatchLineRow,
@@ -74,53 +75,15 @@ export async function fetchSettings(): Promise<Settings | null> {
     return rowsToSettings(snapshot);
 }
 
-export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
-    const { config } = changeSet;
-    if (config) {
-        // Parents first so new child rows have something to reference.
-        unwrap(await supabase.from("ingredients").upsert(config.ingredients));
-        unwrap(await supabase.from("menu_items").upsert(config.menuItems));
-        unwrap(
-            await supabase
-                .from("variants")
-                .upsert(config.variants, { onConflict: "item_id,id" }),
-        );
-
-        // Child line tables are rewritten wholesale: delete-all then insert.
-        unwrap(await supabase.from("batch_lines").delete().gte("position", 0));
-        unwrap(await supabase.from("batch_lines").insert(config.batchLines));
-        unwrap(await supabase.from("recipe_lines").delete().gte("position", 0));
-        unwrap(await supabase.from("recipe_lines").insert(config.recipeLines));
-
-        // Removed parents last; cascades sweep any remaining children.
-        for (const variant of config.variantDeletes) {
-            unwrap(
-                await supabase
-                    .from("variants")
-                    .delete()
-                    .eq("item_id", variant.itemId)
-                    .eq("id", variant.id),
-            );
-        }
-        if (config.menuItemDeletes.length > 0) {
-            unwrap(
-                await supabase
-                    .from("menu_items")
-                    .delete()
-                    .in("id", config.menuItemDeletes),
-            );
-        }
-        if (config.ingredientDeletes.length > 0) {
-            unwrap(
-                await supabase
-                    .from("ingredients")
-                    .delete()
-                    .in("id", config.ingredientDeletes),
-            );
-        }
-    }
-
-    if (changeSet.settings) {
-        unwrap(await supabase.from("settings").upsert(changeSet.settings));
-    }
+/**
+ * Persist the whole document. Rows absent from the payload are deleted by the
+ * function, which is why nothing here has to track removals.
+ */
+export async function applyConfig(config: ConfigPayload): Promise<void> {
+    // The generated Args type is Json; ConfigPayload is a set of concrete row
+    // interfaces, which don't satisfy an index-signature type structurally.
+    const { error } = await supabase.rpc("apply_config", {
+        config: config as unknown as Json,
+    });
+    if (error) throw new Error(error.message);
 }

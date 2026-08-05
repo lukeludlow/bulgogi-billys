@@ -13,7 +13,7 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
     const defaults = () => rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
     return {
         fetchSettings: async () => defaults(),
-        applyChangeSet: async () => {},
+        applyConfig: async () => {},
     };
 });
 

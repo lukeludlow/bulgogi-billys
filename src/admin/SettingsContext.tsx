@@ -6,9 +6,9 @@ import {
     type SetStateAction,
 } from "react";
 import DataGate from "@/admin/components/DataGate.tsx";
-import { computeChangeSet, isEmptyChangeSet } from "@/admin/data/diff.ts";
+import { computeConfigChange, isEmptyConfigChange } from "@/admin/data/diff.ts";
 import { CONFIG_JOURNAL_KEY, isUsableSettings } from "@/admin/data/journal.ts";
-import { applyChangeSet, fetchSettings } from "@/admin/data/settingsRepo.ts";
+import { applyConfig, fetchSettings } from "@/admin/data/settingsRepo.ts";
 import { useOptimisticSync } from "@/admin/useOptimisticSync.ts";
 import type { SyncStatus } from "@/admin/syncStatus.ts";
 import type { Settings } from "@/admin/domain/types.ts";
@@ -36,9 +36,10 @@ const SettingsContext = createContext<SettingsContextValue | null>(null);
 export function SettingsProvider({ children }: { children: ReactNode }) {
     const sync = useOptimisticSync({
         load: fetchSettings,
-        diff: computeChangeSet,
-        isEmpty: isEmptyChangeSet,
-        apply: applyChangeSet,
+        diff: computeConfigChange,
+        isEmpty: isEmptyConfigChange,
+        // Non-null because the engine only applies a change isEmpty rejected.
+        apply: (change) => applyConfig(change!),
         journalKey: CONFIG_JOURNAL_KEY,
         isUsable: isUsableSettings,
     });

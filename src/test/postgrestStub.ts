@@ -9,7 +9,7 @@
 //
 //     vi.mock("@/admin/data/supabase.ts", async () => {
 //         const { stub } = await import("@/test/postgrestStub.ts");
-//         return { supabase: { from: stub.from } };
+//         return { supabase: { from: stub.from, rpc: stub.rpc } };
 //     });
 
 import { recordsToRows } from "@/admin/data/recordsRows.ts";
@@ -66,13 +66,27 @@ function from(table: string) {
     return query;
 }
 
+/**
+ * Stand-in for `supabase.rpc(name, args)`. Recorded — and failed — under the
+ * key `rpc:<name>`, so a test can seed an error for one function the same way
+ * it does for one table.
+ */
+function rpc(name: string, args: unknown) {
+    const key = `rpc:${name}`;
+    calls.push({ table: key, method: "rpc", args: [args] });
+    return Promise.resolve({
+        data: null,
+        error: errors.has(key) ? { message: errors.get(key) } : null,
+    });
+}
+
 function reset() {
     calls.length = 0;
     data.clear();
     errors.clear();
 }
 
-export const stub = { calls, data, errors, from, reset };
+export const stub = { calls, data, errors, from, rpc, reset };
 
 /** Seed every table `fetchSettings` reads from a Settings fixture. */
 export function seedSettingsTables(settings: Settings) {
