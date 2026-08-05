@@ -2,10 +2,8 @@ import { PlusIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
 import { Input } from "@/shared/catalyst-ui-kit/input.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
-import {
-    effectiveCostPerUnit,
-    formatCurrency,
-} from "@/admin/domain/calculations.ts";
+import { effectiveCostPerUnit } from "@/admin/domain/calculations.ts";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
 import type { BatchLine, Ingredient } from "@/admin/domain/types.ts";
 
 interface Props {

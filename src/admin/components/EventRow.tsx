@@ -2,15 +2,15 @@ import { Badge } from "@/shared/catalyst-ui-kit/badge.tsx";
 import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
 import { Select } from "@/shared/catalyst-ui-kit/select.tsx";
 import { TableCell, TableRow } from "@/shared/catalyst-ui-kit/table.tsx";
-import { formatCurrency } from "@/admin/domain/calculations.ts";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
 import DualUnitField from "@/admin/components/DualUnitField.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
 import {
-    MARKET_LABELS,
     marketForDate,
     parseLocalDate,
     type EventReportRow,
 } from "@/admin/domain/eventAnalytics.ts";
+import { MARKET_LABELS } from "@/admin/components/ui/labels.ts";
 import { MARKETS, type MarketEvent } from "@/admin/domain/types.ts";
 
 interface Props {

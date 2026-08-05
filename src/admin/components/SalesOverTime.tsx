@@ -8,14 +8,14 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
-import { formatCurrency } from "@/admin/domain/calculations.ts";
-import { StatCard } from "@/admin/components/SummaryCards.tsx";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
+import StatCard from "@/admin/components/ui/StatCard.tsx";
 import {
     AXIS_TICK_STYLE,
     ChartCard,
     ChartTooltip,
     chartTheme,
-} from "@/admin/components/MarginCharts.tsx";
+} from "@/admin/components/ui/charts.tsx";
 import {
     bucketByPeriod,
     filterByRange,
@@ -24,6 +24,7 @@ import {
 } from "@/admin/domain/salesAnalytics.ts";
 import { useIsDarkMode } from "@/admin/components/useIsDarkMode.ts";
 import type { Settings, Transaction } from "@/admin/domain/types.ts";
+import EmptyState from "@/admin/components/ui/EmptyState.tsx";
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
@@ -149,10 +150,10 @@ export default function SalesOverTime({
                     </ResponsiveContainer>
                 </ChartCard>
             ) : (
-                <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-white/15 dark:text-zinc-400">
+                <EmptyState>
                     No sales in this range yet. Import a transactions CSV to get
                     started.
-                </div>
+                </EmptyState>
             )}
         </div>
     );

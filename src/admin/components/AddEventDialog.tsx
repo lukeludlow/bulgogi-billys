@@ -14,11 +14,8 @@ import {
 import { Input } from "@/shared/catalyst-ui-kit/input.tsx";
 import { Select } from "@/shared/catalyst-ui-kit/select.tsx";
 import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
-import {
-    MARKET_LABELS,
-    localDateKey,
-    marketForDate,
-} from "@/admin/domain/eventAnalytics.ts";
+import { localDateKey, marketForDate } from "@/admin/domain/eventAnalytics.ts";
+import { MARKET_LABELS } from "@/admin/components/ui/labels.ts";
 import {
     MARKETS,
     type Market,

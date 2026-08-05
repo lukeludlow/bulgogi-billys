@@ -10,7 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/shared/catalyst-ui-kit/table.tsx";
-import { formatCurrency } from "@/admin/domain/calculations.ts";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
 import BasisBadge from "@/admin/components/BasisBadge.tsx";
 import {
     filterByRange,
@@ -19,6 +19,7 @@ import {
     type TimeRange,
 } from "@/admin/domain/salesAnalytics.ts";
 import type { Settings, Transaction } from "@/admin/domain/types.ts";
+import Card from "@/admin/components/ui/Card.tsx";
 
 const PAGE_SIZE = 12;
 
@@ -62,7 +63,7 @@ export default function TransactionsTable({
     );
 
     return (
-        <div className="overflow-hidden rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+        <Card className="overflow-hidden">
             <Input
                 aria-label="Search transactions"
                 placeholder="Search by amount, date, method…"
@@ -133,7 +134,7 @@ export default function TransactionsTable({
                     </Button>
                 </div>
             </div>
-        </div>
+        </Card>
     );
 }
 

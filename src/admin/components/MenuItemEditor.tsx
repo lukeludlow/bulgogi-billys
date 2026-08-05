@@ -11,17 +11,15 @@ import { Subheading } from "@/shared/catalyst-ui-kit/heading.tsx";
 import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
 import DualUnitField from "@/admin/components/DualUnitField.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
-import {
-    formatCurrency,
-    formatPercent,
-    variantMargin,
-} from "@/admin/domain/calculations.ts";
+import { variantMargin } from "@/admin/domain/calculations.ts";
+import { formatCurrency, formatPercent } from "@/admin/components/ui/format.ts";
 import {
     PROTEIN_INGREDIENT_ID,
     type Ingredient,
     type MenuItem,
     type Protein,
 } from "@/admin/domain/types.ts";
+import Card from "@/admin/components/ui/Card.tsx";
 
 function marginColor(marginPercent: number): "green" | "amber" | "red" {
     if (marginPercent >= 65) return "green";
@@ -81,7 +79,7 @@ export default function MenuItemEditor({
     };
 
     return (
-        <div className="rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+        <Card>
             <Subheading>{item.name}</Subheading>
 
             {/* Prices + live economics */}
@@ -224,6 +222,6 @@ export default function MenuItemEditor({
                     })}
                 </TableBody>
             </Table>
-        </div>
+        </Card>
     );
 }

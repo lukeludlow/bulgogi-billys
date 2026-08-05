@@ -10,9 +10,11 @@ import {
     TableRow,
 } from "@/shared/catalyst-ui-kit/table.tsx";
 import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
-import { formatCurrency } from "@/admin/domain/calculations.ts";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
 import NumberField from "@/admin/components/NumberField.tsx";
 import { useRecords } from "@/admin/RecordsContext.tsx";
+import Card from "@/admin/components/ui/Card.tsx";
+import FieldLabel from "@/admin/components/ui/FieldLabel.tsx";
 
 interface Props {
     /** Fee dollars in months with no events to absorb them (from the allocator). */
@@ -89,10 +91,8 @@ export default function ProcessorFeesEditor({ unallocated }: Props) {
     }
 
     return (
-        <div className="rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Card processing fees
-            </label>
+        <Card>
+            <FieldLabel>Card processing fees</FieldLabel>
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 Enter each month&apos;s total from the Square statement; it is
                 split across that month&apos;s events in proportion to card
@@ -174,6 +174,6 @@ export default function ProcessorFeesEditor({ unallocated }: Props) {
                     no events, so it isn&apos;t counted anywhere yet.
                 </Text>
             )}
-        </div>
+        </Card>
     );
 }

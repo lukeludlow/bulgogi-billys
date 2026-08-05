@@ -10,6 +10,8 @@ import NumberField from "@/admin/components/NumberField.tsx";
 import type { NavSection } from "@/admin/components/DashboardNav.tsx";
 import { useSettings } from "@/admin/SettingsContext.tsx";
 import type { Batch, BatchLine, Ingredient } from "@/admin/domain/types.ts";
+import Card from "@/admin/components/ui/Card.tsx";
+import FieldLabel from "@/admin/components/ui/FieldLabel.tsx";
 
 const SECTIONS: NavSection[] = [
     { id: "visualizations", label: "Visualizations" },
@@ -250,7 +252,7 @@ export default function ProfitCalculator() {
                 title="Ingredient costs"
                 description="What you pay per pound, ounce, or unit — priced directly, or derived from a batch. This drives every cost above."
             >
-                <div className="overflow-hidden rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+                <Card className="overflow-hidden">
                     <IngredientsEditor
                         ingredients={settings.ingredients}
                         onChange={updateIngredient}
@@ -259,7 +261,7 @@ export default function ProfitCalculator() {
                         onAddBatchLine={addBatchLine}
                         onRemoveBatchLine={removeBatchLine}
                     />
-                </div>
+                </Card>
             </Section>
 
             <Section
@@ -267,11 +269,9 @@ export default function ProfitCalculator() {
                 title="Other costs"
                 description="Applied across the whole menu."
             >
-                <div className="grid grid-cols-1 gap-4 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-2 sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+                <Card className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            Packaging cost per order
-                        </label>
+                        <FieldLabel>Packaging cost per order</FieldLabel>
                         <div className="mt-1">
                             <NumberField
                                 aria-label="Packaging cost per order"
@@ -287,9 +287,7 @@ export default function ProfitCalculator() {
                         </div>
                     </div>
                     <div>
-                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            Weekly grocery spend
-                        </label>
+                        <FieldLabel>Weekly grocery spend</FieldLabel>
                         <div className="mt-1">
                             <NumberField
                                 aria-label="Weekly grocery spend"
@@ -305,7 +303,7 @@ export default function ProfitCalculator() {
                             />
                         </div>
                     </div>
-                </div>
+                </Card>
             </Section>
         </DashboardShell>
     );

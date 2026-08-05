@@ -10,7 +10,7 @@ import {
     TableRow,
 } from "@/shared/catalyst-ui-kit/table.tsx";
 import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
-import { formatCurrency } from "@/admin/domain/calculations.ts";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
 import {
     localDateKey,
     type CategoryTotals,
@@ -22,13 +22,8 @@ import {
     type Purchase,
     type PurchaseCategory,
 } from "@/admin/domain/types.ts";
-
-export const CATEGORY_LABELS: Record<PurchaseCategory, string> = {
-    food: "Food",
-    fuel: "Fuel",
-    propane: "Propane",
-    ice: "Ice",
-};
+import Card from "@/admin/components/ui/Card.tsx";
+import { CATEGORY_LABELS } from "@/admin/components/ui/labels.ts";
 
 interface Props {
     /** Per-category totals no event has absorbed yet (from the allocator). */
@@ -84,7 +79,7 @@ export default function PurchasesEditor({ unallocated }: Props) {
     );
 
     return (
-        <div className="overflow-hidden rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+        <Card className="overflow-hidden">
             <div className="flex items-center justify-between gap-3">
                 <Text className="text-sm">
                     {purchases.length} purchase
@@ -220,6 +215,6 @@ export default function PurchasesEditor({ unallocated }: Props) {
                     . These will land on the next event.
                 </Text>
             )}
-        </div>
+        </Card>
     );
 }

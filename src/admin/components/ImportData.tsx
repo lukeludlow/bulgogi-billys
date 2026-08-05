@@ -5,6 +5,7 @@ import { parseTransactionsCsv } from "@/admin/import/parseTransactionsCsv.ts";
 import { mergeTransactions } from "@/admin/import/mergeTransactions.ts";
 import type { MergeResult } from "@/admin/import/mergeTransactions.ts";
 import type { Transaction } from "@/admin/domain/types.ts";
+import Card from "@/admin/components/ui/Card.tsx";
 
 interface Props {
     transactions: Transaction[];
@@ -71,7 +72,7 @@ export default function ImportData({
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+            <Card>
                 <Text className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
                     Transactions (.csv)
                 </Text>
@@ -113,7 +114,7 @@ export default function ImportData({
                         </Button>
                     </div>
                 )}
-            </div>
+            </Card>
 
             <div aria-live="polite" className="min-h-5 text-sm">
                 {error && (

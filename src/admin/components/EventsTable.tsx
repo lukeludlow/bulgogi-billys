@@ -13,6 +13,7 @@ import * as mutations from "@/admin/domain/eventMutations.ts";
 import { useRecords } from "@/admin/RecordsContext.tsx";
 import type { EventReportRow } from "@/admin/domain/eventAnalytics.ts";
 import type { Market, MarketEvent } from "@/admin/domain/types.ts";
+import Card from "@/admin/components/ui/Card.tsx";
 
 interface Props {
     report: EventReportRow[];
@@ -54,7 +55,7 @@ export default function EventsTable({ report }: Props) {
     }
 
     return (
-        <div className="overflow-hidden rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+        <Card className="overflow-hidden">
             <div className="flex items-center justify-between gap-3">
                 <Text className="text-sm">
                     {report.length} event{report.length === 1 ? "" : "s"}
@@ -147,6 +148,6 @@ export default function EventsTable({ report }: Props) {
                     </TableBody>
                 </Table>
             </div>
-        </div>
+        </Card>
     );
 }

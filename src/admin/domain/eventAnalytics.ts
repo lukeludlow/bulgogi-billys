@@ -35,13 +35,6 @@ import {
     type Transaction,
 } from "@/admin/domain/types.ts";
 
-export const MARKET_LABELS: Record<Market, string> = {
-    "grogans-mill": "Grogan's Mill",
-    "new-caney": "New Caney",
-    "fm-1488": "Farmers Market at 1488",
-    other: "Other",
-};
-
 /** Local "YYYY-MM-DD" key for an ISO timestamp. */
 export function localDateKey(isoDate: string): string {
     const date = new Date(isoDate);

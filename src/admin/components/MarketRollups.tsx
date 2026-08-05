@@ -8,14 +8,15 @@ import {
     TableHeader,
     TableRow,
 } from "@/shared/catalyst-ui-kit/table.tsx";
-import { formatCurrency } from "@/admin/domain/calculations.ts";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
 import {
-    MARKET_LABELS,
     rollupByMarket,
     type EventReportRow,
 } from "@/admin/domain/eventAnalytics.ts";
+import { MARKET_LABELS } from "@/admin/components/ui/labels.ts";
 import { useRecords } from "@/admin/RecordsContext.tsx";
 import type { MarketClassification } from "@/admin/domain/types.ts";
+import Card from "@/admin/components/ui/Card.tsx";
 
 const CLASSIFICATION_LABELS: Record<MarketClassification, string> = {
     growth: "Growth",
@@ -46,7 +47,7 @@ export default function MarketRollups({ report }: Props) {
     const rollups = rollupByMarket(report, records);
 
     return (
-        <div className="overflow-hidden rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+        <Card className="overflow-hidden">
             <div className="overflow-x-auto">
                 <Table dense className="[--gutter:--spacing(4)]">
                     <TableHead>
@@ -170,6 +171,6 @@ export default function MarketRollups({ report }: Props) {
                     </TableBody>
                 </Table>
             </div>
-        </div>
+        </Card>
     );
 }

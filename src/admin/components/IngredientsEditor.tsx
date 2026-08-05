@@ -11,10 +11,8 @@ import { Input } from "@/shared/catalyst-ui-kit/input.tsx";
 import { Select } from "@/shared/catalyst-ui-kit/select.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
 import BatchEditor from "@/admin/components/BatchEditor.tsx";
-import {
-    effectiveCostPerUnit,
-    formatCurrency,
-} from "@/admin/domain/calculations.ts";
+import { effectiveCostPerUnit } from "@/admin/domain/calculations.ts";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
 import type { BatchLine, Ingredient, Unit } from "@/admin/domain/types.ts";
 
 const UNITS: Unit[] = ["lb", "oz", "each"];

@@ -12,6 +12,8 @@ import type { NavSection } from "@/admin/components/DashboardNav.tsx";
 import type { TimeRange } from "@/admin/domain/salesAnalytics.ts";
 import { useSettings } from "@/admin/SettingsContext.tsx";
 import { useTransactions } from "@/admin/TransactionsContext.tsx";
+import Card from "@/admin/components/ui/Card.tsx";
+import FieldLabel from "@/admin/components/ui/FieldLabel.tsx";
 
 const SECTIONS: NavSection[] = [
     { id: "sales-over-time", label: "Sales Over Time" },
@@ -100,11 +102,9 @@ export default function TransactionHistory() {
                 title="Assumptions"
                 description="How profit is estimated for sales whose amount matches no menu price."
             >
-                <div className="rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+                <Card>
                     <div className="max-w-xs">
-                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            Blended food cost
-                        </label>
+                        <FieldLabel>Blended food cost</FieldLabel>
                         <div className="mt-1">
                             <NumberField
                                 aria-label="Blended food cost percent"
@@ -124,7 +124,7 @@ export default function TransactionHistory() {
                             matches no menu price.
                         </p>
                     </div>
-                </div>
+                </Card>
             </Section>
         </DashboardShell>
     );

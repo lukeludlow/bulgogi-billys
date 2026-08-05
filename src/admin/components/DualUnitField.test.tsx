@@ -1,47 +1,10 @@
 import { expect, test, vi } from "vitest";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
-import DualUnitField, {
-    joinUnits,
-    splitUnits,
-} from "@/admin/components/DualUnitField.tsx";
+import DualUnitField from "@/admin/components/DualUnitField.tsx";
 
-test("splitUnits decomposes decimal pounds into lb + oz exactly", () => {
-    expect(splitUnits(0.25, 16)).toEqual({ major: 0, minor: 4 });
-    expect(splitUnits(0.15, 16)).toEqual({ major: 0, minor: 2.4 });
-    expect(splitUnits(1.5, 16)).toEqual({ major: 1, minor: 8 });
-    expect(splitUnits(3, 16)).toEqual({ major: 3, minor: 0 });
-});
-
-test("splitUnits decomposes decimal hours into hr + min exactly", () => {
-    expect(splitUnits(0.25, 60)).toEqual({ major: 0, minor: 15 });
-    expect(splitUnits(1.5, 60)).toEqual({ major: 1, minor: 30 });
-    // Legacy value not on a clean minute boundary still displays sensibly.
-    expect(splitUnits(1.33, 60)).toEqual({ major: 1, minor: 19.8 });
-});
-
-test("splitUnits survives float noise near whole numbers", () => {
-    expect(splitUnits(0.1 + 0.2, 60).major).toBe(0);
-    expect(splitUnits(2.9999999999, 16)).toEqual({ major: 3, minor: 0 });
-});
-
-test("splitUnits treats non-finite and negative values as zero", () => {
-    expect(splitUnits(Number.NaN, 16)).toEqual({ major: 0, minor: 0 });
-    expect(splitUnits(-1, 16)).toEqual({ major: 0, minor: 0 });
-});
-
-test("joinUnits recomposes and round-trips splitUnits", () => {
-    expect(joinUnits(0, 4, 16)).toBe(0.25);
-    expect(joinUnits(1, 30, 60)).toBe(1.5);
-    for (const value of [0.15, 0.25, 1.5, 2.75]) {
-        const { major, minor } = splitUnits(value, 16);
-        expect(joinUnits(major, minor, 16)).toBeCloseTo(value, 10);
-    }
-});
-
-test("joinUnits allows minor overflow past one major unit", () => {
-    // 2 lb 20 oz = 3.25 lb
-    expect(joinUnits(2, 20, 16)).toBe(3.25);
-});
+// The mixed-unit arithmetic these inputs are built on is tested in the fast
+// unit tier — see ui/units.test.ts. What's left here needs a real browser: the
+// two inputs, and the rule that mounting one never fires onChange.
 
 test("renders both inputs with derived values and suffixes", async () => {
     const screen = await renderWithProviders(

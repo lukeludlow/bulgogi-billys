@@ -10,14 +10,16 @@ import ProcessorFeesEditor from "@/admin/components/ProcessorFeesEditor.tsx";
 import PurchasesEditor from "@/admin/components/PurchasesEditor.tsx";
 import type { NavSection } from "@/admin/components/DashboardNav.tsx";
 import {
-    MARKET_LABELS,
     buildEventAllocations,
     buildEventReport,
 } from "@/admin/domain/eventAnalytics.ts";
+import { MARKET_LABELS } from "@/admin/components/ui/labels.ts";
 import { useRecords } from "@/admin/RecordsContext.tsx";
 import { useSettings } from "@/admin/SettingsContext.tsx";
 import { useTransactions } from "@/admin/TransactionsContext.tsx";
 import { MARKETS } from "@/admin/domain/types.ts";
+import Card from "@/admin/components/ui/Card.tsx";
+import FieldLabel from "@/admin/components/ui/FieldLabel.tsx";
 
 const SECTIONS: NavSection[] = [
     { id: "market-rollups", label: "Markets" },
@@ -87,12 +89,10 @@ export default function Events() {
                 description="Rates used in the contribution math."
             >
                 <div className="flex flex-col gap-5">
-                    <div className="rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+                    <Card>
                         <div className="flex flex-col gap-5 sm:flex-row sm:gap-10">
                             <div className="max-w-xs">
-                                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    Employee hourly rate
-                                </label>
+                                <FieldLabel>Employee hourly rate</FieldLabel>
                                 <div className="mt-1">
                                     <NumberField
                                         aria-label="Employee hourly rate"
@@ -115,9 +115,7 @@ export default function Events() {
                                 </p>
                             </div>
                             <div className="max-w-xs">
-                                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    Sales tax rate
-                                </label>
+                                <FieldLabel>Sales tax rate</FieldLabel>
                                 <div className="mt-1">
                                     <NumberField
                                         aria-label="Sales tax rate percent"
@@ -141,9 +139,7 @@ export default function Events() {
                         </div>
 
                         <div className="mt-5">
-                            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                Per-market hourly rates
-                            </label>
+                            <FieldLabel>Per-market hourly rates</FieldLabel>
                             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                                 Set a different pay rate for a market; leave a
                                 field blank to use the global rate above.
@@ -199,7 +195,7 @@ export default function Events() {
                                 ))}
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
                     <ProcessorFeesEditor
                         unallocated={allocations.fees.unallocated}

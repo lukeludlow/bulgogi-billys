@@ -17,14 +17,14 @@ import {
     TableRow,
 } from "@/shared/catalyst-ui-kit/table.tsx";
 import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
-import { formatCurrency } from "@/admin/domain/calculations.ts";
+import { formatCurrency } from "@/admin/components/ui/format.ts";
 import BasisBadge from "@/admin/components/BasisBadge.tsx";
 import {
     AXIS_TICK_STYLE,
     ChartCard,
     ChartTooltip,
     chartTheme,
-} from "@/admin/components/MarginCharts.tsx";
+} from "@/admin/components/ui/charts.tsx";
 import {
     filterByRange,
     pricePointBreakdown,
@@ -33,6 +33,8 @@ import {
 } from "@/admin/domain/salesAnalytics.ts";
 import { useIsDarkMode } from "@/admin/components/useIsDarkMode.ts";
 import type { Settings, Transaction } from "@/admin/domain/types.ts";
+import Card from "@/admin/components/ui/Card.tsx";
+import EmptyState from "@/admin/components/ui/EmptyState.tsx";
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
@@ -62,10 +64,10 @@ export default function PricePointAnalysis({
 
     if (points.length === 0) {
         return (
-            <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-white/15 dark:text-zinc-400">
+            <EmptyState>
                 No sales in this range yet. Import a transactions CSV to see how
                 volume and profit break down by price.
-            </div>
+            </EmptyState>
         );
     }
 
@@ -122,7 +124,7 @@ export default function PricePointAnalysis({
                 </ResponsiveContainer>
             </ChartCard>
 
-            <div className="overflow-hidden rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
+            <Card className="overflow-hidden">
                 <Text className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                     Volume &amp; profit by price point
                 </Text>
@@ -153,7 +155,7 @@ export default function PricePointAnalysis({
                         </TableBody>
                     </Table>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }
