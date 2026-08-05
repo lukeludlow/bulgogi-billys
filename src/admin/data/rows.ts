@@ -3,7 +3,11 @@
 // order of every list; composite keys carry the parent ids.
 
 import {
+    MARKET_CLASSIFICATIONS,
     MARKETS,
+    PROTEINS,
+    PURCHASE_CATEGORIES,
+    UNITS,
     type Ingredient,
     type Market,
     type MarketClassification,
@@ -11,104 +15,47 @@ import {
     type MenuItem,
     type ProcessorFee,
     type Purchase,
-    type PurchaseCategory,
     type Settings,
     type Transaction,
 } from "@/admin/domain/types.ts";
+import type { Database } from "./database.types.ts";
 
-export interface SettingsRow {
-    id: number;
-    selected_protein: string;
-    grocery_weekly_spend: number;
-    packaging_cost_per_order: number;
-    blended_food_cost_percent: number;
-    employee_hourly_rate: number;
-    sales_tax_rate_percent: number;
-}
+// Row shapes come straight from the generated schema types (`npm run
+// db:types`), so a migration that drifts from what the app expects fails
+// `tsc` instead of surfacing at runtime.
+type Row<T extends keyof Database["public"]["Tables"]> =
+    Database["public"]["Tables"][T]["Row"];
 
-export interface IngredientRow {
-    id: string;
-    name: string;
-    unit: string;
-    cost_per_unit: number;
-    pricing: "direct" | "batch";
-    batch_yield: number | null;
-    position: number;
-}
+// `updated_at` is DB-managed (default + trigger); the write path must never
+// send it, so the app-facing settings row omits it.
+export type SettingsRow = Omit<Row<"settings">, "updated_at">;
+export type IngredientRow = Row<"ingredients">;
+export type BatchLineRow = Row<"batch_lines">;
+export type MenuItemRow = Row<"menu_items">;
+export type VariantRow = Row<"variants">;
+export type RecipeLineRow = Row<"recipe_lines">;
+export type TransactionRow = Row<"transactions">;
+export type EventRow = Row<"events">;
+export type PurchaseRow = Row<"purchases">;
+export type MarketOverrideRow = Row<"market_overrides">;
+export type ProcessorFeeRow = Row<"processor_fees">;
+export type MarketSettingsRow = Row<"market_settings">;
 
-export interface BatchLineRow {
-    ingredient_id: string;
-    id: string;
-    name: string;
-    cost: number;
-    position: number;
-}
+/** How an ingredient's per-unit cost is set; mirrors the DB check constraint. */
+const PRICING_MODES = ["direct", "batch"] as const;
 
-export interface MenuItemRow {
-    id: string;
-    name: string;
-    has_protein: boolean;
-    position: number;
-}
-
-export interface VariantRow {
-    item_id: string;
-    id: string;
-    label: string;
-    sell_price: number;
-    units_sold_this_week: number;
-    position: number;
-}
-
-export interface RecipeLineRow {
-    item_id: string;
-    variant_id: string;
-    ingredient_id: string;
-    amount: number;
-    position: number;
-}
-
-export interface TransactionRow {
-    id: string;
-    date: string;
-    amount: number;
-    type: string;
-    result: string;
-    method: string;
-    brand: string | null;
-}
-
-export interface EventRow {
-    date: string;
-    market: string;
-    market_fee: number;
-    waste: number;
-    employee_hours: number;
-    billys_hours: number;
-}
-
-export interface PurchaseRow {
-    id: string;
-    date: string;
-    category: string;
-    amount: number;
-    note: string | null;
-}
-
-export interface MarketOverrideRow {
-    date: string;
-    market: string;
-}
-
-export interface ProcessorFeeRow {
-    month: string;
-    amount: number;
-}
-
-export interface MarketSettingsRow {
-    market: string;
-    classification: string | null;
-    employee_hourly_rate: number | null;
+// Check-constrained columns generate as plain `string`; narrow them here at
+// the boundary so schema/data drift fails loudly instead of leaking invalid
+// values into the app.
+function oneOf<T extends string>(
+    value: string,
+    allowed: readonly T[],
+    label: string,
+): T {
+    if (!(allowed as readonly string[]).includes(value)) {
+        throw new Error(`Unexpected ${label}: ${value}`);
+    }
+    return value as T;
 }
 
 export interface DbSnapshot {
@@ -274,9 +221,13 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
             const ingredient: Ingredient = {
                 id: row.id,
                 name: row.name,
-                unit: row.unit as Ingredient["unit"],
+                unit: oneOf(row.unit, UNITS, "ingredient unit"),
                 costPerUnit: row.cost_per_unit,
-                pricing: row.pricing,
+                pricing: oneOf(
+                    row.pricing,
+                    PRICING_MODES,
+                    "ingredient pricing",
+                ),
             };
             if (row.pricing === "batch") {
                 ingredient.batch = { yield: row.batch_yield ?? 0, lines };
@@ -331,7 +282,7 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         )
         .map((row) => ({
             date: row.date,
-            market: row.market as Market,
+            market: oneOf(row.market, MARKETS, "event market"),
             marketFee: row.market_fee,
             waste: row.waste,
             employeeHours: row.employee_hours,
@@ -344,7 +295,11 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
             const purchase: Purchase = {
                 id: row.id,
                 date: row.date,
-                category: row.category as PurchaseCategory,
+                category: oneOf(
+                    row.category,
+                    PURCHASE_CATEGORIES,
+                    "purchase category",
+                ),
                 amount: row.amount,
             };
             if (row.note !== null) purchase.note = row.note;
@@ -353,7 +308,11 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
 
     const marketOverrides: Record<string, Market> = {};
     for (const row of snapshot.marketOverrides) {
-        marketOverrides[row.date] = row.market as Market;
+        marketOverrides[row.date] = oneOf(
+            row.market,
+            MARKETS,
+            "market override market",
+        );
     }
 
     const processorFees: ProcessorFee[] = [...snapshot.processorFees]
@@ -368,17 +327,28 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
     const marketHourlyRates = Object.fromEntries(
         MARKETS.map((market) => [market, null]),
     ) as Record<Market, number | null>;
+    // Unknown markets are skipped, not rejected — a row left behind by an old
+    // market must not brick the whole load.
     for (const row of snapshot.marketSettings) {
-        if ((MARKETS as string[]).includes(row.market)) {
-            marketClassifications[row.market as Market] =
-                row.classification as MarketClassification | null;
-            marketHourlyRates[row.market as Market] = row.employee_hourly_rate;
-        }
+        if (!(MARKETS as readonly string[]).includes(row.market)) continue;
+        const market = oneOf(row.market, MARKETS, "market settings market");
+        marketClassifications[market] =
+            row.classification === null
+                ? null
+                : oneOf(
+                      row.classification,
+                      MARKET_CLASSIFICATIONS,
+                      "market classification",
+                  );
+        marketHourlyRates[market] = row.employee_hourly_rate;
     }
 
     return {
-        selectedProtein: snapshot.settings
-            .selected_protein as Settings["selectedProtein"],
+        selectedProtein: oneOf(
+            snapshot.settings.selected_protein,
+            PROTEINS,
+            "selected protein",
+        ),
         ingredients,
         items,
         groceryWeeklySpend: snapshot.settings.grocery_weekly_spend,

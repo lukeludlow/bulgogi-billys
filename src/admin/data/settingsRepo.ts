@@ -6,6 +6,7 @@
 
 import { supabase } from "@/admin/data/supabase.ts";
 import type { Settings } from "@/admin/domain/types.ts";
+import type { Database } from "./database.types.ts";
 import type { ChangeSet } from "./diff.ts";
 import {
     rowsToSettings,
@@ -31,7 +32,7 @@ import {
 const PAGE_SIZE = 1000;
 
 async function fetchAllRows<T>(
-    table: string,
+    table: keyof Database["public"]["Tables"],
     tiebreaker: string,
 ): Promise<T[]> {
     const rows: T[] = [];

@@ -5,8 +5,11 @@
 // protein (beef or pork) is currently selected. That lets one recipe describe
 // both the beef and pork versions of a dish without duplication.
 
-export type Unit = "lb" | "oz" | "each";
-export type Protein = "beef" | "pork";
+export const UNITS = ["lb", "oz", "each"] as const;
+export type Unit = (typeof UNITS)[number];
+
+export const PROTEINS = ["beef", "pork"] as const;
+export type Protein = (typeof PROTEINS)[number];
 
 /** Sentinel recipe-line ingredient id that resolves to the selected protein. */
 export const PROTEIN_INGREDIENT_ID = "protein";
@@ -85,12 +88,14 @@ export const MARKETS: Market[] = [
 ];
 
 /** The growth plan's five-way market classification (§17.2). */
-export type MarketClassification =
-    | "growth"
-    | "core"
-    | "development"
-    | "probation"
-    | "exit";
+export const MARKET_CLASSIFICATIONS = [
+    "growth",
+    "core",
+    "development",
+    "probation",
+    "exit",
+] as const;
+export type MarketClassification = (typeof MARKET_CLASSIFICATIONS)[number];
 
 /** Direct expenses recorded for one market on one local calendar day. */
 export interface MarketEvent {

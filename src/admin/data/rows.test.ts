@@ -254,6 +254,56 @@ describe("settingsToRows / rowsToSettings", () => {
         expect(settingsToRows(a).events).toEqual(settingsToRows(b).events);
     });
 
+    test("out-of-range enum values are rejected at the rows boundary", () => {
+        // The generated row types leave check-constrained columns as plain
+        // strings; rowsToSettings must fail loudly on drift, not mistype it.
+        const withBadUnit = settingsToRows(DEFAULT_SETTINGS);
+        withBadUnit.ingredients[0].unit = "stone";
+        expect(() => rowsToSettings(withBadUnit)).toThrow(
+            "Unexpected ingredient unit: stone",
+        );
+
+        const withBadMarket = settingsToRows(DEFAULT_SETTINGS);
+        withBadMarket.events = [
+            {
+                date: "2026-07-25",
+                market: "narnia",
+                market_fee: 0,
+                waste: 0,
+                employee_hours: 0,
+                billys_hours: 0,
+            },
+        ];
+        expect(() => rowsToSettings(withBadMarket)).toThrow(
+            "Unexpected event market: narnia",
+        );
+
+        const withBadOverride = settingsToRows(DEFAULT_SETTINGS);
+        withBadOverride.marketOverrides = [
+            { date: "2026-07-25", market: "narnia" },
+        ];
+        expect(() => rowsToSettings(withBadOverride)).toThrow(
+            "Unexpected market override market: narnia",
+        );
+    });
+
+    test("unknown markets in market_settings are skipped, not rejected", () => {
+        // A row left behind by a removed market must not brick the load.
+        const snapshot = settingsToRows(DEFAULT_SETTINGS);
+        snapshot.marketSettings = [
+            {
+                market: "narnia",
+                classification: "core",
+                employee_hourly_rate: 12,
+            },
+        ];
+        const settings = rowsToSettings(snapshot);
+        expect(settings.marketClassifications["grogans-mill"]).toBeNull();
+        expect(Object.keys(settings.marketClassifications)).not.toContain(
+            "narnia",
+        );
+    });
+
     test("timestamptz-style dates normalize back to the parser's ISO format", () => {
         const settings: Settings = {
             ...DEFAULT_SETTINGS,

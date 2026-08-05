@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
+        "db:types": "supabase gen types typescript --local > src/admin/data/database.types.ts && prettier --write src/admin/data/database.types.ts",
         "lint": "eslint .",
         "preview": "vite preview",
         "typecheck": "tsc -b",
