@@ -5,7 +5,9 @@
 #
 # Usage: ./verify.sh [--dist] [--db]
 #   --dist  also build and assert the public entry chunk ships no admin code
-#   --db    also run the db tier against the local Supabase stack
+#   --db    also run the db tier against the local Supabase stack. DESTRUCTIVE:
+#           it resets the local database (which is what proves the migration
+#           chain applies from scratch) and each test file reseeds it.
 set -u
 cd "$(dirname "$0")"
 
@@ -61,11 +63,36 @@ stage "typecheck" npx tsc -b
 stage "unit tests" npx vitest run --project unit
 stage "browser tests" npx vitest run --project browser
 
+check_db_stack() {
+    if npx supabase status >/dev/null 2>&1; then
+        echo "local Supabase stack is up"
+    else
+        echo "the db tier needs the local stack: npx supabase start"
+        return 1
+    fi
+}
+
+db_reset() {
+    npx supabase db reset || return 1
+    # `db reset` restarts several containers, and Kong goes on routing to the
+    # addresses they had before — every /auth/v1 call 502s until Kong restarts
+    # too. The db tier waits for GoTrue to answer, so no sleep is needed here.
+    local project
+    project=$(sed -n 's/^project_id[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' \
+        supabase/config.toml)
+    [ -n "$project" ] || {
+        echo "no project_id in supabase/config.toml"
+        return 1
+    }
+    docker restart "supabase_kong_${project}" >/dev/null
+}
+
 if [ "$RUN_DB" = 1 ]; then
-    # Placeholder until the db tier lands with apply_config
-    # (REFACTOR_PLAN Phase 5): RLS matrix, RPC atomicity, migration reset.
-    echo "── db tests"
-    echo "· SKIP  db tier not implemented yet (REFACTOR_PLAN Phase 5)"
+    stage "db stack" check_db_stack
+    # Doubles as §5.3's migration check: the whole chain must apply from
+    # scratch, and everything downstream runs against what it produced.
+    stage "db reset" db_reset
+    stage "db tests" npx vitest run --project db
 fi
 
 if [ "$RUN_DIST" = 1 ]; then

@@ -3,10 +3,13 @@ import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// Two tiers, split by file extension: pure-logic tests are .test.ts and run
-// in the fast `unit` project; component tests are .test.tsx and run in the
-// `browser` project against real browsers. A `db` project against the local
-// Supabase stack arrives with the apply_config work (REFACTOR_PLAN §5.1).
+// Three tiers (REFACTOR_PLAN §5.1). Pure-logic tests are .test.ts and run in
+// the fast `unit` project; component tests are .test.tsx and run in the
+// `browser` project against real browsers; SQL-behavior tests are
+// supabase/tests/*.db.test.ts and run in the `db` project against the local
+// Supabase stack. Only `unit` and `browser` run on a bare `npm test` — the db
+// tier needs Docker, so it is opt-in through `npm run test:db` / `verify.sh
+// --db`.
 export default defineConfig({
     plugins: [react()],
     resolve: {
@@ -54,6 +57,19 @@ export default defineConfig({
                             { browser: "webkit" },
                         ],
                     },
+                },
+            },
+            {
+                extends: true,
+                test: {
+                    name: "db",
+                    environment: "node",
+                    include: ["supabase/tests/**/*.db.test.ts"],
+                    // One shared database: files must not overlap in time, and
+                    // psql / GoTrue round trips are slower than a unit test.
+                    fileParallelism: false,
+                    testTimeout: 30_000,
+                    hookTimeout: 30_000,
                 },
             },
         ],

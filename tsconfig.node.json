@@ -4,7 +4,9 @@
         "target": "es2023",
         "lib": ["ES2023"],
         "module": "esnext",
-        "types": ["node"],
+        // vite/client because the db tier compiles app modules that read
+        // import.meta.env (src/admin/data/supabase.ts).
+        "types": ["node", "vite/client"],
         "skipLibCheck": true,
 
         /* Bundler mode */
@@ -18,7 +20,12 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "erasableSyntaxOnly": true,
-        "noFallthroughCasesInSwitch": true
+        "noFallthroughCasesInSwitch": true,
+
+        // The db test tier lives outside src/ but imports from it.
+        "paths": {
+            "@/*": ["./src/*"]
+        }
     },
-    "include": ["vite.config.ts", "vitest.config.ts"]
+    "include": ["vite.config.ts", "vitest.config.ts", "supabase/tests"]
 }

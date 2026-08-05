@@ -12,9 +12,10 @@
         "typecheck": "tsc -b",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
-        "test": "vitest run",
+        "test": "vitest run --project unit --project browser",
         "test:unit": "vitest run --project unit",
-        "test:browser": "vitest --project browser --browser.headless=false"
+        "test:browser": "vitest --project browser --browser.headless=false",
+        "test:db": "vitest run --project db"
     },
     "dependencies": {
         "@fontsource-variable/inter": "^5.2.8",
