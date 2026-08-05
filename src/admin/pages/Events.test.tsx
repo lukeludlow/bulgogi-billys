@@ -59,7 +59,7 @@ vi.mock("@/admin/data/transactions.ts", () => {
 });
 
 afterEach(() => {
-    localStorage.removeItem("bb_admin_pending");
+    localStorage.removeItem("bb_admin_config_pending");
 });
 
 function renderEvents() {

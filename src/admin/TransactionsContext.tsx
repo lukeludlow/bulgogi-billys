@@ -7,8 +7,7 @@ import {
     useState,
     type ReactNode,
 } from "react";
-import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
-import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
+import DataGate from "@/admin/components/DataGate.tsx";
 import {
     fetchAllTransactions,
     importTransactions as persistTransactions,
@@ -126,26 +125,15 @@ export function TransactionsGate({ children }: { children: ReactNode }) {
         );
     }
 
-    if (value.loadError) {
-        return (
-            <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
-                <Text>Couldn’t load the dashboard data.</Text>
-                <Button outline onClick={value.retry}>
-                    Retry
-                </Button>
-            </div>
-        );
-    }
-
-    if (!value.transactions) {
-        return (
-            <div className="flex min-h-dvh items-center justify-center p-6">
-                <Text aria-live="polite">Loading dashboard…</Text>
-            </div>
-        );
-    }
-
-    return children;
+    return (
+        <DataGate
+            loadError={value.loadError}
+            ready={value.transactions !== null}
+            onRetry={value.retry}
+        >
+            {children}
+        </DataGate>
+    );
 }
 
 export function useTransactions(): TransactionsContextValue {

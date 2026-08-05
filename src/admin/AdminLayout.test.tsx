@@ -25,7 +25,7 @@ vi.mock("@/admin/data/transactions.ts", () => ({
 }));
 
 afterEach(() => {
-    localStorage.removeItem("bb_admin_pending");
+    localStorage.removeItem("bb_admin_config_pending");
 });
 
 /** The real /admin route tree from main.tsx, minus lazy-loading. */

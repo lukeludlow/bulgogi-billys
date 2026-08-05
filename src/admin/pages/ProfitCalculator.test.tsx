@@ -18,7 +18,7 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
 });
 
 afterEach(() => {
-    localStorage.removeItem("bb_admin_pending");
+    localStorage.removeItem("bb_admin_config_pending");
 });
 
 function renderCalculator() {

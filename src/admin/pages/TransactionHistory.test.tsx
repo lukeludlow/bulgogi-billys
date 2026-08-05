@@ -44,7 +44,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-    localStorage.removeItem("bb_admin_pending");
+    localStorage.removeItem("bb_admin_config_pending");
 });
 
 function renderHistory() {

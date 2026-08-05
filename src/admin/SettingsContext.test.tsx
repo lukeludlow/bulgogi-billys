@@ -4,6 +4,7 @@ import { SettingsProvider, useSettings } from "@/admin/SettingsContext.tsx";
 import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 import { rowsToSettings, settingsToRows } from "@/admin/data/rows.ts";
 import { applyChangeSet, fetchSettings } from "@/admin/data/settingsRepo.ts";
+import { CONFIG_JOURNAL_KEY as PENDING_KEY } from "@/admin/data/journal.ts";
 
 vi.mock("@/admin/data/settingsRepo.ts", () => ({
     fetchSettings: vi.fn(),
@@ -11,8 +12,6 @@ vi.mock("@/admin/data/settingsRepo.ts", () => ({
 }));
 
 const BASE = rowsToSettings(settingsToRows(DEFAULT_SETTINGS));
-const PENDING_KEY = "bb_admin_pending";
-
 beforeEach(() => {
     localStorage.removeItem(PENDING_KEY);
     vi.mocked(fetchSettings).mockResolvedValue(structuredClone(BASE));
