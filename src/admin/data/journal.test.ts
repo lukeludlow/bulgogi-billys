@@ -1,13 +1,18 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
 import {
     CONFIG_JOURNAL_KEY,
+    RECORDS_JOURNAL_KEY,
     clearLegacyCache,
     clearPendingJournal,
+    isUsableRecords,
     isUsableSettings,
     readPendingJournal,
     writePendingJournal,
 } from "./journal.ts";
-import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
+import {
+    DEFAULT_RECORDS,
+    DEFAULT_SETTINGS,
+} from "@/test/fixtures/defaultSettings.ts";
 
 const LEGACY_KEY = "bb_admin_pending";
 
@@ -19,17 +24,20 @@ function writeConfigJournal(value: unknown) {
     writePendingJournal(CONFIG_JOURNAL_KEY, value);
 }
 
+function readRecordsJournal() {
+    return readPendingJournal(RECORDS_JOURNAL_KEY, isUsableRecords);
+}
+
 // Clear before and after so a write leaked from another suite in the same
 // browser origin can't turn a "nothing stored" assertion into a false hit.
-beforeEach(() => {
+function clearAll() {
     localStorage.removeItem(CONFIG_JOURNAL_KEY);
+    localStorage.removeItem(RECORDS_JOURNAL_KEY);
     localStorage.removeItem(LEGACY_KEY);
-});
+}
 
-afterEach(() => {
-    localStorage.removeItem(CONFIG_JOURNAL_KEY);
-    localStorage.removeItem(LEGACY_KEY);
-});
+beforeEach(clearAll);
+afterEach(clearAll);
 
 test("the pending journal round-trips an unsaved edit", () => {
     const edited = { ...DEFAULT_SETTINGS, packagingCostPerOrder: 0.99 };
@@ -53,25 +61,34 @@ test("readPendingJournal rejects corrupt or misshapen payloads", () => {
     expect(readConfigJournal()).toBeNull();
 });
 
-test("readPendingJournal rejects a journal from a pre-events app version", () => {
-    // A journal written before the events feature existed lacks the newer
-    // Settings fields; adopting it would crash the events page.
+test("readPendingJournal rejects a config journal missing newer fields", () => {
+    // A journal written by an older app version lacks fields the current one
+    // reads; adopting it would crash the dashboard.
     const stale: Record<string, unknown> = { ...DEFAULT_SETTINGS };
-    delete stale.events;
     delete stale.employeeHourlyRate;
     localStorage.setItem(CONFIG_JOURNAL_KEY, JSON.stringify(stale));
     expect(readConfigJournal()).toBeNull();
 });
 
-test("readPendingJournal rejects a journal from a pre-purchases app version", () => {
-    // Journals from before the purchases log still carry per-event
-    // fuel/propane and lack the purchases/marketOverrides fields; replaying
-    // one would resurrect the removed columns.
-    const stale: Record<string, unknown> = { ...DEFAULT_SETTINGS };
-    delete stale.purchases;
+test("the records journal round-trips and rejects a config payload", () => {
+    writePendingJournal(RECORDS_JOURNAL_KEY, {
+        ...DEFAULT_RECORDS,
+        purchases: [
+            { id: "p1", date: "2026-07-20", category: "fuel", amount: 12 },
+        ],
+    });
+    expect(readRecordsJournal()?.purchases).toHaveLength(1);
+
+    // Each engine's payload has a distinct shape, so a mix-up is caught.
+    writePendingJournal(RECORDS_JOURNAL_KEY, DEFAULT_SETTINGS);
+    expect(readRecordsJournal()).toBeNull();
+});
+
+test("readPendingJournal rejects a records journal missing a slice", () => {
+    const stale: Record<string, unknown> = { ...DEFAULT_RECORDS };
     delete stale.marketOverrides;
-    localStorage.setItem(CONFIG_JOURNAL_KEY, JSON.stringify(stale));
-    expect(readConfigJournal()).toBeNull();
+    localStorage.setItem(RECORDS_JOURNAL_KEY, JSON.stringify(stale));
+    expect(readRecordsJournal()).toBeNull();
 });
 
 test("a journal under one key is invisible to another", () => {

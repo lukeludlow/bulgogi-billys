@@ -32,9 +32,6 @@ export function isUsableSettings(value: unknown): value is Settings {
     return (
         Array.isArray(candidate.ingredients) &&
         Array.isArray(candidate.items) &&
-        Array.isArray(candidate.events) &&
-        typeof candidate.marketOverrides === "object" &&
-        candidate.marketOverrides !== null &&
         typeof candidate.employeeHourlyRate === "number" &&
         typeof candidate.salesTaxRatePercent === "number"
     );
@@ -45,8 +42,13 @@ export function isUsableRecords(value: unknown): value is OperatingRecords {
     if (typeof value !== "object" || value === null) return false;
     const candidate = value as Partial<OperatingRecords>;
     return (
+        Array.isArray(candidate.events) &&
         Array.isArray(candidate.purchases) &&
-        Array.isArray(candidate.processorFees)
+        Array.isArray(candidate.processorFees) &&
+        typeof candidate.marketOverrides === "object" &&
+        candidate.marketOverrides !== null &&
+        typeof candidate.marketClassifications === "object" &&
+        candidate.marketClassifications !== null
     );
 }
 

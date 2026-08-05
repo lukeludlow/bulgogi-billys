@@ -108,7 +108,7 @@ export interface MarketEvent {
     waste: number;
     /**
      * Paid employee hours; costed at the market's hourly rate
-     * (`Settings.marketHourlyRates`) or the global `employeeHourlyRate`.
+     * (`OperatingRecords.marketHourlyRates`) or `Settings.employeeHourlyRate`.
      */
     employeeHours: number;
     /** Billy's own hours — recorded and displayed, never subtracted. */
@@ -175,19 +175,8 @@ export interface Settings {
      * amount matches no menu price. e.g. 32 = 32%.
      */
     blendedFoodCostPercent: number;
-    /** Per-event expense records, keyed by (date, market). */
-    events: MarketEvent[];
-    /**
-     * Days whose auto-tagged market was wrong: local "YYYY-MM-DD" → the market
-     * that day actually was. Absent = trust `marketForDate`.
-     */
-    marketOverrides: Record<string, Market>;
-    /** Manually chosen classification per market; null = not yet classified. */
-    marketClassifications: Record<Market, MarketClassification | null>;
     /** Dollars per hour used to cost `MarketEvent.employeeHours`. */
     employeeHourlyRate: number;
-    /** Per-market hourly rate; null = use the global `employeeHourlyRate`. */
-    marketHourlyRates: Record<Market, number | null>;
     /**
      * Sales-tax rate baked into the tax-inclusive menu prices, e.g. 8.25 = 8.25%.
      * Pre-tax sales = amount ÷ (1 + rate/100).
@@ -201,10 +190,21 @@ export interface Settings {
  * so they live outside Settings on their own sync engine.
  */
 export interface OperatingRecords {
+    /** Per-event expense records, keyed by (date, market). */
+    events: MarketEvent[];
     /** Shopping-trip spend, allocated across events between trips. */
     purchases: Purchase[];
+    /**
+     * Days whose auto-tagged market was wrong: local "YYYY-MM-DD" → the market
+     * that day actually was. Absent = trust `marketForDate`.
+     */
+    marketOverrides: Record<string, Market>;
     /** Monthly card-processor fee totals, spread across the month's events. */
     processorFees: ProcessorFee[];
+    /** Manually chosen classification per market; null = not yet classified. */
+    marketClassifications: Record<Market, MarketClassification | null>;
+    /** Per-market hourly rate; null = use the global `employeeHourlyRate`. */
+    marketHourlyRates: Record<Market, number | null>;
 }
 
 /** A single item×size combination with its computed economics. */

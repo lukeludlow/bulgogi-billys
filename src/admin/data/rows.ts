@@ -3,14 +3,9 @@
 // order of every list; composite keys carry the parent ids.
 
 import {
-    MARKET_CLASSIFICATIONS,
-    MARKETS,
     PROTEINS,
     UNITS,
     type Ingredient,
-    type Market,
-    type MarketClassification,
-    type MarketEvent,
     type MenuItem,
     type Settings,
 } from "@/admin/domain/types.ts";
@@ -24,9 +19,6 @@ export type BatchLineRow = Row<"batch_lines">;
 export type MenuItemRow = Row<"menu_items">;
 export type VariantRow = Row<"variants">;
 export type RecipeLineRow = Row<"recipe_lines">;
-export type EventRow = Row<"events">;
-export type MarketOverrideRow = Row<"market_overrides">;
-export type MarketSettingsRow = Row<"market_settings">;
 
 /** How an ingredient's per-unit cost is set; mirrors the DB check constraint. */
 const PRICING_MODES = ["direct", "batch"] as const;
@@ -38,9 +30,6 @@ export interface DbSnapshot {
     menuItems: MenuItemRow[];
     variants: VariantRow[];
     recipeLines: RecipeLineRow[];
-    events: EventRow[];
-    marketOverrides: MarketOverrideRow[];
-    marketSettings: MarketSettingsRow[];
 }
 
 export function settingsToRows(settings: Settings): DbSnapshot {
@@ -111,32 +100,6 @@ export function settingsToRows(settings: Settings): DbSnapshot {
         menuItems,
         variants,
         recipeLines,
-        // Sorted so both sides of a diff serialize identically regardless of
-        // the order the UI happened to append rows in.
-        events: [...settings.events]
-            .sort((a, b) =>
-                `${a.date} ${a.market}`.localeCompare(`${b.date} ${b.market}`),
-            )
-            .map(eventToRow),
-        marketOverrides: Object.entries(settings.marketOverrides)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([date, market]) => ({ date, market })),
-        marketSettings: MARKETS.map((market) => ({
-            market,
-            classification: settings.marketClassifications[market],
-            employee_hourly_rate: settings.marketHourlyRates[market],
-        })),
-    };
-}
-
-export function eventToRow(event: MarketEvent): EventRow {
-    return {
-        date: event.date,
-        market: event.market,
-        market_fee: event.marketFee,
-        waste: event.waste,
-        employee_hours: event.employeeHours,
-        billys_hours: event.billysHours,
     };
 }
 
@@ -201,52 +164,6 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
                 })),
         }));
 
-    const events: MarketEvent[] = [...snapshot.events]
-        .sort((a, b) =>
-            `${b.date} ${b.market}`.localeCompare(`${a.date} ${a.market}`),
-        )
-        .map((row) => ({
-            date: row.date,
-            market: oneOf(row.market, MARKETS, "event market"),
-            marketFee: row.market_fee,
-            waste: row.waste,
-            employeeHours: row.employee_hours,
-            billysHours: row.billys_hours,
-        }));
-
-    const marketOverrides: Record<string, Market> = {};
-    for (const row of snapshot.marketOverrides) {
-        marketOverrides[row.date] = oneOf(
-            row.market,
-            MARKETS,
-            "market override market",
-        );
-    }
-
-    // Start from all-null so markets with no stored row (e.g. a database
-    // migrated before any classification was chosen) are still present.
-    const marketClassifications = Object.fromEntries(
-        MARKETS.map((market) => [market, null]),
-    ) as Record<Market, MarketClassification | null>;
-    const marketHourlyRates = Object.fromEntries(
-        MARKETS.map((market) => [market, null]),
-    ) as Record<Market, number | null>;
-    // Unknown markets are skipped, not rejected — a row left behind by an old
-    // market must not brick the whole load.
-    for (const row of snapshot.marketSettings) {
-        if (!(MARKETS as readonly string[]).includes(row.market)) continue;
-        const market = oneOf(row.market, MARKETS, "market settings market");
-        marketClassifications[market] =
-            row.classification === null
-                ? null
-                : oneOf(
-                      row.classification,
-                      MARKET_CLASSIFICATIONS,
-                      "market classification",
-                  );
-        marketHourlyRates[market] = row.employee_hourly_rate;
-    }
-
     return {
         selectedProtein: oneOf(
             snapshot.settings.selected_protein,
@@ -258,11 +175,7 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         groceryWeeklySpend: snapshot.settings.grocery_weekly_spend,
         packagingCostPerOrder: snapshot.settings.packaging_cost_per_order,
         blendedFoodCostPercent: snapshot.settings.blended_food_cost_percent,
-        events,
-        marketOverrides,
-        marketClassifications,
         employeeHourlyRate: snapshot.settings.employee_hourly_rate,
         salesTaxRatePercent: snapshot.settings.sales_tax_rate_percent,
-        marketHourlyRates,
     };
 }

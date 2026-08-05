@@ -20,6 +20,24 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
                 blendedFoodCostPercent: 50,
                 salesTaxRatePercent: 0,
                 employeeHourlyRate: 10,
+            }),
+        );
+    return {
+        fetchSettings: async () => fixture(),
+        applyChangeSet: async () => {},
+    };
+});
+
+vi.mock("@/admin/data/recordsRepo.ts", async () => {
+    const { DEFAULT_RECORDS } =
+        await import("@/test/fixtures/defaultSettings.ts");
+    const { recordsToRows, rowsToRecords } =
+        await import("@/admin/data/recordsRows.ts");
+    // Through the real serialization path, like the settings fixture above.
+    const fixture = () =>
+        rowsToRecords(
+            recordsToRows({
+                ...DEFAULT_RECORDS,
                 events: [
                     {
                         date: "2026-07-19",
@@ -33,16 +51,7 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
             }),
         );
     return {
-        fetchSettings: async () => fixture(),
-        applyChangeSet: async () => {},
-    };
-});
-
-vi.mock("@/admin/data/recordsRepo.ts", async () => {
-    const { DEFAULT_RECORDS } =
-        await import("@/test/fixtures/defaultSettings.ts");
-    return {
-        fetchRecords: async () => structuredClone(DEFAULT_RECORDS),
+        fetchRecords: async () => fixture(),
         applyRecordsChangeSet: async () => {},
     };
 });

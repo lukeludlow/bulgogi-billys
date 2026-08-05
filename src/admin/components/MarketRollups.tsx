@@ -14,7 +14,8 @@ import {
     rollupByMarket,
     type EventReportRow,
 } from "@/admin/domain/eventAnalytics.ts";
-import type { Settings, MarketClassification } from "@/admin/domain/types.ts";
+import { useRecords } from "@/admin/RecordsContext.tsx";
+import type { MarketClassification } from "@/admin/domain/types.ts";
 
 const CLASSIFICATION_LABELS: Record<MarketClassification, string> = {
     growth: "Growth",
@@ -36,18 +37,13 @@ const CLASSIFICATION_COLORS: Record<
 };
 
 interface Props {
-    settings: Settings;
-    setSettings: (update: (prev: Settings) => Settings) => void;
     report: EventReportRow[];
 }
 
 /** Per-market totals with the manually chosen five-way classification. */
-export default function MarketRollups({
-    settings,
-    setSettings,
-    report,
-}: Props) {
-    const rollups = rollupByMarket(report, settings);
+export default function MarketRollups({ report }: Props) {
+    const { records, setRecords } = useRecords();
+    const rollups = rollupByMarket(report, records);
 
     return (
         <div className="overflow-hidden rounded-lg bg-white p-4 shadow-sm sm:p-5 dark:bg-zinc-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
@@ -97,7 +93,7 @@ export default function MarketRollups({
                                                 onChange={(event) => {
                                                     const raw =
                                                         event.target.value;
-                                                    setSettings((prev) => ({
+                                                    setRecords((prev) => ({
                                                         ...prev,
                                                         marketClassifications: {
                                                             ...prev.marketClassifications,

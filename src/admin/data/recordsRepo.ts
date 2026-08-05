@@ -11,6 +11,9 @@ import { supabase } from "@/admin/data/supabase.ts";
 import { fetchAllRows, unwrap } from "@/admin/data/postgrest.ts";
 import {
     rowsToRecords,
+    type EventRow,
+    type MarketOverrideRow,
+    type MarketSettingsRow,
     type ProcessorFeeRow,
     type PurchaseRow,
 } from "./recordsRows.ts";
@@ -22,20 +25,56 @@ import type { OperatingRecords } from "@/admin/domain/types.ts";
  * started yet has no purchases — so this never returns null.
  */
 export async function fetchRecords(): Promise<OperatingRecords> {
-    const [purchases, processorFees] = await Promise.all([
-        fetchAllRows<PurchaseRow>("purchases", "date", "id"),
-        // One row per month — genuinely small, so no paging needed.
-        supabase
-            .from("processor_fees")
-            .select("*")
-            .then(unwrap<ProcessorFeeRow[]>),
-    ]);
-    return rowsToRecords({ purchases, processorFees });
+    const [events, purchases, marketOverrides, processorFees, marketSettings] =
+        await Promise.all([
+            fetchAllRows<EventRow>("events", "date", "market"),
+            fetchAllRows<PurchaseRow>("purchases", "date", "id"),
+            // One row per corrected day, growing without bound — paged like
+            // the tables above. `date` is the primary key, so no tiebreaker.
+            fetchAllRows<MarketOverrideRow>("market_overrides", "date"),
+            // Genuinely small tables (a handful of rows) — no paging needed.
+            supabase
+                .from("processor_fees")
+                .select("*")
+                .then(unwrap<ProcessorFeeRow[]>),
+            supabase
+                .from("market_settings")
+                .select("*")
+                .then(unwrap<MarketSettingsRow[]>),
+        ]);
+    return rowsToRecords({
+        events,
+        purchases,
+        marketOverrides,
+        processorFees,
+        marketSettings,
+    });
 }
 
 export async function applyRecordsChangeSet(
     changeSet: RecordsChangeSet,
 ): Promise<void> {
+    if (changeSet.events) {
+        if (changeSet.events.upserts.length > 0) {
+            unwrap(
+                await supabase.from("events").upsert(changeSet.events.upserts, {
+                    onConflict: "date,market",
+                }),
+            );
+        }
+        // Upserts run first, so a row being moved to another market exists at
+        // its new key before the old one goes.
+        for (const key of changeSet.events.deletes) {
+            unwrap(
+                await supabase
+                    .from("events")
+                    .delete()
+                    .eq("date", key.date)
+                    .eq("market", key.market),
+            );
+        }
+    }
+
     if (changeSet.purchases) {
         if (changeSet.purchases.upserts.length > 0) {
             unwrap(
@@ -52,6 +91,26 @@ export async function applyRecordsChangeSet(
                     .from("purchases")
                     .delete()
                     .in("id", changeSet.purchases.deletes),
+            );
+        }
+    }
+
+    if (changeSet.marketOverrides) {
+        if (changeSet.marketOverrides.upserts.length > 0) {
+            unwrap(
+                await supabase
+                    .from("market_overrides")
+                    .upsert(changeSet.marketOverrides.upserts, {
+                        onConflict: "date",
+                    }),
+            );
+        }
+        if (changeSet.marketOverrides.deletes.length > 0) {
+            unwrap(
+                await supabase
+                    .from("market_overrides")
+                    .delete()
+                    .in("date", changeSet.marketOverrides.deletes),
             );
         }
     }
@@ -74,5 +133,15 @@ export async function applyRecordsChangeSet(
                     .in("month", changeSet.processorFees.deletes),
             );
         }
+    }
+
+    // Always all four rows, so there is nothing to delete — a strategy that
+    // quietly depends on MARKETS only ever being appended to.
+    if (changeSet.marketSettings) {
+        unwrap(
+            await supabase
+                .from("market_settings")
+                .upsert(changeSet.marketSettings, { onConflict: "market" }),
+        );
     }
 }

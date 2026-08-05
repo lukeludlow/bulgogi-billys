@@ -9,8 +9,103 @@ function normalize(records: OperatingRecords): OperatingRecords {
 }
 
 describe("recordsToRows / rowsToRecords", () => {
+    test("events and classifications survive the round-trip", () => {
+        const records: OperatingRecords = {
+            ...DEFAULT_RECORDS,
+            events: [
+                {
+                    date: "2026-07-25",
+                    market: "grogans-mill",
+                    marketFee: 20,
+                    waste: 12,
+                    employeeHours: 4.5,
+                    billysHours: 7,
+                },
+            ],
+            marketOverrides: { "2026-07-25": "new-caney" },
+            marketClassifications: {
+                ...DEFAULT_RECORDS.marketClassifications,
+                "grogans-mill": "core",
+            },
+            marketHourlyRates: {
+                ...DEFAULT_RECORDS.marketHourlyRates,
+                "grogans-mill": 15,
+            },
+        };
+        const back = normalize(records);
+        expect(back.events).toEqual(records.events);
+        expect(back.marketOverrides).toEqual(records.marketOverrides);
+        expect(back.marketClassifications["grogans-mill"]).toBe("core");
+        expect(back.marketClassifications["new-caney"]).toBeNull();
+        expect(back.marketHourlyRates).toEqual(records.marketHourlyRates);
+    });
+
+    test("missing market_settings rows synthesize all-null records", () => {
+        // An existing database migrated before any classification was chosen
+        // has an empty market_settings table.
+        const snapshot = recordsToRows(DEFAULT_RECORDS);
+        snapshot.marketSettings = [];
+        const records = rowsToRecords(snapshot);
+        expect(records.marketClassifications).toEqual({
+            "grogans-mill": null,
+            "new-caney": null,
+            "fm-1488": null,
+            other: null,
+        });
+        expect(records.marketHourlyRates).toEqual({
+            "grogans-mill": null,
+            "new-caney": null,
+            "fm-1488": null,
+            other: null,
+        });
+    });
+
+    test("unknown markets in market_settings are skipped, not rejected", () => {
+        // A row left behind by a removed market must not brick the load.
+        const snapshot = recordsToRows(DEFAULT_RECORDS);
+        snapshot.marketSettings = [
+            {
+                market: "narnia",
+                classification: "core",
+                employee_hourly_rate: 12,
+            },
+        ];
+        const records = rowsToRecords(snapshot);
+        expect(records.marketClassifications["grogans-mill"]).toBeNull();
+        expect(Object.keys(records.marketClassifications)).not.toContain(
+            "narnia",
+        );
+    });
+
+    test("event rows are emitted sorted by date+market for stable diffs", () => {
+        const event = (date: string, market: "grogans-mill" | "other") => ({
+            date,
+            market,
+            marketFee: 0,
+            waste: 0,
+            employeeHours: 0,
+            billysHours: 0,
+        });
+        const a: OperatingRecords = {
+            ...DEFAULT_RECORDS,
+            events: [
+                event("2026-07-25", "grogans-mill"),
+                event("2026-07-20", "other"),
+            ],
+        };
+        const b: OperatingRecords = {
+            ...DEFAULT_RECORDS,
+            events: [
+                event("2026-07-20", "other"),
+                event("2026-07-25", "grogans-mill"),
+            ],
+        };
+        expect(recordsToRows(a).events).toEqual(recordsToRows(b).events);
+    });
+
     test("purchases and fees survive the round-trip", () => {
         const records: OperatingRecords = {
+            ...DEFAULT_RECORDS,
             purchases: [
                 {
                     id: "p1",
@@ -86,19 +181,43 @@ describe("recordsToRows / rowsToRecords", () => {
     });
 
     test("out-of-range enum values are rejected at the rows boundary", () => {
-        expect(() =>
-            rowsToRecords({
-                purchases: [
-                    {
-                        id: "p1",
-                        date: "2026-07-20",
-                        category: "beverages",
-                        amount: 1,
-                        note: null,
-                    },
-                ],
-                processorFees: [],
-            }),
-        ).toThrow(/Unexpected purchase category: beverages/);
+        // The generated row types leave check-constrained columns as plain
+        // strings; rowsToRecords must fail loudly on drift, not mistype it.
+        const withBadCategory = recordsToRows(DEFAULT_RECORDS);
+        withBadCategory.purchases = [
+            {
+                id: "p1",
+                date: "2026-07-20",
+                category: "beverages",
+                amount: 1,
+                note: null,
+            },
+        ];
+        expect(() => rowsToRecords(withBadCategory)).toThrow(
+            "Unexpected purchase category: beverages",
+        );
+
+        const withBadMarket = recordsToRows(DEFAULT_RECORDS);
+        withBadMarket.events = [
+            {
+                date: "2026-07-25",
+                market: "narnia",
+                market_fee: 0,
+                waste: 0,
+                employee_hours: 0,
+                billys_hours: 0,
+            },
+        ];
+        expect(() => rowsToRecords(withBadMarket)).toThrow(
+            "Unexpected event market: narnia",
+        );
+
+        const withBadOverride = recordsToRows(DEFAULT_RECORDS);
+        withBadOverride.marketOverrides = [
+            { date: "2026-07-25", market: "narnia" },
+        ];
+        expect(() => rowsToRecords(withBadOverride)).toThrow(
+            "Unexpected market override market: narnia",
+        );
     });
 });

@@ -288,6 +288,7 @@ interface SalesAccumulator {
 /** Countable sales bucketed by `${date} ${market}` (override-aware). */
 function bucketSales(
     transactions: Transaction[],
+    records: OperatingRecords,
     settings: Settings,
 ): Map<string, SalesAccumulator> {
     const index = buildProfitIndex(settings);
@@ -295,7 +296,7 @@ function bucketSales(
     for (const txn of transactions) {
         if (!isCountable(txn)) continue;
         const dateKey = localDateKey(txn.date);
-        const key = `${dateKey} ${resolveMarket(dateKey, settings.marketOverrides)}`;
+        const key = `${dateKey} ${resolveMarket(dateKey, records.marketOverrides)}`;
         const bucket = sales.get(key) ?? {
             orders: 0,
             grossSales: 0,
@@ -315,11 +316,11 @@ function bucketSales(
 /** Every event key (sales-derived ∪ expense rows) as allocator input. */
 function allocationEvents(
     sales: Map<string, SalesAccumulator>,
-    settings: Settings,
+    records: OperatingRecords,
 ): AllocationEvent[] {
     const keys = new Set([
         ...sales.keys(),
-        ...settings.events.map((event) => `${event.date} ${event.market}`),
+        ...records.events.map((event) => `${event.date} ${event.market}`),
     ]);
     return [...keys].map((key) => {
         const [date] = key.split(" ");
@@ -348,8 +349,8 @@ export function buildEventAllocations(
     settings: Settings,
 ): EventAllocations {
     const events = allocationEvents(
-        bucketSales(transactions, settings),
-        settings,
+        bucketSales(transactions, records, settings),
+        records,
     );
     return {
         purchases: allocatePurchases(records.purchases, events),
@@ -368,14 +369,11 @@ export function buildEventReport(
     records: OperatingRecords,
     settings: Settings,
 ): EventReportRow[] {
-    const sales = bucketSales(transactions, settings);
+    const sales = bucketSales(transactions, records, settings);
     const expenseRows = new Map(
-        settings.events.map((event) => [
-            `${event.date} ${event.market}`,
-            event,
-        ]),
+        records.events.map((event) => [`${event.date} ${event.market}`, event]),
     );
-    const events = allocationEvents(sales, settings);
+    const events = allocationEvents(sales, records);
     const purchaseAlloc = allocatePurchases(records.purchases, events);
     const feeAlloc = allocateProcessorFees(records.processorFees, events);
 
@@ -390,7 +388,7 @@ export function buildEventReport(
         };
         const expenses = expenseRows.get(key) ?? null;
         const hourlyRate =
-            settings.marketHourlyRates[market] ?? settings.employeeHourlyRate;
+            records.marketHourlyRates[market] ?? settings.employeeHourlyRate;
         const laborCost = expenses ? expenses.employeeHours * hourlyRate : 0;
         const allocated =
             purchaseAlloc.byEvent.get(key) ?? emptyCategoryTotals();
@@ -448,7 +446,7 @@ export interface MarketRollup {
 /** Totals per market, in fixed MARKETS order (zeros when a market is empty). */
 export function rollupByMarket(
     rows: EventReportRow[],
-    settings: Settings,
+    records: OperatingRecords,
 ): MarketRollup[] {
     return MARKETS.map((market) => {
         const own = rows.filter((row) => row.market === market);
@@ -457,7 +455,7 @@ export function rollupByMarket(
         const contribution = total((row) => row.contribution);
         return {
             market,
-            classification: settings.marketClassifications[market],
+            classification: records.marketClassifications[market],
             events: own.length,
             grossSales: total((row) => row.grossSales),
             preTaxSales: total((row) => row.preTaxSales),

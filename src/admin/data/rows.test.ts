@@ -77,92 +77,6 @@ describe("settingsToRows / rowsToSettings", () => {
         expect(beef.batch).toBeUndefined();
     });
 
-    test("events and classifications survive the round-trip", () => {
-        const settings: Settings = {
-            ...DEFAULT_SETTINGS,
-            events: [
-                {
-                    date: "2026-07-25",
-                    market: "grogans-mill",
-                    marketFee: 20,
-                    waste: 12,
-                    employeeHours: 4.5,
-                    billysHours: 7,
-                },
-            ],
-            marketClassifications: {
-                ...DEFAULT_SETTINGS.marketClassifications,
-                "grogans-mill": "core",
-            },
-        };
-        const back = normalize(settings);
-        expect(back.events).toEqual(settings.events);
-        expect(back.marketClassifications["grogans-mill"]).toBe("core");
-        expect(back.marketClassifications["new-caney"]).toBeNull();
-        expect(back.employeeHourlyRate).toBe(settings.employeeHourlyRate);
-        expect(back.salesTaxRatePercent).toBe(settings.salesTaxRatePercent);
-    });
-
-    test("overrides and per-market rates survive the round-trip", () => {
-        const settings: Settings = {
-            ...DEFAULT_SETTINGS,
-            marketOverrides: { "2026-07-25": "new-caney" },
-            marketHourlyRates: {
-                ...DEFAULT_SETTINGS.marketHourlyRates,
-                "grogans-mill": 15,
-            },
-        };
-        const back = normalize(settings);
-        expect(back.marketOverrides).toEqual(settings.marketOverrides);
-        expect(back.marketHourlyRates).toEqual(settings.marketHourlyRates);
-    });
-
-    test("missing market_settings rows synthesize all-null records", () => {
-        // An existing database migrated before any classification was chosen
-        // has an empty market_settings table.
-        const snapshot = settingsToRows(DEFAULT_SETTINGS);
-        snapshot.marketSettings = [];
-        const settings = rowsToSettings(snapshot);
-        expect(settings.marketClassifications).toEqual({
-            "grogans-mill": null,
-            "new-caney": null,
-            "fm-1488": null,
-            other: null,
-        });
-        expect(settings.marketHourlyRates).toEqual({
-            "grogans-mill": null,
-            "new-caney": null,
-            "fm-1488": null,
-            other: null,
-        });
-    });
-
-    test("event rows are emitted sorted by date+market for stable diffs", () => {
-        const event = (date: string, market: "grogans-mill" | "other") => ({
-            date,
-            market,
-            marketFee: 0,
-            waste: 0,
-            employeeHours: 0,
-            billysHours: 0,
-        });
-        const a: Settings = {
-            ...DEFAULT_SETTINGS,
-            events: [
-                event("2026-07-25", "grogans-mill"),
-                event("2026-07-20", "other"),
-            ],
-        };
-        const b: Settings = {
-            ...DEFAULT_SETTINGS,
-            events: [
-                event("2026-07-20", "other"),
-                event("2026-07-25", "grogans-mill"),
-            ],
-        };
-        expect(settingsToRows(a).events).toEqual(settingsToRows(b).events);
-    });
-
     test("out-of-range enum values are rejected at the rows boundary", () => {
         // The generated row types leave check-constrained columns as plain
         // strings; rowsToSettings must fail loudly on drift, not mistype it.
@@ -170,46 +84,6 @@ describe("settingsToRows / rowsToSettings", () => {
         withBadUnit.ingredients[0].unit = "stone";
         expect(() => rowsToSettings(withBadUnit)).toThrow(
             "Unexpected ingredient unit: stone",
-        );
-
-        const withBadMarket = settingsToRows(DEFAULT_SETTINGS);
-        withBadMarket.events = [
-            {
-                date: "2026-07-25",
-                market: "narnia",
-                market_fee: 0,
-                waste: 0,
-                employee_hours: 0,
-                billys_hours: 0,
-            },
-        ];
-        expect(() => rowsToSettings(withBadMarket)).toThrow(
-            "Unexpected event market: narnia",
-        );
-
-        const withBadOverride = settingsToRows(DEFAULT_SETTINGS);
-        withBadOverride.marketOverrides = [
-            { date: "2026-07-25", market: "narnia" },
-        ];
-        expect(() => rowsToSettings(withBadOverride)).toThrow(
-            "Unexpected market override market: narnia",
-        );
-    });
-
-    test("unknown markets in market_settings are skipped, not rejected", () => {
-        // A row left behind by a removed market must not brick the load.
-        const snapshot = settingsToRows(DEFAULT_SETTINGS);
-        snapshot.marketSettings = [
-            {
-                market: "narnia",
-                classification: "core",
-                employee_hourly_rate: 12,
-            },
-        ];
-        const settings = rowsToSettings(snapshot);
-        expect(settings.marketClassifications["grogans-mill"]).toBeNull();
-        expect(Object.keys(settings.marketClassifications)).not.toContain(
-            "narnia",
         );
     });
 });

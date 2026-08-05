@@ -344,10 +344,12 @@ const SETTINGS: Settings = {
     blendedFoodCostPercent: 50,
     salesTaxRatePercent: 0,
     employeeHourlyRate: 10,
-    events: [SATURDAY_EXPENSES],
 };
 
-const RECORDS: OperatingRecords = DEFAULT_RECORDS;
+const RECORDS: OperatingRecords = {
+    ...DEFAULT_RECORDS,
+    events: [SATURDAY_EXPENSES],
+};
 
 const TRANSACTIONS: Transaction[] = [
     sale("1", new Date(2026, 6, 25), 10), // Saturday → Grogan's Mill
@@ -401,11 +403,15 @@ describe("buildEventReport", () => {
     });
 
     test("a market override re-tags the day's sales and expense row", () => {
-        const report = buildEventReport(TRANSACTIONS, RECORDS, {
-            ...SETTINGS,
-            events: [{ ...SATURDAY_EXPENSES, market: "new-caney" }],
-            marketOverrides: { "2026-07-25": "new-caney" },
-        });
+        const report = buildEventReport(
+            TRANSACTIONS,
+            {
+                ...RECORDS,
+                events: [{ ...SATURDAY_EXPENSES, market: "new-caney" }],
+                marketOverrides: { "2026-07-25": "new-caney" },
+            },
+            SETTINGS,
+        );
         // The Saturday sales now land on new-caney with the expense row.
         const saturday = report.find((row) => row.date === "2026-07-25")!;
         expect(saturday.market).toBe("new-caney");
@@ -420,6 +426,7 @@ describe("buildEventReport", () => {
         const report = buildEventReport(
             TRANSACTIONS,
             {
+                ...RECORDS,
                 purchases: [purchase("p1", "2026-07-19", "propane", 8)],
                 processorFees: [{ month: "2026-07", amount: 6 }],
             },
@@ -454,13 +461,17 @@ describe("buildEventReport", () => {
     });
 
     test("labor uses the per-market rate when set, global otherwise", () => {
-        const report = buildEventReport(TRANSACTIONS, RECORDS, {
-            ...SETTINGS,
-            marketHourlyRates: {
-                ...SETTINGS.marketHourlyRates,
-                "grogans-mill": 15,
+        const report = buildEventReport(
+            TRANSACTIONS,
+            {
+                ...RECORDS,
+                marketHourlyRates: {
+                    ...RECORDS.marketHourlyRates,
+                    "grogans-mill": 15,
+                },
             },
-        });
+            SETTINGS,
+        );
         const saturday = report.find((row) => row.market === "grogans-mill")!;
         expect(saturday.laborCost).toBe(30); // 2 hrs × $15 market rate
         // 20 fee + 30 labor
@@ -481,6 +492,7 @@ describe("buildEventAllocations", () => {
         const { purchases, fees } = buildEventAllocations(
             TRANSACTIONS,
             {
+                ...RECORDS,
                 purchases: [purchase("p1", "2026-07-28", "fuel", 45)],
                 processorFees: [{ month: "2026-05", amount: 33 }],
             },
@@ -493,16 +505,16 @@ describe("buildEventAllocations", () => {
 
 describe("rollupByMarket", () => {
     test("totals per market in fixed order, zeros for empty markets", () => {
-        const settings: Settings = {
-            ...SETTINGS,
+        const records: OperatingRecords = {
+            ...RECORDS,
             marketClassifications: {
-                ...SETTINGS.marketClassifications,
+                ...RECORDS.marketClassifications,
                 "grogans-mill": "core",
             },
         };
         const rollups = rollupByMarket(
-            buildEventReport(TRANSACTIONS, RECORDS, settings),
-            settings,
+            buildEventReport(TRANSACTIONS, records, SETTINGS),
+            records,
         );
 
         expect(rollups.map((rollup) => rollup.market)).toEqual([

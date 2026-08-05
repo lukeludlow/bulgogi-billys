@@ -28,7 +28,9 @@ const SECTIONS: NavSection[] = [
 
 export default function Events() {
     const { settings, setSettings } = useSettings();
-    const { records } = useRecords();
+    // The Assumptions card below edits both engines side by side: the two
+    // rates live on the config document, the per-market rates on the records.
+    const { records, setRecords } = useRecords();
     const { transactions } = useTransactions();
 
     const report = useMemo(
@@ -58,11 +60,7 @@ export default function Events() {
                 title="Markets"
                 description="How each market performs across all its events, and where it stands in the growth plan's classification."
             >
-                <MarketRollups
-                    settings={settings}
-                    setSettings={setSettings}
-                    report={report}
-                />
+                <MarketRollups report={report} />
             </Section>
 
             <Section
@@ -70,11 +68,7 @@ export default function Events() {
                 title="Events"
                 description="One row per market day. Sales and food cost come from imported transactions; fuel, propane, ice, and card fees are allocated from the purchases log and monthly statements; enter the rest of each event's direct costs to see its true cash contribution."
             >
-                <EventsTable
-                    settings={settings}
-                    setSettings={setSettings}
-                    report={report}
-                />
+                <EventsTable report={report} />
             </Section>
 
             <Section
@@ -176,14 +170,14 @@ export default function Events() {
                                                     settings.employeeHourlyRate,
                                                 )}
                                                 value={
-                                                    settings.marketHourlyRates[
+                                                    records.marketHourlyRates[
                                                         market
                                                     ] ?? ""
                                                 }
                                                 onChange={(event) => {
                                                     const raw =
                                                         event.target.value;
-                                                    setSettings((prev) => ({
+                                                    setRecords((prev) => ({
                                                         ...prev,
                                                         marketHourlyRates: {
                                                             ...prev.marketHourlyRates,

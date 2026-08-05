@@ -203,28 +203,28 @@ export const DEFAULT_SETTINGS: Settings = {
     groceryWeeklySpend: 400,
     packagingCostPerOrder: 0.25,
     blendedFoodCostPercent: 32,
+    // Must match the SQL column defaults in the events_and_market_settings
+    // migration so a migrated database and a fresh seed agree.
+    employeeHourlyRate: 12,
+    salesTaxRatePercent: 8.25,
+};
+
+/** The operational-record counterpart: nothing has been recorded yet. */
+export const DEFAULT_RECORDS: OperatingRecords = {
     events: [],
+    purchases: [],
     marketOverrides: {},
+    processorFees: [],
     marketClassifications: {
         "grogans-mill": null,
         "new-caney": null,
         "fm-1488": null,
         other: null,
     },
-    // Must match the SQL column defaults in the events_and_market_settings
-    // migration so a migrated database and a fresh seed agree.
-    employeeHourlyRate: 12,
-    salesTaxRatePercent: 8.25,
     marketHourlyRates: {
         "grogans-mill": null,
         "new-caney": null,
         "fm-1488": null,
         other: null,
     },
-};
-
-/** The operational-record counterpart: everything starts empty. */
-export const DEFAULT_RECORDS: OperatingRecords = {
-    purchases: [],
-    processorFees: [],
 };

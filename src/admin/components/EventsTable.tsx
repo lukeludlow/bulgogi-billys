@@ -10,12 +10,11 @@ import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
 import AddEventDialog from "@/admin/components/AddEventDialog.tsx";
 import EventRow from "@/admin/components/EventRow.tsx";
 import * as mutations from "@/admin/domain/eventMutations.ts";
+import { useRecords } from "@/admin/RecordsContext.tsx";
 import type { EventReportRow } from "@/admin/domain/eventAnalytics.ts";
-import type { Market, MarketEvent, Settings } from "@/admin/domain/types.ts";
+import type { Market, MarketEvent } from "@/admin/domain/types.ts";
 
 interface Props {
-    settings: Settings;
-    setSettings: (update: (prev: Settings) => Settings) => void;
     report: EventReportRow[];
 }
 
@@ -25,21 +24,23 @@ interface Props {
  * first so they're visible without scrolling. All editing goes through the
  * pure mutators in eventMutations.ts.
  */
-export default function EventsTable({ settings, setSettings, report }: Props) {
+export default function EventsTable({ report }: Props) {
+    const { records, setRecords } = useRecords();
+
     function updateEvent(
         date: string,
         market: Market,
         patch: Partial<MarketEvent>,
     ) {
-        setSettings((prev) => mutations.updateEvent(prev, date, market, patch));
+        setRecords((prev) => mutations.updateEvent(prev, date, market, patch));
     }
 
     function addExpenses(date: string, market: Market) {
-        setSettings((prev) => mutations.addExpenses(prev, date, market));
+        setRecords((prev) => mutations.addExpenses(prev, date, market));
     }
 
     function removeExpenses(date: string, market: Market) {
-        setSettings((prev) => mutations.removeExpenses(prev, date, market));
+        setRecords((prev) => mutations.removeExpenses(prev, date, market));
     }
 
     function overrideMarket(
@@ -47,7 +48,7 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
         currentMarket: Market,
         selection: string,
     ) {
-        setSettings((prev) =>
+        setRecords((prev) =>
             mutations.overrideMarket(prev, date, currentMarket, selection),
         );
     }
@@ -58,7 +59,7 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
                 <Text className="text-sm">
                     {report.length} event{report.length === 1 ? "" : "s"}
                 </Text>
-                <AddEventDialog events={settings.events} onAdd={addExpenses} />
+                <AddEventDialog events={records.events} onAdd={addExpenses} />
             </div>
 
             <div className="mt-3 overflow-x-auto">
@@ -111,7 +112,7 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
                                 key={`${row.date} ${row.market}`}
                                 row={row}
                                 overridden={
-                                    settings.marketOverrides[row.date] !==
+                                    records.marketOverrides[row.date] !==
                                     undefined
                                 }
                                 onOverride={(selection) =>

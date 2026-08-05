@@ -33,7 +33,19 @@ const PURCHASE = {
 describe("fetchRecords", () => {
     test("assembles records from the purchases and fees tables", async () => {
         const seeded: OperatingRecords = {
+            ...BASE,
+            events: [
+                {
+                    date: "2026-07-25",
+                    market: "grogans-mill",
+                    marketFee: 20,
+                    waste: 0,
+                    employeeHours: 2,
+                    billysHours: 6,
+                },
+            ],
             purchases: [PURCHASE],
+            marketOverrides: { "2026-07-25": "new-caney" },
             processorFees: [{ month: "2026-07", amount: 84 }],
         };
         seedRecordsTables(seeded);
@@ -42,10 +54,7 @@ describe("fetchRecords", () => {
 
     test("empty tables are a valid, empty result — not an error", async () => {
         seedRecordsTables(DEFAULT_RECORDS);
-        expect(await fetchRecords()).toEqual({
-            purchases: [],
-            processorFees: [],
-        });
+        expect(await fetchRecords()).toEqual(DEFAULT_RECORDS);
     });
 
     test("pages past the 1000-row cap to load every purchase", async () => {
@@ -68,6 +77,42 @@ describe("fetchRecords", () => {
             [1000, 1999],
             [2000, 2999],
         ]);
+    });
+
+    test("pages past the 1000-row cap to load every market override", async () => {
+        seedRecordsTables(DEFAULT_RECORDS);
+        // One override per corrected day — distinct dates, or the keyed
+        // marketOverrides record would collapse.
+        const date = (index: number) =>
+            new Date(Date.UTC(2020, 0, 1 + index)).toISOString().slice(0, 10);
+        stub.data.set(
+            "market_overrides",
+            Array.from({ length: 2500 }, (_, index) => ({
+                date: date(index),
+                market: "new-caney",
+            })),
+        );
+
+        const records = await fetchRecords();
+        expect(Object.keys(records.marketOverrides)).toHaveLength(2500);
+        expect(records.marketOverrides[date(0)]).toBe("new-caney");
+        expect(records.marketOverrides[date(2499)]).toBe("new-caney");
+
+        const rangeCalls = stub.calls.filter(
+            (call) =>
+                call.table === "market_overrides" && call.method === "range",
+        );
+        expect(rangeCalls.map((call) => call.args)).toEqual([
+            [0, 999],
+            [1000, 1999],
+            [2000, 2999],
+        ]);
+    });
+
+    test("propagates errors from the market_overrides fetch", async () => {
+        seedRecordsTables(DEFAULT_RECORDS);
+        stub.errors.set("market_overrides", "permission denied");
+        await expect(fetchRecords()).rejects.toThrow("permission denied");
     });
 
     test("sorts purchases newest-first with a stable tiebreaker", async () => {
@@ -111,6 +156,75 @@ describe("applyRecordsChangeSet", () => {
             (call) => call.table === "purchases" && call.method === "in",
         )!;
         expect(deleteIn.args).toEqual(["id", ["p2"]]);
+    });
+
+    test("event edits upsert by composite key and delete per key", async () => {
+        const event = {
+            date: "2026-07-19",
+            market: "new-caney" as const,
+            marketFee: 20,
+            waste: 0,
+            employeeHours: 0,
+            billysHours: 0,
+        };
+        const prev = {
+            ...BASE,
+            events: [event, { ...event, date: "2026-07-11" }],
+        };
+        const next = { ...BASE, events: [{ ...event, waste: 5 }] };
+        await applyRecordsChangeSet(computeRecordsChangeSet(prev, next));
+
+        // The upsert lands before the delete, so a moved row is never absent.
+        expect(mutationOrder()).toEqual(["events.upsert", "events.delete"]);
+        const upsert = stub.calls.find(
+            (call) => call.table === "events" && call.method === "upsert",
+        )!;
+        expect(upsert.args[1]).toEqual({ onConflict: "date,market" });
+        const eqs = stub.calls
+            .filter((call) => call.table === "events" && call.method === "eq")
+            .map((call) => call.args);
+        expect(eqs).toEqual([
+            ["date", "2026-07-11"],
+            ["market", "new-caney"],
+        ]);
+    });
+
+    test("market override changes upsert and delete by date", async () => {
+        const withOverride = {
+            ...BASE,
+            marketOverrides: { "2026-07-25": "new-caney" as const },
+        };
+        await applyRecordsChangeSet(
+            computeRecordsChangeSet(BASE, withOverride),
+        );
+        expect(mutationOrder()).toEqual(["market_overrides.upsert"]);
+        expect(
+            stub.calls.find((call) => call.table === "market_overrides")!
+                .args[1],
+        ).toEqual({ onConflict: "date" });
+
+        stub.reset();
+        await applyRecordsChangeSet(
+            computeRecordsChangeSet(withOverride, BASE),
+        );
+        expect(mutationOrder()).toEqual(["market_overrides.delete"]);
+        const deleteIn = stub.calls.find(
+            (call) => call.table === "market_overrides" && call.method === "in",
+        )!;
+        expect(deleteIn.args).toEqual(["date", ["2026-07-25"]]);
+    });
+
+    test("classification changes upsert the whole four-row set", async () => {
+        const next = structuredClone(BASE);
+        next.marketClassifications["grogans-mill"] = "core";
+        await applyRecordsChangeSet(computeRecordsChangeSet(BASE, next));
+
+        expect(mutationOrder()).toEqual(["market_settings.upsert"]);
+        const upsert = stub.calls.find(
+            (call) => call.table === "market_settings",
+        )!;
+        expect((upsert.args[0] as unknown[]).length).toBe(4);
+        expect(upsert.args[1]).toEqual({ onConflict: "market" });
     });
 
     test("processor fee changes upsert by month", async () => {
