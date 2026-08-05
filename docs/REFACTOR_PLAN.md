@@ -322,22 +322,33 @@ one.
 - **Gate:** ✅ `./verify.sh --dist` green; verify-skill runtime pass 20/20,
   including the merge branch writing one summed row to Postgres.
 
-### B5 — `apply_config(jsonb)` RPC: atomic config saves
+### B5 — `apply_config(jsonb)` RPC: atomic config saves — ✅ Done (Aug 5 2026)
 
-- New migration:
-  `create function public.apply_config(config jsonb) returns void language plpgsql security invoker`
+- `20260805000000_apply_config.sql` adds
+  `public.apply_config(config jsonb) returns void language plpgsql security invoker`
   — upserts `settings`, rewrites `ingredients` / `batch_lines` / `menu_items` /
   `variants` / `recipe_lines` inside the function's single transaction.
-  `security invoker` so RLS still gates it; execute granted to `authenticated`
-  only.
-- The config save in `settingsRepo` becomes one
-  `supabase.rpc("apply_config", …)` call with `settingsToRows` output. `diff.ts`
-  collapses to a config dirty-check (after B3/B4 that's all it has left). The
-  partial-save window acknowledged in the file header closes for good —
-  transactionality without a server or an ORM.
-- **Gate:** the new db test tier (§5.3) asserts atomicity — inject a constraint
-  violation mid-payload, assert the previous config is fully intact;
-  SettingsContext tests green with the stub updated to the RPC shape.
+  `security invoker` so RLS still gates it; `execute` revoked from PUBLIC and
+  granted to `authenticated` only (the grants migration's default privileges
+  cover tables, not functions).
+- The config save in `settingsRepo` is one `supabase.rpc("apply_config", …)`
+  call, and `diff.ts` is a dirty check plus a payload builder. The delete lists
+  went with it: the payload **is** the document, so a row absent from it is
+  deleted by the function. The partial-save window acknowledged in the file
+  header is closed — transactionality without a server or an ORM.
+- Two things the db tier caught while writing the function, both worth
+  remembering for the next one: `jsonb_typeof(config -> key) <> 'array'` is
+  NULL, not true, when the key is missing, so the envelope check needs
+  `is distinct from` or a client bug empties a table instead of raising; and
+  Supabase preloads `pg_safeupdate` for `authenticated`, which refuses an
+  unqualified `DELETE` (hence `where position >= 0`, the same predicate the
+  sequential save used).
+- **Gate:** ✅ `./verify.sh --db --dist` green (157 unit, 246 browser, 71 db).
+  The §5.4 atomicity test was run against the sequential path first and failed
+  as designed — an early ingredient upsert committed while the settings write
+  tripped a check constraint, leaving a config nobody asked for. Verify-skill
+  runtime pass 13/13, including one RPC call per debounce and a records edit
+  proving it still rides its own engine.
 
 **Standing convention from here on** (unchanged from BACKEND_ARCHITECTURE §7):
 every new domain — catering inquiries, preorders, KPI snapshots, inventory —
@@ -419,7 +430,8 @@ Stages:
 3. tsc -b                        (typecheck)
 4. vitest run --project unit
 5. vitest run --project browser
-6. [--db flag] supabase running? → vitest run --project db
+6. [--db flag] stack up? → supabase db reset (also the migration-chain
+   check) + restart Kong → vitest run --project db
 7. [--dist flag] npm run build → assert public entry chunk contains no supabase-js/recharts
 ```
 
@@ -427,17 +439,30 @@ Each stage prints a clear pass/fail line so the script can be lifted verbatim
 into a GitHub Actions workflow the day PRs start. New `package.json` scripts
 riding along: `typecheck`, `format:check`, `test:unit`, `test:db`, `db:types`.
 
-### 5.3 The `db` tier (new capability — nothing tests real Postgres today)
+### 5.3 The `db` tier — ✅ landed with Phase 5
 
-Runs against the local Supabase stack (same Docker setup the verify skill uses):
+Runs against the local Supabase stack (same Docker setup the verify skill uses).
+Lives in `supabase/tests/*.db.test.ts`, next to the SQL it tests, with
+`localStack.ts` for the two ways in: `psql()` through the container for fixtures
+and inspection (it bypasses RLS, and the grants migration means even
+service_role can't reach these tables over PostgREST), and `clientAs()` for a
+real supabase-js client holding a real session as anon, a signed-in non-admin,
+or the allowlisted admin. **It is destructive** — `--db` resets the database and
+each file truncates and reseeds:
 
 - **RLS matrix, every table:** anon client denied select/insert/update/delete; a
   signed-in **non-admin** user denied (exercises `is_admin()` and the
-  never-exercised `admin_users` policy); the admin allowed.
-- **`apply_config`:** happy path; atomicity on injected failure; anon RPC
-  denied.
-- **Migrations:** `supabase db reset` applies the full chain from scratch,
-  exit 0.
+  never-exercised `admin_users` policy); the admin allowed. The two denials are
+  not symmetrical, and the assertions must not pretend they are: anon has no
+  table grants, so Postgres rejects its statements, while a non-admin passes the
+  grants and is filtered by the policies — its `UPDATE`/`DELETE` succeed against
+  zero rows, so those cases assert the row survived rather than an error.
+- **`apply_config`:** happy path; a malformed envelope refused per key;
+  atomicity on injected failure; anon and non-admin denied.
+- **Migrations:** `supabase db reset` applies the full chain from scratch, exit
+  0 — run by `verify.sh --db` before the tests, so everything downstream runs
+  against what it produced. It restarts containers, and Kong keeps routing to
+  their old addresses until it is restarted too, which the script handles.
 - **Cascade/constraint spot checks** the PostgREST stub can't see
   (batch_lines/recipe_lines FK cascades, check constraints).
 
@@ -451,7 +476,7 @@ tests pass unmodified (mechanical import-path updates excepted):
 | Phase 1 (moves)  | Public-page smoke tests (render each of the 8 site pages, assert PageMeta title — currently zero public-page tests except ContactForm); dist-chunk assertion that the public bundle stays admin-free |
 | Phase 3 (B3)     | ImportData flow test + TransactionHistory characterization test                                                                                                                                      |
 | Phase 4 (B4)     | ✅ `overrideMarket` expense-merge unit test (became the extracted mutator's test)                                                                                                                    |
-| Phase 5 (B5)     | SettingsContext save-shape test; db-tier atomicity test written to _fail_ against sequential writes and _pass_ against the RPC                                                                       |
+| Phase 5 (B5)     | ✅ db-tier round-trip of the real repo against real Postgres (passed unedited across the swap); atomicity test written to _fail_ against sequential writes and _pass_ against the RPC                |
 | Phase 1, ongoing | Sitemap test rewritten to consume `src/site/routes.ts` — route drift becomes impossible                                                                                                              |
 
 ### 5.5 Definition of done, per phase
@@ -474,7 +499,7 @@ tests pass unmodified (mechanical import-path updates excepted):
 | 2   | **Generated types + pagination**           | B1 + B2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | 0.5–1 day                     | 0 (1 first is recommended so paths are final) | ✅ Done (Aug 5 2026) |
 | 3   | **transactionsRepo**                       | B3 — natural to ride ROADMAP 0.1 follow-up work, which touches transactions anyway                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 2–3 days                      | 2                                             | ✅ Done (Aug 5 2026) |
 | 4   | **eventsRepo + EventsTable decomposition** | B4 + settingsMutations (events side) + EventsTable split                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 2–3 days                      | 3                                             | ✅ Done (Aug 5 2026) |
-| 5   | **apply_config RPC**                       | B5 + diff.ts collapse + config-only journal + db-tier atomicity tests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 1–2 days                      | 3, 4                                          | —                    |
+| 5   | **apply_config RPC**                       | B5 + diff.ts collapse + the db test tier (RLS matrix, RPC atomicity, migration chain, cascades). The config-only journal listed here originally shipped early, with Phase 4                                                                                                                                                                                                                                                                                                                                                                                      | 1–2 days                      | 3, 4                                          | ✅ Done (Aug 5 2026) |
 | 6   | **Admin UI consolidation**                 | settingsMutations (ProfitCalculator side); `ui/` primitives (Card, StatCard, chart theme, labels, format, units); chrome into AdminLayout; targeted memoization; then items 6–8 opportunistically                                                                                                                                                                                                                                                                                                                                                                | 2–4 days, splittable per item | 1; independent of 2–5                         | —                    |
 
 - Phases 2–5 are strictly sequential. Phase 6 can interleave anywhere after
@@ -515,21 +540,19 @@ The flexibility goal, made concrete:
 
 ## 8. Immediate next action
 
-Phase 5 (B5, the `apply_config(jsonb)` RPC), which is now a small change: after
-Phase 4 the config document is exactly the six tables the RPC covers, `diff.ts`
-is config-only, and `useOptimisticSync` takes `apply` as a parameter — so the
-sequential `applyChangeSet` becomes a one-line swap for a single
-`supabase.rpc("apply_config", …)` call. It also brings the `db` test tier (§5.3)
-that nothing has needed until now; write the atomicity test to _fail_ against
-sequential writes and _pass_ against the RPC.
+Phase 6 (admin UI consolidation), the last one in this plan and the only one
+that was always free to interleave. `settingsMutations` for the ProfitCalculator
+side is the natural first slice: the events side already has `eventMutations.ts`
+as the pattern to copy, and the same three-way split (`EventsTable` → table +
+row + dialog) is waiting for `MenuItemEditor`.
 
-Phases 0–4 all landed by Aug 5 2026: the safety net (`verify.sh`, vitest split,
+Phases 0–5 all landed by Aug 5 2026: the safety net (`verify.sh`, vitest split,
 grants migration), the boundary restructure (`src/site` · `src/admin` ·
 `src/shared`, ESLint boundary rules, route manifests, smoke tests), generated DB
 types + paged `market_overrides`, the transactions extraction
-(`src/admin/data/transactions.ts` + `TransactionsContext`), and the operational
+(`src/admin/data/transactions.ts` + `TransactionsContext`), the operational
 records extraction (`src/admin/data/recordsRepo.ts` + `RecordsContext`, on the
-`useOptimisticSync` engine shared with the config document). Phase 6 (admin UI
-consolidation) can interleave whenever — `settingsMutations` for the
-ProfitCalculator side is the natural next slice of it, since the events side
-already has `eventMutations.ts` as the pattern to copy.
+`useOptimisticSync` engine shared with the config document), and the
+`apply_config` RPC that makes a config save one transaction — arriving with the
+`db` test tier, so RLS, grants, cascades and constraints are now covered by
+tests for the first time.

@@ -158,7 +158,9 @@ What to do instead — three moves that deliver most of what an ORM promises:
    migration's definition of done.
 2. **Postgres views/functions via `supabase.rpc()`** when queries outgrow
    PostgREST filters (event-contribution rollups, 13-week forecast seeding).
-   Still RLS-governed, transactional for free, no new dependency.
+   Still RLS-governed, transactional for free, no new dependency. `apply_config`
+   (§7, Aug 2026) is the first one, and it was writes rather than reads that
+   needed it.
 3. **Drizzle's future slot, precisely bounded:** P3, inside server functions
    that hold the service-role key anyway (RLS already bypassed there by design),
    for multi-table transactional writes — and even then, try an RPC function
@@ -192,10 +194,13 @@ no big-bang rewrite:
   extracted to `useOptimisticSync` and now runs one instance per document — the
   config and the records share no table, so their saves cannot interleave
   destructively.
-- **P0/P1 hardening:** replace `applyChangeSet`'s sequential delete-then-insert
-  statements with a single Postgres function `apply_config(jsonb)` called via
-  RPC — one atomic transaction, closing the partial-save risk `settingsRepo`'s
-  own comment acknowledges. Transactionality without a server or an ORM.
+- **P0/P1 hardening:** _done (Aug 2026)_ — `apply_config(jsonb)`
+  (`20260805000000_apply_config.sql`) replaced the sequential delete-then-insert
+  statements with one RPC call. The payload is the whole document, so a row
+  absent from it is deleted by the function and the client stopped tracking
+  removals; `security invoker` keeps RLS the gate. The partial-save risk
+  `settingsRepo`'s own comment acknowledged is closed — transactionality without
+  a server or an ORM.
 - **Standing convention:** every new domain (catering_inquiries, preorders, KPI
   snapshots, inventory) gets its own module under `src/data/<domain>.ts` from
   day one and never enters the Settings blob. A domain that is edited row by row
@@ -245,15 +250,15 @@ Four layers, each with one hard rule:
 
 ## 10. Risks & gotchas register
 
-| #   | Risk                                                                                     | Mitigation                                                                                                                       |
-| --- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Vercel Hobby non-commercial ToS** — the site was out of compliance on the free plan    | **Resolved by the Pro upgrade (§4)**; make the upgrade before adding any new public features                                     |
-| 2   | **Supabase free-tier 7-day pause**                                                       | Scheduled ping now (Vercel Cron); build-time menu publish keeps the public site immune; hard Pro-upgrade trigger defined (§5)    |
-| 3   | **RLS bypass via ORM / connection strings** — silently skips the entire security model   | Codify "supabase-js or RPC only" until P3; no Postgres connection string ever ships in app code                                  |
-| 4   | **Anon read policies leaking cost data** — RLS is row-level, not column-level            | No anon policies on admin tables, ever; build-time publish or dedicated public views only                                        |
-| 5   | **Catering-form spam** — a public POST endpoint will be found by bots                    | Turnstile + honeypot field + function-side rate limiting; insert-only table with no anon SELECT (inquiries contain customer PII) |
-| 6   | **Secrets-management debut** — the first Vercel Function introduces the service-role key | Server-side Vercel environment variables only; never in the repo; never `VITE_`-prefixed; rotate immediately if ever exposed     |
-| 7   | **Non-transactional config saves** — acknowledged in `settingsRepo` today                | `apply_config(jsonb)` RPC (§7) makes the save atomic                                                                             |
+| #   | Risk                                                                                     | Mitigation                                                                                                                        |
+| --- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Vercel Hobby non-commercial ToS** — the site was out of compliance on the free plan    | **Resolved by the Pro upgrade (§4)**; make the upgrade before adding any new public features                                      |
+| 2   | **Supabase free-tier 7-day pause**                                                       | Scheduled ping now (Vercel Cron); build-time menu publish keeps the public site immune; hard Pro-upgrade trigger defined (§5)     |
+| 3   | **RLS bypass via ORM / connection strings** — silently skips the entire security model   | Codify "supabase-js or RPC only" until P3; no Postgres connection string ever ships in app code                                   |
+| 4   | **Anon read policies leaking cost data** — RLS is row-level, not column-level            | No anon policies on admin tables, ever; build-time publish or dedicated public views only                                         |
+| 5   | **Catering-form spam** — a public POST endpoint will be found by bots                    | Turnstile + honeypot field + function-side rate limiting; insert-only table with no anon SELECT (inquiries contain customer PII)  |
+| 6   | **Secrets-management debut** — the first Vercel Function introduces the service-role key | Server-side Vercel environment variables only; never in the repo; never `VITE_`-prefixed; rotate immediately if ever exposed      |
+| 7   | ~~**Non-transactional config saves**~~ — **resolved (Aug 2026)**                         | `apply_config(jsonb)` RPC (§7) makes the save atomic; the db test tier asserts it by injecting a mid-payload constraint violation |
 
 ## 11. Immediate action list
 
@@ -269,4 +274,6 @@ Small, ordered, all cheap:
    `src/admin/data/recordsRepo.ts` + `RecordsContext` — one repo for the five
    operational tables rather than two, since they share a change set and
    `overrideMarket` writes across them.
-5. **Add the `apply_config` RPC** to make config saves atomic.
+5. ~~**Add the `apply_config` RPC** to make config saves atomic.~~ Done (Aug
+   2026), together with the `db` test tier that proves it — RLS matrix, RPC
+   atomicity, migration chain and cascades, run by `./verify.sh --db`.
