@@ -34,6 +34,10 @@ Three decisions were made up front and are baked in:
 Short and factual; each item is verified in the code. The app _works_ — this is
 about the cost of the next twenty changes, not the last twenty.
 
+> Written August 2026, before any phase landed, and left as written: it is the
+> record of what motivated each step, not a description of the code today. §4
+> and §6 track what has since been fixed.
+
 ### 1.1 The public/private boundary exists de facto, not de jure
 
 - `src/main.tsx` is already the only file where public and admin meet (7 lazy
@@ -362,43 +366,61 @@ Settings blob.
 Not everything needs doing. High-value items below are in the roadmap (Phase
 4/6); medium items are opportunistic; the "skip" list is deliberate.
 
-**High value:**
+**High value — all done:**
 
-1. **`settingsMutations.ts`** (`src/admin/domain/`): extract ProfitCalculator's
-   ~145 lines of pure state reducers and EventsTable's 4 mutators (including
-   `overrideMarket`) as pure `(settings, args) => Settings` functions with node
-   unit tests. Then bless **one** convention: components call `useSettings()`
-   and apply mutators — deleting both the `setSettings`-drilling (4 components)
-   and the 6-callback drilling (ProfitCalculator).
-2. **EventsTable decomposition:** `AddEventDialog.tsx` + `EventRow.tsx` + a lean
-   `EventsTable.tsx`, mutators already gone to the mutations module. Rides Phase
-   4 since B4 changes the file anyway.
-3. **Shared admin primitives** in `src/admin/components/ui/`: `Card` (kills the
-   15× repeated class string), `StatCard` (out of SummaryCards), `charts/theme`
-   (ChartCard/ChartTooltip/ chartTheme out of MarginCharts), `labels.ts`
-   (MARKET_LABELS out of the pure analytics engine, CATEGORY_LABELS out of
-   PurchasesEditor), `format.ts` (formatCurrency/formatPercent out of
-   calculations.ts), `units.ts` (splitUnits/joinUnits out of DualUnitField).
-4. **Route manifest as single source of truth** (§2.3) + chrome moves from
-   per-page `DashboardShell` into `AdminLayout`.
-5. **Targeted memoization:** `useMemo` around
-   `allCombinations`/`summaryStats`/`weeklyStats` in
-   MarginCharts/SummaryCards/WeeklySales. Policy: memoize derived analytics at
-   the page/section level only; no blanket `React.memo`.
+1. ✅ **`settingsMutations.ts`** (`src/admin/domain/`, Phase 6):
+   ProfitCalculator's nine reducers are pure `(settings, args) => Settings`
+   functions with 15 unit tests; EventsTable's four went to `eventMutations.ts`
+   in Phase 4. **One** convention now: a component that _writes_ calls
+   `useSettings()`/`useRecords()` and applies mutators; a component that only
+   _displays_ takes props and stays pure; leaf inputs (`NumberField`,
+   `DualUnitField`, `BatchEditor`, `EventRow`) keep callbacks. Both the
+   `setSettings`-drilling and the 6-callback drilling are gone, and the page
+   dropped from 312 lines to 129.
+2. ✅ **EventsTable decomposition** (Phase 4): `AddEventDialog` + `EventRow` + a
+   lean `EventsTable`. Phase 6 gave `MenuItemEditor` the same treatment —
+   `VariantPriceTable` + `RecipeGrid`, since it held two unrelated tables.
+3. ✅ **Shared admin primitives** in `src/admin/components/ui/` (Phase 6):
+   `Card` (the class string was at 14 admin call sites; two padding sizes, the
+   rest through `className`), `StatCard`, `EmptyState`, `FieldLabel`,
+   `charts.tsx` (ChartCard/ChartTooltip/chartTheme/AXIS_TICK_STYLE),
+   `labels.ts`, `format.ts`, `units.ts`. Moving the formatters and MARKET_LABELS
+   out left `domain/` with no display strings in it at all — neither module used
+   them internally. `units.ts` also let six pure tests leave the three-browser
+   tier for the fast one.
+4. ✅ **Route manifest as single source of truth** (§2.3, Phase 6): `AdminRoute`
+   carries `heading`, `intro`, `description` and `sections`, and `AdminLayout`
+   renders `DashboardShell` once around the `Outlet`. The per-page `title` was
+   the manifest's `label` every time and the document title was always
+   `Admin | <heading>`, so nothing had to be invented. Adding a page is one
+   manifest entry plus a content component.
+5. ✅ **Targeted memoization** (Phase 6), with the honest split: the win is
+   `TransactionHistory` filtering its transactions once instead of three
+   components each doing it, and no longer refiltering when the
+   blended-food-cost field is typed in. The `useMemo`s in
+   MarginCharts/SummaryCards/WeeklySales do nothing for typing — a settings edit
+   is a new object by construction — and exist for `useActiveSection`, which
+   sets state on every scroll. No blanket `React.memo`.
 
 **Medium value (opportunistic, when touching the file anyway):**
 
-6. **SyncStatusBar split** into `ProteinSelector` + `SyncStatus` +
-   `LogoutButton` — an auth control currently lives in a sync-status component.
-7. **`EditorTable` primitive** generalizing the shape
-   Purchases/ProcessorFees/Events tables share (header + Add + per-row Remove +
-   empty state + newest-first sort). Justified by the roadmap: catering
-   inquiries (P1.4), inventory (P3.2), and KPI inputs all want exactly this.
-8. **Catalyst `Field`/`Label` adoption** — only when touching a file, never as a
-   big-bang restyle; visual regressions are the enemy of the zero-regression
-   rule.
+6. ✅ **SyncStatusBar split** (Phase 6) into `ProteinSelector` + `SyncStatus` +
+   `LogoutButton`, still composed by `SyncStatusBar` so the shell's markup is
+   unchanged. It also got its first test.
+7. ⏸ **`EditorTable` primitive** — **deliberately deferred.** Looked at closely
+   in Phase 6, the three tables share less than the shape suggests: 16 / 5 / 3
+   columns, three different add affordances (a dialog, a top button, a bottom
+   month-form with duplicate validation), two different empty states, and
+   different sort keys. Generalizing now buys an abstraction with one caller per
+   variant. Build it when the fourth arrives — catering inquiries (ROADMAP P1.4)
+   is the natural trigger.
+8. ◐ **Catalyst `Field`/`Label` adoption** — Phase 6 took the safe half only: a
+   `ui/FieldLabel` consolidating the label class string at 7 call sites with
+   byte-identical output. Catalyst's `Field`/`Label` render a different type
+   scale and spacing, so swapping to them is a restyle, not a consolidation, and
+   visual regressions are the enemy of the zero-regression rule.
 
-**Skip for now:** renames for their own sake; restructuring
+**Skipped, as planned:** renames for their own sake; restructuring
 `useActiveSection`/`useIsDarkMode`; any change to the math in `calculations.ts`
 beyond the formatter extraction.
 
@@ -477,6 +499,7 @@ tests pass unmodified (mechanical import-path updates excepted):
 | Phase 3 (B3)     | ImportData flow test + TransactionHistory characterization test                                                                                                                                      |
 | Phase 4 (B4)     | ✅ `overrideMarket` expense-merge unit test (became the extracted mutator's test)                                                                                                                    |
 | Phase 5 (B5)     | ✅ db-tier round-trip of the real repo against real Postgres (passed unedited across the swap); atomicity test written to _fail_ against sequential writes and _pass_ against the RPC                |
+| Phase 6 (UI)     | ✅ The three page tests' assertions, unchanged. Moving the chrome into the layout meant they had to mount through it, so the wrapper — and only the wrapper — became a shared `renderAdminPage`      |
 | Phase 1, ongoing | Sitemap test rewritten to consume `src/site/routes.ts` — route drift becomes impossible                                                                                                              |
 
 ### 5.5 Definition of done, per phase
@@ -500,10 +523,10 @@ tests pass unmodified (mechanical import-path updates excepted):
 | 3   | **transactionsRepo**                       | B3 — natural to ride ROADMAP 0.1 follow-up work, which touches transactions anyway                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 2–3 days                      | 2                                             | ✅ Done (Aug 5 2026) |
 | 4   | **eventsRepo + EventsTable decomposition** | B4 + settingsMutations (events side) + EventsTable split                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 2–3 days                      | 3                                             | ✅ Done (Aug 5 2026) |
 | 5   | **apply_config RPC**                       | B5 + diff.ts collapse + the db test tier (RLS matrix, RPC atomicity, migration chain, cascades). The config-only journal listed here originally shipped early, with Phase 4                                                                                                                                                                                                                                                                                                                                                                                      | 1–2 days                      | 3, 4                                          | ✅ Done (Aug 5 2026) |
-| 6   | **Admin UI consolidation**                 | settingsMutations (ProfitCalculator side); `ui/` primitives (Card, StatCard, chart theme, labels, format, units); chrome into AdminLayout; targeted memoization; then items 6–8 opportunistically                                                                                                                                                                                                                                                                                                                                                                | 2–4 days, splittable per item | 1; independent of 2–5                         | —                    |
+| 6   | **Admin UI consolidation**                 | settingsMutations (ProfitCalculator side); `ui/` primitives (Card, StatCard, EmptyState, FieldLabel, charts, labels, format, units); chrome into AdminLayout from the route manifest; targeted memoization; SyncStatusBar split; MenuItemEditor split. `EditorTable` deferred with reasons (§4 item 7)                                                                                                                                                                                                                                                           | 2–4 days, splittable per item | 1; independent of 2–5                         | ✅ Done (Aug 5 2026) |
 
-- Phases 2–5 are strictly sequential. Phase 6 can interleave anywhere after
-  Phase 1.
+- Phases 2–5 were strictly sequential. Phase 6 could interleave anywhere after
+  Phase 1, and ran last.
 - Every phase is behavior-preserving except the explicitly listed copy fixes in
   Phase 0.
 - Each phase is sized for solo work in spare hours and ships independently —
@@ -540,19 +563,29 @@ The flexibility goal, made concrete:
 
 ## 8. Immediate next action
 
-Phase 6 (admin UI consolidation), the last one in this plan and the only one
-that was always free to interleave. `settingsMutations` for the ProfitCalculator
-side is the natural first slice: the events side already has `eventMutations.ts`
-as the pattern to copy, and the same three-way split (`EventsTable` → table +
-row + dialog) is waiting for `MenuItemEditor`.
+**This plan is complete.** All six phases landed by Aug 5 2026: the safety net
+(`verify.sh`, vitest split, grants migration), the boundary restructure
+(`src/site` · `src/admin` · `src/shared`, ESLint boundary rules, route
+manifests, smoke tests), generated DB types + paged `market_overrides`, the
+transactions extraction (`src/admin/data/transactions.ts` +
+`TransactionsContext`), the operational records extraction
+(`src/admin/data/recordsRepo.ts` + `RecordsContext`, on the `useOptimisticSync`
+engine shared with the config document), the `apply_config` RPC that makes a
+config save one transaction — arriving with the `db` test tier, so RLS, grants,
+cascades and constraints are covered by tests for the first time — and finally
+the admin UI consolidation: pure mutators on both documents, one editing
+convention, `ui/` primitives, and chrome built once from the route manifest.
 
-Phases 0–5 all landed by Aug 5 2026: the safety net (`verify.sh`, vitest split,
-grants migration), the boundary restructure (`src/site` · `src/admin` ·
-`src/shared`, ESLint boundary rules, route manifests, smoke tests), generated DB
-types + paged `market_overrides`, the transactions extraction
-(`src/admin/data/transactions.ts` + `TransactionsContext`), the operational
-records extraction (`src/admin/data/recordsRepo.ts` + `RecordsContext`, on the
-`useOptimisticSync` engine shared with the config document), and the
-`apply_config` RPC that makes a config save one transaction — arriving with the
-`db` test tier, so RLS, grants, cascades and constraints are now covered by
-tests for the first time.
+The next action is feature work from [ROADMAP.md](ROADMAP.md), not refactoring.
+The shape §7 describes is now real, so use it: a new admin domain is a
+migration + `npm run db:types` + `src/admin/data/<domain>.ts` + pure logic in
+`src/admin/domain/` + one `ADMIN_ROUTES` entry + a content component built from
+`ui/`. Two standing rules survive this plan:
+
+- **Never grow the Settings blob.** Every new domain gets its own repo module
+  and, if it is edited row by row, its own `useOptimisticSync` instance.
+- **`./verify.sh` before pushing** (`--db` when SQL changed, `--dist` when
+  bundling could). It is the only gate, deliberately.
+
+The one open item this plan deliberately left is `EditorTable` (§4 item 7),
+whose trigger is the fourth editor table — catering inquiries, ROADMAP P1.4.
