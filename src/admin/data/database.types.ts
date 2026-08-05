@@ -363,6 +363,7 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
+            apply_config: { Args: { config: Json }; Returns: undefined };
             is_admin: { Args: never; Returns: boolean };
         };
         Enums: {
