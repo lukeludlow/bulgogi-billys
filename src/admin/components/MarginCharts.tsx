@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
     Bar,
     BarChart,
@@ -26,13 +27,17 @@ export default function MarginCharts({ settings }: { settings: Settings }) {
     const isDark = useIsDarkMode();
     const theme = chartTheme(isDark);
 
-    const data = allCombinations(settings).map((combination) => ({
-        name: combination.shortLabel,
-        marginPercent: round1(combination.marginPercent),
-        revenue: round2(combination.revenue),
-        cost: round2(combination.cost),
-        grossProfit: round2(combination.grossProfit),
-    }));
+    const data = useMemo(
+        () =>
+            allCombinations(settings).map((combination) => ({
+                name: combination.shortLabel,
+                marginPercent: round1(combination.marginPercent),
+                revenue: round2(combination.revenue),
+                cost: round2(combination.cost),
+                grossProfit: round2(combination.grossProfit),
+            })),
+        [settings],
+    );
 
     // Enough width to keep every labelled bar legible. On a laptop the row is
     // wider than this so the chart fills it; on a phone it scrolls.

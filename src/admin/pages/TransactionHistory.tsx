@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Section from "@/admin/components/Section.tsx";
 import ImportData from "@/admin/components/ImportData.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
@@ -6,7 +6,10 @@ import PricePointAnalysis from "@/admin/components/PricePointAnalysis.tsx";
 import SalesOverTime from "@/admin/components/SalesOverTime.tsx";
 import TimeRangeSelector from "@/admin/components/TimeRangeSelector.tsx";
 import TransactionsTable from "@/admin/components/TransactionsTable.tsx";
-import type { TimeRange } from "@/admin/domain/salesAnalytics.ts";
+import {
+    filterByRange,
+    type TimeRange,
+} from "@/admin/domain/salesAnalytics.ts";
 import { useSettings } from "@/admin/SettingsContext.tsx";
 import { useTransactions } from "@/admin/TransactionsContext.tsx";
 import Card from "@/admin/components/ui/Card.tsx";
@@ -22,6 +25,14 @@ export default function TransactionHistory() {
         granularity: "week",
     });
 
+    // Filtered once here rather than in each of the three sections: the list
+    // runs to thousands of rows, and every keystroke in the blended-food-cost
+    // field below re-renders all of them.
+    const inRange = useMemo(
+        () => filterByRange(transactions, range),
+        [transactions, range],
+    );
+
     return (
         <>
             {/* One sticky range selector drives every section below. */}
@@ -36,7 +47,7 @@ export default function TransactionHistory() {
             >
                 <SalesOverTime
                     settings={settings}
-                    transactions={transactions}
+                    inRange={inRange}
                     range={range}
                 />
             </Section>
@@ -46,11 +57,7 @@ export default function TransactionHistory() {
                 title="Price points"
                 description="How many orders landed at each price, and the profit each price generated — the view for experimenting with price vs. volume."
             >
-                <PricePointAnalysis
-                    settings={settings}
-                    transactions={transactions}
-                    range={range}
-                />
+                <PricePointAnalysis settings={settings} inRange={inRange} />
             </Section>
 
             <Section
@@ -58,11 +65,7 @@ export default function TransactionHistory() {
                 title="Transactions"
                 description="Every imported sale, with its estimated profit basis."
             >
-                <TransactionsTable
-                    settings={settings}
-                    transactions={transactions}
-                    range={range}
-                />
+                <TransactionsTable settings={settings} inRange={inRange} />
             </Section>
 
             <Section

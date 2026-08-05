@@ -26,10 +26,8 @@ import {
     chartTheme,
 } from "@/admin/components/ui/charts.tsx";
 import {
-    filterByRange,
     pricePointBreakdown,
     type PricePoint,
-    type TimeRange,
 } from "@/admin/domain/salesAnalytics.ts";
 import { useIsDarkMode } from "@/admin/components/useIsDarkMode.ts";
 import type { Settings, Transaction } from "@/admin/domain/types.ts";
@@ -40,19 +38,14 @@ const round2 = (value: number) => Math.round(value * 100) / 100;
 
 interface Props {
     settings: Settings;
-    transactions: Transaction[];
-    range: TimeRange;
+    /** Already filtered to the range by the page. */
+    inRange: Transaction[];
 }
 
-export default function PricePointAnalysis({
-    settings,
-    transactions,
-    range,
-}: Props) {
+export default function PricePointAnalysis({ settings, inRange }: Props) {
     const isDark = useIsDarkMode();
     const theme = chartTheme(isDark);
 
-    const inRange = filterByRange(transactions, range);
     const points = pricePointBreakdown(inRange, settings);
 
     const chartData = points.map((point) => ({

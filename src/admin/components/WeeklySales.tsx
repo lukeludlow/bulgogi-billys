@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
     Bar,
     BarChart,
@@ -40,7 +41,7 @@ export default function WeeklySales() {
     const { settings, setSettings } = useSettings();
     const isDark = useIsDarkMode();
     const theme = chartTheme(isDark);
-    const stats = weeklyStats(settings);
+    const stats = useMemo(() => weeklyStats(settings), [settings]);
 
     function onChangeUnitsSold(
         itemId: string,

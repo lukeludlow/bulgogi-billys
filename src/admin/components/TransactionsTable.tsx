@@ -13,10 +13,8 @@ import {
 import { formatCurrency } from "@/admin/components/ui/format.ts";
 import BasisBadge from "@/admin/components/BasisBadge.tsx";
 import {
-    filterByRange,
     isCountable,
     resolveTransactionProfit,
-    type TimeRange,
 } from "@/admin/domain/salesAnalytics.ts";
 import type { Settings, Transaction } from "@/admin/domain/types.ts";
 import Card from "@/admin/components/ui/Card.tsx";
@@ -25,20 +23,15 @@ const PAGE_SIZE = 12;
 
 interface Props {
     settings: Settings;
-    transactions: Transaction[];
-    range: TimeRange;
+    /** Already filtered to the range by the page. */
+    inRange: Transaction[];
 }
 
-export default function TransactionsTable({
-    settings,
-    transactions,
-    range,
-}: Props) {
+export default function TransactionsTable({ settings, inRange }: Props) {
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(0);
 
     const filtered = useMemo(() => {
-        const inRange = filterByRange(transactions, range);
         const needle = query.trim().toLowerCase();
         return inRange.filter((txn) => {
             if (!needle) return true;
@@ -53,7 +46,7 @@ export default function TransactionsTable({
                 .toLowerCase();
             return haystack.includes(needle);
         });
-    }, [transactions, range, query]);
+    }, [inRange, query]);
 
     const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const clampedPage = Math.min(page, pageCount - 1);

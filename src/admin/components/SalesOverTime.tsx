@@ -18,7 +18,6 @@ import {
 } from "@/admin/components/ui/charts.tsx";
 import {
     bucketByPeriod,
-    filterByRange,
     salesSummary,
     type TimeRange,
 } from "@/admin/domain/salesAnalytics.ts";
@@ -30,19 +29,15 @@ const round2 = (value: number) => Math.round(value * 100) / 100;
 
 interface Props {
     settings: Settings;
-    transactions: Transaction[];
+    /** Already filtered to the range by the page. */
+    inRange: Transaction[];
     range: TimeRange;
 }
 
-export default function SalesOverTime({
-    settings,
-    transactions,
-    range,
-}: Props) {
+export default function SalesOverTime({ settings, inRange, range }: Props) {
     const isDark = useIsDarkMode();
     const theme = chartTheme(isDark);
 
-    const inRange = filterByRange(transactions, range);
     const summary = salesSummary(inRange, settings);
     const buckets = bucketByPeriod(inRange, range.granularity, settings);
 

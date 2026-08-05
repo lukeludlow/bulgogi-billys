@@ -1,10 +1,14 @@
+import { useMemo } from "react";
 import { summaryStats } from "@/admin/domain/calculations.ts";
 import StatCard from "@/admin/components/ui/StatCard.tsx";
 import { formatCurrency, formatPercent } from "@/admin/components/ui/format.ts";
 import type { Settings } from "@/admin/domain/types.ts";
 
 export default function SummaryCards({ settings }: { settings: Settings }) {
-    const stats = summaryStats(settings);
+    // Memoized because useActiveSection sets state on every scroll, re-rendering
+    // this whole subtree; without it each scroll recomputes the analytics. A
+    // settings edit still recomputes, which is correct — the numbers changed.
+    const stats = useMemo(() => summaryStats(settings), [settings]);
 
     return (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

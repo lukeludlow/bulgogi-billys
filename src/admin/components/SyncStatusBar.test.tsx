@@ -7,8 +7,11 @@ import { renderAdminPage } from "@/test/renderAdminPage.tsx";
 // in-memory state, which would navigate the test page away. Hanging here keeps
 // the click observable without letting the redirect run. Hoisted because the
 // vi.mock factory below is lifted above this file's other statements.
-const { signOut } = vi.hoisted(() => ({
+const { signOut, holdSave } = vi.hoisted(() => ({
     signOut: vi.fn(() => new Promise(() => {})),
+    // Lets a test park a config write in flight, so "Saving…" is a state the
+    // assertion can wait for rather than a moment it has to catch.
+    holdSave: { value: false },
 }));
 
 vi.mock("@/admin/data/supabase.ts", () => ({
@@ -23,7 +26,8 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
     return {
         fetchSettings: async () =>
             rowsToSettings(settingsToRows(DEFAULT_SETTINGS)),
-        applyConfig: async () => {},
+        applyConfig: () =>
+            holdSave.value ? new Promise(() => {}) : Promise.resolve(),
     };
 });
 
@@ -43,6 +47,7 @@ vi.mock("@/admin/data/transactions.ts", () => ({
 
 beforeEach(() => {
     signOut.mockClear();
+    holdSave.value = false;
 });
 
 afterEach(() => {
@@ -63,15 +68,24 @@ test("settles on Saved once both engines have loaded", async () => {
     await expect.element(getByText("Saved")).toBeInTheDocument();
 });
 
-test("an edit moves the bar off Saved and back", async () => {
+test("an edit with the write still in flight reads Saving\u2026", async () => {
+    holdSave.value = true;
     const { getByLabelText, getByText } = await renderBar();
     await expect.element(getByText("Saved")).toBeInTheDocument();
 
     await getByLabelText("Bulgogi Fries Small price").fill("13");
 
-    // Dirty and saving both read "Saving…", so this covers the whole window
-    // between the keystroke and the write landing.
-    await expect.element(getByText("Saving…")).toBeInTheDocument();
+    await expect.element(getByText("Saving\u2026")).toBeInTheDocument();
+});
+
+test("the bar returns to Saved once the write lands", async () => {
+    const { getByLabelText, getByText } = await renderBar();
+    await expect.element(getByText("Saved")).toBeInTheDocument();
+
+    const price = getByLabelText("Bulgogi Fries Small price");
+    await price.fill("13");
+
+    await expect.element(price).toHaveValue(13);
     await expect.element(getByText("Saved")).toBeInTheDocument();
 });
 
