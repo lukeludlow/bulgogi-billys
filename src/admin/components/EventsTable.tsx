@@ -33,6 +33,7 @@ import {
     type EventReportRow,
 } from "@/admin/domain/eventAnalytics.ts";
 import NumberField from "@/admin/components/NumberField.tsx";
+import * as mutations from "@/admin/domain/eventMutations.ts";
 import {
     MARKETS,
     type Market,
@@ -44,17 +45,6 @@ interface Props {
     settings: Settings;
     setSettings: (update: (prev: Settings) => Settings) => void;
     report: EventReportRow[];
-}
-
-function emptyEvent(date: string, market: Market): MarketEvent {
-    return {
-        date,
-        market,
-        marketFee: 0,
-        waste: 0,
-        employeeHours: 0,
-        billysHours: 0,
-    };
 }
 
 /** "Sat, Jul 25, 2026" from a "YYYY-MM-DD" key, without UTC-parse day shift. */
@@ -84,91 +74,25 @@ export default function EventsTable({ settings, setSettings, report }: Props) {
         market: Market,
         patch: Partial<MarketEvent>,
     ) {
-        setSettings((prev) => ({
-            ...prev,
-            events: prev.events.map((event) =>
-                event.date === date && event.market === market
-                    ? { ...event, ...patch }
-                    : event,
-            ),
-        }));
+        setSettings((prev) => mutations.updateEvent(prev, date, market, patch));
     }
 
     function addExpenses(date: string, market: Market) {
-        setSettings((prev) => ({
-            ...prev,
-            events: [...prev.events, emptyEvent(date, market)],
-        }));
+        setSettings((prev) => mutations.addExpenses(prev, date, market));
     }
 
     function removeExpenses(date: string, market: Market) {
-        setSettings((prev) => ({
-            ...prev,
-            events: prev.events.filter(
-                (event) => !(event.date === date && event.market === market),
-            ),
-        }));
+        setSettings((prev) => mutations.removeExpenses(prev, date, market));
     }
 
-    /**
-     * Set (or clear, selection = "") the day's market override, and move any
-     * expense row recorded under the old market along with it. If the target
-     * (date, market) already has an expense row, the two are merged by
-     * summing — both describe the same physical day.
-     */
     function overrideMarket(
         date: string,
         currentMarket: Market,
         selection: string,
     ) {
-        setSettings((prev) => {
-            const marketOverrides = { ...prev.marketOverrides };
-            const newMarket =
-                selection === ""
-                    ? marketForDate(parseLocalDate(date))
-                    : (selection as Market);
-            if (selection === "") {
-                delete marketOverrides[date];
-            } else {
-                marketOverrides[date] = selection as Market;
-            }
-
-            let events = prev.events;
-            const moving = prev.events.find(
-                (event) =>
-                    event.date === date && event.market === currentMarket,
-            );
-            if (moving && newMarket !== currentMarket) {
-                const existing = prev.events.find(
-                    (event) =>
-                        event.date === date && event.market === newMarket,
-                );
-                const merged: MarketEvent = existing
-                    ? {
-                          ...existing,
-                          marketFee: existing.marketFee + moving.marketFee,
-                          waste: existing.waste + moving.waste,
-                          employeeHours:
-                              existing.employeeHours + moving.employeeHours,
-                          billysHours:
-                              existing.billysHours + moving.billysHours,
-                      }
-                    : { ...moving, market: newMarket };
-                events = [
-                    ...prev.events.filter(
-                        (event) =>
-                            !(
-                                event.date === date &&
-                                (event.market === currentMarket ||
-                                    event.market === newMarket)
-                            ),
-                    ),
-                    merged,
-                ];
-            }
-
-            return { ...prev, marketOverrides, events };
-        });
+        setSettings((prev) =>
+            mutations.overrideMarket(prev, date, currentMarket, selection),
+        );
     }
 
     const duplicateNewEvent = settings.events.some(

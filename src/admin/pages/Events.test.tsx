@@ -1,4 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
+import { page } from "vitest/browser";
 import Events from "@/admin/pages/Events.tsx";
 import { AdminDataProviders } from "@/admin/AdminLayout.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
@@ -168,6 +169,55 @@ test("overriding a day's market moves its expense row along", async () => {
     await expect
         .element(getByLabelText("Market fee for 2026-07-19 Grogan's Mill"))
         .toBeInTheDocument();
+});
+
+test("removing an event's expenses collapses it back to Add expenses", async () => {
+    const { getByRole, getByLabelText } = await renderEvents();
+
+    await expect
+        .element(getByLabelText("Market fee for 2026-07-19 New Caney"))
+        .toBeInTheDocument();
+
+    await getByRole("button", { name: "Remove expenses" }).click();
+
+    await expect
+        .element(getByLabelText("Market fee for 2026-07-19 New Caney"))
+        .not.toBeInTheDocument();
+    // The day still has sales, so its row stays — only the expense cells go.
+    expect(getByRole("button", { name: "Add expenses" }).all()).toHaveLength(2);
+});
+
+test("the add-event dialog records expenses for a day with no sales", async () => {
+    const { getByRole, getByLabelText } = await renderEvents();
+
+    await getByRole("button", { name: "Add event" }).click();
+    // The dialog renders in a portal outside the render container, and its
+    // fields are named by their visible <Label> (Headless UI's
+    // aria-labelledby wins over the aria-label the markup also sets).
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabelText("Date").fill("2026-07-04");
+    await dialog.getByLabelText("Market").selectOptions("Other");
+    await dialog.getByRole("button", { name: "Add event" }).click();
+
+    await expect
+        .element(getByLabelText("Market fee for 2026-07-04 Other"))
+        .toBeInTheDocument();
+});
+
+test("the add-event dialog refuses a day+market that already has expenses", async () => {
+    const { getByRole } = await renderEvents();
+
+    await getByRole("button", { name: "Add event" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabelText("Date").fill("2026-07-19");
+    await dialog.getByLabelText("Market").selectOptions("New Caney");
+
+    await expect
+        .element(dialog.getByText("That event already has an expense record."))
+        .toBeInTheDocument();
+    await expect
+        .element(dialog.getByRole("button", { name: "Add event" }))
+        .toBeDisabled();
 });
 
 test("purchases can be added and removed", async () => {
