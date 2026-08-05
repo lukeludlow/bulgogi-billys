@@ -26,27 +26,33 @@ import {
     chartTheme,
 } from "@/admin/components/ui/charts.tsx";
 import { weeklyStats } from "@/admin/domain/calculations.ts";
+import * as mutations from "@/admin/domain/settingsMutations.ts";
 import { formatCurrency } from "@/admin/components/ui/format.ts";
 import { useIsDarkMode } from "@/admin/components/useIsDarkMode.ts";
-import type { Settings } from "@/admin/domain/types.ts";
+import { useSettings } from "@/admin/SettingsContext.tsx";
 import Card from "@/admin/components/ui/Card.tsx";
 import EmptyState from "@/admin/components/ui/EmptyState.tsx";
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
-interface Props {
-    settings: Settings;
-    onChangeUnitsSold: (
-        itemId: string,
-        variantId: string,
-        value: number,
-    ) => void;
-}
-
-export default function WeeklySales({ settings, onChangeUnitsSold }: Props) {
+/** This week's units sold, and the revenue and profit they add up to. */
+export default function WeeklySales() {
+    const { settings, setSettings } = useSettings();
     const isDark = useIsDarkMode();
     const theme = chartTheme(isDark);
     const stats = weeklyStats(settings);
+
+    function onChangeUnitsSold(
+        itemId: string,
+        variantId: string,
+        value: number,
+    ) {
+        setSettings((prev) =>
+            mutations.updateVariant(prev, itemId, variantId, {
+                unitsSoldThisWeek: value,
+            }),
+        );
+    }
 
     const chartData = stats.lines
         .filter((line) => line.unitsSold > 0)

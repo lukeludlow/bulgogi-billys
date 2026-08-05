@@ -12,32 +12,47 @@ import { Select } from "@/shared/catalyst-ui-kit/select.tsx";
 import NumberField from "@/admin/components/NumberField.tsx";
 import BatchEditor from "@/admin/components/BatchEditor.tsx";
 import { effectiveCostPerUnit } from "@/admin/domain/calculations.ts";
+import * as mutations from "@/admin/domain/settingsMutations.ts";
 import { formatCurrency } from "@/admin/components/ui/format.ts";
+import { useSettings } from "@/admin/SettingsContext.tsx";
 import type { BatchLine, Ingredient, Unit } from "@/admin/domain/types.ts";
 
 const UNITS: Unit[] = ["lb", "oz", "each"];
 
-interface Props {
-    ingredients: Ingredient[];
-    onChange: (id: string, patch: Partial<Ingredient>) => void;
-    onChangeBatchYield: (id: string, value: number) => void;
-    onChangeBatchLine: (
+/**
+ * What each ingredient costs, priced per unit or derived from a batch. Every
+ * edit goes through the pure mutators in settingsMutations.ts.
+ */
+export default function IngredientsEditor() {
+    const { settings, setSettings } = useSettings();
+    const ingredients = settings.ingredients;
+
+    function onChange(id: string, patch: Partial<Ingredient>) {
+        setSettings((prev) => mutations.updateIngredient(prev, id, patch));
+    }
+
+    function onChangeBatchYield(id: string, value: number) {
+        setSettings((prev) => mutations.updateBatchYield(prev, id, value));
+    }
+
+    function onChangeBatchLine(
         id: string,
         lineId: string,
         patch: Partial<BatchLine>,
-    ) => void;
-    onAddBatchLine: (id: string) => void;
-    onRemoveBatchLine: (id: string, lineId: string) => void;
-}
+    ) {
+        setSettings((prev) =>
+            mutations.updateBatchLine(prev, id, lineId, patch),
+        );
+    }
 
-export default function IngredientsEditor({
-    ingredients,
-    onChange,
-    onChangeBatchYield,
-    onChangeBatchLine,
-    onAddBatchLine,
-    onRemoveBatchLine,
-}: Props) {
+    function onAddBatchLine(id: string) {
+        setSettings((prev) => mutations.addBatchLine(prev, id));
+    }
+
+    function onRemoveBatchLine(id: string, lineId: string) {
+        setSettings((prev) => mutations.removeBatchLine(prev, id, lineId));
+    }
+
     return (
         <Table dense striped className="[--gutter:--spacing(4)]">
             <TableHead>
