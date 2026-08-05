@@ -9,10 +9,9 @@ import SalesOverTime from "@/admin/components/SalesOverTime.tsx";
 import TimeRangeSelector from "@/admin/components/TimeRangeSelector.tsx";
 import TransactionsTable from "@/admin/components/TransactionsTable.tsx";
 import type { NavSection } from "@/admin/components/DashboardNav.tsx";
-import { mergeTransactions } from "@/admin/import/mergeTransactions.ts";
 import type { TimeRange } from "@/admin/domain/salesAnalytics.ts";
 import { useSettings } from "@/admin/SettingsContext.tsx";
-import type { Transaction } from "@/admin/domain/types.ts";
+import { useTransactions } from "@/admin/TransactionsContext.tsx";
 
 const SECTIONS: NavSection[] = [
     { id: "sales-over-time", label: "Sales Over Time" },
@@ -24,19 +23,12 @@ const SECTIONS: NavSection[] = [
 
 export default function TransactionHistory() {
     const { settings, setSettings } = useSettings();
+    const { transactions, importTransactions } = useTransactions();
     // The one range that drives every analytics section on this page.
     const [range, setRange] = useState<TimeRange>({
         window: "90d",
         granularity: "week",
     });
-
-    function mergeImportedTransactions(incoming: Transaction[]) {
-        setSettings((prev) => ({
-            ...prev,
-            transactions: mergeTransactions(prev.transactions, incoming)
-                .transactions,
-        }));
-    }
 
     return (
         <DashboardShell
@@ -61,7 +53,11 @@ export default function TransactionHistory() {
                 title="Sales over time"
                 description="Real revenue and estimated profit per day, week, or month."
             >
-                <SalesOverTime settings={settings} range={range} />
+                <SalesOverTime
+                    settings={settings}
+                    transactions={transactions}
+                    range={range}
+                />
             </Section>
 
             <Section
@@ -69,7 +65,11 @@ export default function TransactionHistory() {
                 title="Price points"
                 description="How many orders landed at each price, and the profit each price generated — the view for experimenting with price vs. volume."
             >
-                <PricePointAnalysis settings={settings} range={range} />
+                <PricePointAnalysis
+                    settings={settings}
+                    transactions={transactions}
+                    range={range}
+                />
             </Section>
 
             <Section
@@ -77,7 +77,11 @@ export default function TransactionHistory() {
                 title="Transactions"
                 description="Every imported sale, with its estimated profit basis."
             >
-                <TransactionsTable settings={settings} range={range} />
+                <TransactionsTable
+                    settings={settings}
+                    transactions={transactions}
+                    range={range}
+                />
             </Section>
 
             <Section
@@ -86,8 +90,8 @@ export default function TransactionHistory() {
                 description="Upload your processor's transactions CSV to drive the charts above with real numbers. Re-imports are safe — sales are deduped."
             >
                 <ImportData
-                    settings={settings}
-                    onImportTransactions={mergeImportedTransactions}
+                    transactions={transactions}
+                    onImportTransactions={importTransactions}
                 />
             </Section>
 

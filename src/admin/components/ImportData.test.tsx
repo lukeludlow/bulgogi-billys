@@ -85,7 +85,7 @@ test("CSV upload previews the batch, and confirming imports only the new sales",
 
     await getByRole("button", { name: "Import 1 sales" }).click();
     await expect
-        .element(getByText("Imported 1 new sales. Saved automatically."))
+        .element(getByText("Imported 1 new sales."))
         .toBeInTheDocument();
 
     // Only the genuinely new row reaches the database, insert-only so
@@ -131,12 +131,35 @@ test("an all-duplicates batch confirms without touching the database", async () 
 
     await getByRole("button", { name: "Import 0 sales" }).click();
     await expect
-        .element(getByText("Imported 0 new sales. Saved automatically."))
+        .element(getByText("Imported 0 new sales."))
         .toBeInTheDocument();
 
-    // Wait out the autosave debounce before asserting nothing was written.
+    // Give any stray write a beat to land before asserting none did.
     await new Promise((resolve) => setTimeout(resolve, 1600));
     expect(transactionUpserts()).toHaveLength(0);
+    await expect.element(getByText("1 transaction")).toBeInTheDocument();
+});
+
+test("a failed import keeps the preview and reports that nothing was saved", async () => {
+    const { getByLabelText, getByRole, getByText } = await renderHistory();
+    await expect.element(getByText("1 transaction")).toBeInTheDocument();
+
+    await getByLabelText("Transactions CSV file").upload(csvFile(CSV_ONE_NEW));
+    // Reject the write only now — after the initial load has succeeded.
+    stub.errors.set("transactions", "permission denied");
+    await getByRole("button", { name: "Import 1 sales" }).click();
+
+    await expect
+        .element(
+            getByText(
+                "Import failed — nothing was saved. Check your connection and try again.",
+            ),
+        )
+        .toBeInTheDocument();
+    // The preview survives for a one-click retry, and nothing was merged.
+    await expect
+        .element(getByRole("button", { name: "Import 1 sales" }))
+        .toBeInTheDocument();
     await expect.element(getByText("1 transaction")).toBeInTheDocument();
 });
 

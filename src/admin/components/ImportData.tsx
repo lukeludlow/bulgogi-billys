@@ -3,11 +3,12 @@ import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
 import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
 import { parseTransactionsCsv } from "@/admin/import/parseTransactionsCsv.ts";
 import { mergeTransactions } from "@/admin/import/mergeTransactions.ts";
-import type { Settings, Transaction } from "@/admin/domain/types.ts";
+import type { MergeResult } from "@/admin/import/mergeTransactions.ts";
+import type { Transaction } from "@/admin/domain/types.ts";
 
 interface Props {
-    settings: Settings;
-    onImportTransactions: (transactions: Transaction[]) => void;
+    transactions: Transaction[];
+    onImportTransactions: (transactions: Transaction[]) => Promise<MergeResult>;
 }
 
 interface TxnPreview {
@@ -20,8 +21,12 @@ interface TxnPreview {
 const inputClass =
     "block w-full text-sm text-zinc-600 dark:text-zinc-300 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200 dark:file:bg-white/10 dark:file:text-zinc-200 dark:hover:file:bg-white/15";
 
-export default function ImportData({ settings, onImportTransactions }: Props) {
+export default function ImportData({
+    transactions,
+    onImportTransactions,
+}: Props) {
     const [txnPreview, setTxnPreview] = useState<TxnPreview | null>(null);
+    const [importing, setImporting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [done, setDone] = useState<string | null>(null);
 
@@ -29,31 +34,39 @@ export default function ImportData({ settings, onImportTransactions }: Props) {
         setError(null);
         setDone(null);
         try {
-            const transactions = parseTransactionsCsv(await file.text());
-            if (transactions.length === 0) {
+            const parsed = parseTransactionsCsv(await file.text());
+            if (parsed.length === 0) {
                 setError("No transactions found in that file.");
                 return;
             }
-            const merge = mergeTransactions(
-                settings.transactions,
-                transactions,
-            );
+            const merge = mergeTransactions(transactions, parsed);
             setTxnPreview({
-                transactions,
+                transactions: parsed,
                 added: merge.added,
                 duplicates: merge.duplicates,
-                range: dateRange(transactions),
+                range: dateRange(parsed),
             });
         } catch (e) {
             setError(errorMessage(e));
         }
     }
 
-    function confirmTxns() {
-        if (!txnPreview) return;
-        onImportTransactions(txnPreview.transactions);
-        setDone(`Imported ${txnPreview.added} new sales.`);
-        setTxnPreview(null);
+    async function confirmTxns() {
+        if (!txnPreview || importing) return;
+        setImporting(true);
+        setError(null);
+        try {
+            const result = await onImportTransactions(txnPreview.transactions);
+            setDone(`Imported ${result.added} new sales.`);
+            setTxnPreview(null);
+        } catch {
+            // Keep the preview so the import is one click away from a retry.
+            setError(
+                "Import failed — nothing was saved. Check your connection and try again.",
+            );
+        } finally {
+            setImporting(false);
+        }
     }
 
     return (
@@ -70,6 +83,7 @@ export default function ImportData({ settings, onImportTransactions }: Props) {
                     type="file"
                     accept=".csv,text/csv"
                     aria-label="Transactions CSV file"
+                    disabled={importing}
                     className={`mt-3 ${inputClass}`}
                     onChange={(event) => {
                         const file = event.target.files?.[0];
@@ -90,9 +104,12 @@ export default function ImportData({ settings, onImportTransactions }: Props) {
                         <Button
                             color="orange"
                             className="mt-3"
-                            onClick={confirmTxns}
+                            disabled={importing}
+                            onClick={() => void confirmTxns()}
                         >
-                            Import {txnPreview.added} sales
+                            {importing
+                                ? "Importing…"
+                                : `Import ${txnPreview.added} sales`}
                         </Button>
                     </div>
                 )}
@@ -106,7 +123,7 @@ export default function ImportData({ settings, onImportTransactions }: Props) {
                 )}
                 {done && (
                     <span className="text-green-700 dark:text-green-400">
-                        {done} Saved automatically.
+                        {done}
                     </span>
                 )}
             </div>

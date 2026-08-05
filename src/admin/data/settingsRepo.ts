@@ -21,7 +21,6 @@ import {
     type PurchaseRow,
     type RecipeLineRow,
     type SettingsRow,
-    type TransactionRow,
     type VariantRow,
 } from "./rows.ts";
 
@@ -34,7 +33,6 @@ export async function fetchSettings(): Promise<Settings | null> {
         menuItems,
         variants,
         recipeLines,
-        transactions,
         events,
         purchases,
         marketOverrides,
@@ -71,7 +69,6 @@ export async function fetchSettings(): Promise<Settings | null> {
             .select("*")
             .order("position")
             .then(unwrap<RecipeLineRow[]>),
-        fetchAllRows<TransactionRow>("transactions", "date", "id"),
         fetchAllRows<EventRow>("events", "date", "market"),
         fetchAllRows<PurchaseRow>("purchases", "date", "id"),
         // One row per corrected day, growing without bound — paged like the
@@ -97,7 +94,6 @@ export async function fetchSettings(): Promise<Settings | null> {
         menuItems,
         variants,
         recipeLines,
-        transactions,
         events,
         purchases,
         marketOverrides,
@@ -241,18 +237,6 @@ export async function applyChangeSet(changeSet: ChangeSet): Promise<void> {
             await supabase
                 .from("market_settings")
                 .upsert(changeSet.marketSettings),
-        );
-    }
-
-    if (changeSet.transactionInserts) {
-        // ignoreDuplicates: existing rows win, matching mergeTransactions.
-        unwrap(
-            await supabase
-                .from("transactions")
-                .upsert(changeSet.transactionInserts, {
-                    onConflict: "id",
-                    ignoreDuplicates: true,
-                }),
         );
     }
 }

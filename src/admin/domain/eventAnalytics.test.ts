@@ -340,18 +340,19 @@ const SETTINGS: Settings = {
     blendedFoodCostPercent: 50,
     salesTaxRatePercent: 0,
     employeeHourlyRate: 10,
-    transactions: [
-        sale("1", new Date(2026, 6, 25), 10), // Saturday → Grogan's Mill
-        sale("2", new Date(2026, 6, 25), 10),
-        { ...sale("3", new Date(2026, 6, 25), 10), result: "Declined" },
-        sale("4", new Date(2026, 6, 19), 10), // 3rd Sunday → New Caney
-    ],
     events: [SATURDAY_EXPENSES],
 };
 
+const TRANSACTIONS: Transaction[] = [
+    sale("1", new Date(2026, 6, 25), 10), // Saturday → Grogan's Mill
+    sale("2", new Date(2026, 6, 25), 10),
+    { ...sale("3", new Date(2026, 6, 25), 10), result: "Declined" },
+    sale("4", new Date(2026, 6, 19), 10), // 3rd Sunday → New Caney
+];
+
 describe("buildEventReport", () => {
     test("groups sales into events and computes contribution", () => {
-        const report = buildEventReport(SETTINGS);
+        const report = buildEventReport(TRANSACTIONS, SETTINGS);
         expect(report).toHaveLength(2);
 
         const saturday = report.find((row) => row.market === "grogans-mill")!;
@@ -374,7 +375,7 @@ describe("buildEventReport", () => {
     });
 
     test("applies the sales-tax rate to pre-tax sales and contribution", () => {
-        const taxed = buildEventReport({
+        const taxed = buildEventReport(TRANSACTIONS, {
             ...SETTINGS,
             salesTaxRatePercent: 25,
         });
@@ -385,10 +386,7 @@ describe("buildEventReport", () => {
     });
 
     test("an expense row with no sales still produces a report row", () => {
-        const report = buildEventReport({
-            ...SETTINGS,
-            transactions: [],
-        });
+        const report = buildEventReport([], SETTINGS);
         expect(report).toHaveLength(1);
         const row = report[0];
         expect(row.orders).toBe(0);
@@ -397,7 +395,7 @@ describe("buildEventReport", () => {
     });
 
     test("a market override re-tags the day's sales and expense row", () => {
-        const report = buildEventReport({
+        const report = buildEventReport(TRANSACTIONS, {
             ...SETTINGS,
             events: [{ ...SATURDAY_EXPENSES, market: "new-caney" }],
             marketOverrides: { "2026-07-25": "new-caney" },
@@ -413,7 +411,7 @@ describe("buildEventReport", () => {
     });
 
     test("allocated purchases and fees land on events without expense rows", () => {
-        const report = buildEventReport({
+        const report = buildEventReport(TRANSACTIONS, {
             ...SETTINGS,
             purchases: [purchase("p1", "2026-07-19", "propane", 8)],
             processorFees: [{ month: "2026-07", amount: 6 }],
@@ -430,8 +428,8 @@ describe("buildEventReport", () => {
     });
 
     test("food purchases show as reference but never hit contribution", () => {
-        const base = buildEventReport(SETTINGS);
-        const withFood = buildEventReport({
+        const base = buildEventReport(TRANSACTIONS, SETTINGS);
+        const withFood = buildEventReport(TRANSACTIONS, {
             ...SETTINGS,
             purchases: [purchase("p1", "2026-07-19", "food", 100)],
         });
@@ -443,7 +441,7 @@ describe("buildEventReport", () => {
     });
 
     test("labor uses the per-market rate when set, global otherwise", () => {
-        const report = buildEventReport({
+        const report = buildEventReport(TRANSACTIONS, {
             ...SETTINGS,
             marketHourlyRates: {
                 ...SETTINGS.marketHourlyRates,
@@ -457,7 +455,7 @@ describe("buildEventReport", () => {
     });
 
     test("rows are sorted newest-first", () => {
-        const report = buildEventReport(SETTINGS);
+        const report = buildEventReport(TRANSACTIONS, SETTINGS);
         expect(report.map((row) => row.date)).toEqual([
             "2026-07-25",
             "2026-07-19",
@@ -467,7 +465,7 @@ describe("buildEventReport", () => {
 
 describe("buildEventAllocations", () => {
     test("surfaces unallocated purchase and fee totals", () => {
-        const { purchases, fees } = buildEventAllocations({
+        const { purchases, fees } = buildEventAllocations(TRANSACTIONS, {
             ...SETTINGS,
             purchases: [purchase("p1", "2026-07-28", "fuel", 45)],
             processorFees: [{ month: "2026-05", amount: 33 }],
@@ -486,7 +484,10 @@ describe("rollupByMarket", () => {
                 "grogans-mill": "core",
             },
         };
-        const rollups = rollupByMarket(buildEventReport(settings), settings);
+        const rollups = rollupByMarket(
+            buildEventReport(TRANSACTIONS, settings),
+            settings,
+        );
 
         expect(rollups.map((rollup) => rollup.market)).toEqual([
             "grogans-mill",

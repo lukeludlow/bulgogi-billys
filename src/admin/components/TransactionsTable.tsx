@@ -24,15 +24,20 @@ const PAGE_SIZE = 12;
 
 interface Props {
     settings: Settings;
+    transactions: Transaction[];
     range: TimeRange;
 }
 
-export default function TransactionsTable({ settings, range }: Props) {
+export default function TransactionsTable({
+    settings,
+    transactions,
+    range,
+}: Props) {
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(0);
 
     const filtered = useMemo(() => {
-        const inRange = filterByRange(settings.transactions, range);
+        const inRange = filterByRange(transactions, range);
         const needle = query.trim().toLowerCase();
         return inRange.filter((txn) => {
             if (!needle) return true;
@@ -47,7 +52,7 @@ export default function TransactionsTable({ settings, range }: Props) {
                 .toLowerCase();
             return haystack.includes(needle);
         });
-    }, [settings.transactions, range, query]);
+    }, [transactions, range, query]);
 
     const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const clampedPage = Math.min(page, pageCount - 1);

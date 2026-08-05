@@ -170,8 +170,6 @@ export interface Settings {
     groceryWeeklySpend: number;
     /** Packaging/container cost added to every order, in dollars. */
     packagingCostPerOrder: number;
-    /** Real sales history imported from the processor, deduped by `id`. */
-    transactions: Transaction[];
     /**
      * Food cost as a percent of price, used to estimate profit for a sale whose
      * amount matches no menu price. e.g. 32 = 32%.

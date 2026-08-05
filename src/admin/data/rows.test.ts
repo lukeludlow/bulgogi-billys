@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
 import { PROTEIN_INGREDIENT_ID, type Settings } from "@/admin/domain/types.ts";
-import { rowsToSettings, settingsToRows, transactionToRow } from "./rows.ts";
+import { rowsToSettings, settingsToRows } from "./rows.ts";
 
 /** The canonical shape settings take after one trip through the mappers. */
 function normalize(settings: Settings): Settings {
@@ -75,45 +75,6 @@ describe("settingsToRows / rowsToSettings", () => {
         const beef = normalized.ingredients.find((i) => i.id === "beef")!;
         expect(beef.pricing).toBe("direct");
         expect(beef.batch).toBeUndefined();
-    });
-
-    test("transaction brand maps between undefined and null", () => {
-        const withBrand = transactionToRow({
-            id: "1",
-            date: "2026-07-11T17:19:00.000Z",
-            amount: 9,
-            type: "Sale",
-            result: "Approved",
-            method: "Tapped",
-            brand: "Visa",
-        });
-        expect(withBrand.brand).toBe("Visa");
-
-        const cashRow = transactionToRow({
-            id: "2",
-            date: "2026-07-11T17:20:00.000Z",
-            amount: 7,
-            type: "Sale",
-            result: "Approved",
-            method: "Cash",
-        });
-        expect(cashRow.brand).toBeNull();
-
-        const settings: Settings = {
-            ...DEFAULT_SETTINGS,
-            transactions: [
-                {
-                    id: "2",
-                    date: "2026-07-11T17:20:00.000Z",
-                    amount: 7,
-                    type: "Sale",
-                    result: "Approved",
-                    method: "Cash",
-                },
-            ],
-        };
-        const back = normalize(settings).transactions[0];
-        expect("brand" in back).toBe(false);
     });
 
     test("events and classifications survive the round-trip", () => {
@@ -301,28 +262,6 @@ describe("settingsToRows / rowsToSettings", () => {
         expect(settings.marketClassifications["grogans-mill"]).toBeNull();
         expect(Object.keys(settings.marketClassifications)).not.toContain(
             "narnia",
-        );
-    });
-
-    test("timestamptz-style dates normalize back to the parser's ISO format", () => {
-        const settings: Settings = {
-            ...DEFAULT_SETTINGS,
-            transactions: [
-                {
-                    id: "1",
-                    date: "2026-07-11T17:19:00.000Z",
-                    amount: 9,
-                    type: "Sale",
-                    result: "Approved",
-                    method: "Tapped",
-                },
-            ],
-        };
-        const snapshot = settingsToRows(settings);
-        // Postgres returns timestamptz with an offset, not a Z suffix.
-        snapshot.transactions[0].date = "2026-07-11T17:19:00+00:00";
-        expect(rowsToSettings(snapshot).transactions[0].date).toBe(
-            "2026-07-11T17:19:00.000Z",
         );
     });
 });

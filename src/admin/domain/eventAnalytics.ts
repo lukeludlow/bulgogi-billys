@@ -285,10 +285,13 @@ interface SalesAccumulator {
 }
 
 /** Countable sales bucketed by `${date} ${market}` (override-aware). */
-function bucketSales(settings: Settings): Map<string, SalesAccumulator> {
+function bucketSales(
+    transactions: Transaction[],
+    settings: Settings,
+): Map<string, SalesAccumulator> {
     const index = buildProfitIndex(settings);
     const sales = new Map<string, SalesAccumulator>();
-    for (const txn of settings.transactions) {
+    for (const txn of transactions) {
         if (!isCountable(txn)) continue;
         const dateKey = localDateKey(txn.date);
         const key = `${dateKey} ${resolveMarket(dateKey, settings.marketOverrides)}`;
@@ -338,8 +341,14 @@ export interface EventAllocations {
  * The purchase and fee allocations for the current settings — used inside
  * buildEventReport, and by the editors to surface unallocated totals.
  */
-export function buildEventAllocations(settings: Settings): EventAllocations {
-    const events = allocationEvents(bucketSales(settings), settings);
+export function buildEventAllocations(
+    transactions: Transaction[],
+    settings: Settings,
+): EventAllocations {
+    const events = allocationEvents(
+        bucketSales(transactions, settings),
+        settings,
+    );
     return {
         purchases: allocatePurchases(settings.purchases, events),
         fees: allocateProcessorFees(settings.processorFees, events),
@@ -352,8 +361,11 @@ export function buildEventAllocations(settings: Settings): EventAllocations {
  * future booking — still shows up, with a negative contribution).
  * Sorted newest-first.
  */
-export function buildEventReport(settings: Settings): EventReportRow[] {
-    const sales = bucketSales(settings);
+export function buildEventReport(
+    transactions: Transaction[],
+    settings: Settings,
+): EventReportRow[] {
+    const sales = bucketSales(transactions, settings);
     const expenseRows = new Map(
         settings.events.map((event) => [
             `${event.date} ${event.market}`,

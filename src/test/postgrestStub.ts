@@ -82,7 +82,6 @@ export function seedSettingsTables(settings: Settings) {
     data.set("menu_items", snapshot.menuItems);
     data.set("variants", snapshot.variants);
     data.set("recipe_lines", snapshot.recipeLines);
-    data.set("transactions", snapshot.transactions);
     data.set("events", snapshot.events);
     data.set("purchases", snapshot.purchases);
     data.set("market_overrides", snapshot.marketOverrides);

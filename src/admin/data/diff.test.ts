@@ -1,11 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { DEFAULT_SETTINGS } from "@/test/fixtures/defaultSettings.ts";
-import type {
-    MarketEvent,
-    Purchase,
-    Settings,
-    Transaction,
-} from "@/admin/domain/types.ts";
+import type { MarketEvent, Purchase, Settings } from "@/admin/domain/types.ts";
 import { computeChangeSet, isEmptyChangeSet } from "./diff.ts";
 import { rowsToSettings, settingsToRows } from "./rows.ts";
 
@@ -35,17 +30,6 @@ const EVENTS_BASE: Settings = {
     ],
 };
 
-function makeTransaction(id: string): Transaction {
-    return {
-        id,
-        date: "2026-07-11T17:19:00.000Z",
-        amount: 9,
-        type: "Sale",
-        result: "Approved",
-        method: "Tapped",
-    };
-}
-
 describe("computeChangeSet", () => {
     test("identical settings produce an empty change set", () => {
         const changeSet = computeChangeSet(BASE, structuredClone(BASE));
@@ -57,7 +41,6 @@ describe("computeChangeSet", () => {
         const changeSet = computeChangeSet(BASE, next);
         expect(changeSet.settings?.grocery_weekly_spend).toBe(500);
         expect(changeSet.config).toBeUndefined();
-        expect(changeSet.transactionInserts).toBeUndefined();
     });
 
     test("an ingredient edit emits the config block and nothing else", () => {
@@ -68,7 +51,6 @@ describe("computeChangeSet", () => {
         expect(changeSet.config?.ingredients[0].cost_per_unit).toBe(8.5);
         expect(changeSet.config?.ingredientDeletes).toEqual([]);
         expect(changeSet.settings).toBeUndefined();
-        expect(changeSet.transactionInserts).toBeUndefined();
     });
 
     test("a removed variant shows up in variantDeletes", () => {
@@ -85,18 +67,6 @@ describe("computeChangeSet", () => {
         const removed = next.ingredients.pop()!;
         const changeSet = computeChangeSet(BASE, next);
         expect(changeSet.config?.ingredientDeletes).toEqual([removed.id]);
-    });
-
-    test("imported transactions become inserts only", () => {
-        const prev = { ...BASE, transactions: [makeTransaction("1")] };
-        const next = {
-            ...BASE,
-            transactions: [makeTransaction("1"), makeTransaction("2")],
-        };
-        const changeSet = computeChangeSet(prev, next);
-        expect(changeSet.transactionInserts?.map((t) => t.id)).toEqual(["2"]);
-        expect(changeSet.config).toBeUndefined();
-        expect(changeSet.settings).toBeUndefined();
     });
 
     test("editing one event upserts exactly that row", () => {
@@ -260,17 +230,5 @@ describe("computeChangeSet", () => {
         const changeSet = computeChangeSet(BASE, next);
         expect(changeSet.settings?.employee_hourly_rate).toBe(15);
         expect(changeSet.settings?.sales_tax_rate_percent).toBe(6.25);
-    });
-
-    test("removed transactions never produce deletes or writes", () => {
-        // Safety property: a stale snapshot (e.g. the recovery journal) that
-        // lacks transactions the DB already has must not remove them.
-        const prev = {
-            ...BASE,
-            transactions: [makeTransaction("1"), makeTransaction("2")],
-        };
-        const next = { ...BASE, transactions: [makeTransaction("1")] };
-        const changeSet = computeChangeSet(prev, next);
-        expect(isEmptyChangeSet(changeSet)).toBe(true);
     });
 });

@@ -5,8 +5,8 @@ import ProfitCalculator from "@/admin/pages/ProfitCalculator.tsx";
 import TransactionHistory from "@/admin/pages/TransactionHistory.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 
-// Resolve the provider's mount-load instantly with the defaults so the pages
-// render without a database.
+// Resolve the providers' mount-loads instantly so the pages render without
+// a database.
 vi.mock("@/admin/data/settingsRepo.ts", async () => {
     const { DEFAULT_SETTINGS } =
         await import("@/test/fixtures/defaultSettings.ts");
@@ -18,6 +18,11 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
         applyChangeSet: async () => {},
     };
 });
+
+vi.mock("@/admin/data/transactions.ts", () => ({
+    fetchAllTransactions: async () => [],
+    importTransactions: async () => {},
+}));
 
 afterEach(() => {
     localStorage.removeItem("bb_admin_pending");

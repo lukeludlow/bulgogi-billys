@@ -31,7 +31,6 @@ describe("fetchSettings", () => {
             "menu_items",
             "variants",
             "recipe_lines",
-            "transactions",
             "events",
             "purchases",
             "market_overrides",
@@ -47,60 +46,13 @@ describe("fetchSettings", () => {
         seedSettingsTables(DEFAULT_SETTINGS);
     }
 
-    test("assembles a full Settings object from the twelve tables", async () => {
+    test("assembles a full Settings object from the eleven tables", async () => {
         seedAllTables();
         expect(await fetchSettings()).toEqual(BASE);
     });
 
     test("throws when a select fails", async () => {
         stub.errors.set("ingredients", "permission denied");
-        await expect(fetchSettings()).rejects.toThrow("permission denied");
-    });
-
-    test("pages past the 1000-row cap to load every transaction", async () => {
-        seedAllTables();
-        stub.data.set(
-            "transactions",
-            Array.from({ length: 2500 }, (_, index) => ({
-                id: String(index),
-                date: "2026-07-11T17:19:00.000Z",
-                amount: 1,
-                type: "Sale",
-                result: "Approved",
-                method: "Tapped",
-                brand: null,
-            })),
-        );
-
-        const settings = await fetchSettings();
-        expect(settings!.transactions).toHaveLength(2500);
-        expect(settings!.transactions.map((txn) => txn.id)).toEqual(
-            Array.from({ length: 2500 }, (_, index) => String(index)),
-        );
-
-        const rangeCalls = stub.calls.filter(
-            (call) => call.table === "transactions" && call.method === "range",
-        );
-        expect(rangeCalls.map((call) => call.args)).toEqual([
-            [0, 999],
-            [1000, 1999],
-            [2000, 2999],
-        ]);
-    });
-
-    test("fetches a single page when transactions fit within the cap", async () => {
-        seedAllTables();
-        await fetchSettings();
-
-        const rangeCalls = stub.calls.filter(
-            (call) => call.table === "transactions" && call.method === "range",
-        );
-        expect(rangeCalls.map((call) => call.args)).toEqual([[0, 999]]);
-    });
-
-    test("propagates errors from paginated fetches", async () => {
-        seedAllTables();
-        stub.errors.set("transactions", "permission denied");
         await expect(fetchSettings()).rejects.toThrow("permission denied");
     });
 
@@ -163,30 +115,6 @@ describe("applyChangeSet", () => {
             (call) => call.table === "variants" && call.method === "upsert",
         )!;
         expect(variantUpsert.args[1]).toEqual({ onConflict: "item_id,id" });
-    });
-
-    test("transaction inserts ignore duplicates so existing rows win", async () => {
-        const next = structuredClone(BASE);
-        next.transactions = [
-            {
-                id: "42",
-                date: "2026-07-11T17:19:00.000Z",
-                amount: 9,
-                type: "Sale",
-                result: "Approved",
-                method: "Tapped",
-            },
-        ];
-        await applyChangeSet(computeChangeSet(BASE, next));
-
-        expect(mutationOrder()).toEqual(["transactions.upsert"]);
-        const upsert = stub.calls.find(
-            (call) => call.table === "transactions" && call.method === "upsert",
-        )!;
-        expect(upsert.args[1]).toEqual({
-            onConflict: "id",
-            ignoreDuplicates: true,
-        });
     });
 
     test("event edits upsert by composite key and delete per key", async () => {

@@ -15,6 +15,7 @@ import {
     buildEventReport,
 } from "@/admin/domain/eventAnalytics.ts";
 import { useSettings } from "@/admin/SettingsContext.tsx";
+import { useTransactions } from "@/admin/TransactionsContext.tsx";
 import { MARKETS } from "@/admin/domain/types.ts";
 
 const SECTIONS: NavSection[] = [
@@ -26,11 +27,15 @@ const SECTIONS: NavSection[] = [
 
 export default function Events() {
     const { settings, setSettings } = useSettings();
+    const { transactions } = useTransactions();
 
-    const report = useMemo(() => buildEventReport(settings), [settings]);
+    const report = useMemo(
+        () => buildEventReport(transactions, settings),
+        [transactions, settings],
+    );
     const allocations = useMemo(
-        () => buildEventAllocations(settings),
-        [settings],
+        () => buildEventAllocations(transactions, settings),
+        [transactions, settings],
     );
 
     return (

@@ -1,25 +1,17 @@
 import { afterEach, expect, test, vi } from "vitest";
 import Events from "@/admin/pages/Events.tsx";
-import { SettingsProvider } from "@/admin/SettingsContext.tsx";
+import { AdminDataProviders } from "@/admin/AdminLayout.tsx";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
 
-// Resolve the provider's mount-load instantly with fixture data: one Saturday
-// sale with no expense record yet, and one Sunday sale whose event already
-// has expenses. Simple rates keep the contribution math exact — a $10 sale
-// matches no menu price, so blended 50% makes its food cost $5.
+// Resolve both providers' mount-loads instantly with fixture data: one
+// Saturday sale with no expense record yet, and one Sunday sale whose event
+// already has expenses. Simple rates keep the contribution math exact — a
+// $10 sale matches no menu price, so blended 50% makes its food cost $5.
 vi.mock("@/admin/data/settingsRepo.ts", async () => {
     const { DEFAULT_SETTINGS } =
         await import("@/test/fixtures/defaultSettings.ts");
     const { rowsToSettings, settingsToRows } =
         await import("@/admin/data/rows.ts");
-    const sale = (id: string, year: number, month: number, day: number) => ({
-        id,
-        date: new Date(year, month, day, 12).toISOString(),
-        amount: 10,
-        type: "Sale",
-        result: "Approved",
-        method: "Tapped",
-    });
     const fixture = () =>
         rowsToSettings(
             settingsToRows({
@@ -27,12 +19,6 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
                 blendedFoodCostPercent: 50,
                 salesTaxRatePercent: 0,
                 employeeHourlyRate: 10,
-                transactions: [
-                    // 2026-07-25 is a Saturday → Grogan's Mill.
-                    sale("1", 2026, 6, 25),
-                    // 2026-07-19 is the 3rd Sunday → New Caney.
-                    sale("2", 2026, 6, 19),
-                ],
                 events: [
                     {
                         date: "2026-07-19",
@@ -51,15 +37,35 @@ vi.mock("@/admin/data/settingsRepo.ts", async () => {
     };
 });
 
+vi.mock("@/admin/data/transactions.ts", () => {
+    const sale = (id: string, year: number, month: number, day: number) => ({
+        id,
+        date: new Date(year, month, day, 12).toISOString(),
+        amount: 10,
+        type: "Sale",
+        result: "Approved",
+        method: "Tapped",
+    });
+    return {
+        fetchAllTransactions: async () => [
+            // 2026-07-25 is a Saturday → Grogan's Mill.
+            sale("1", 2026, 6, 25),
+            // 2026-07-19 is the 3rd Sunday → New Caney.
+            sale("2", 2026, 6, 19),
+        ],
+        importTransactions: async () => {},
+    };
+});
+
 afterEach(() => {
     localStorage.removeItem("bb_admin_pending");
 });
 
 function renderEvents() {
     return renderWithProviders(
-        <SettingsProvider>
+        <AdminDataProviders>
             <Events />
-        </SettingsProvider>,
+        </AdminDataProviders>,
         { route: "/admin/events" },
     );
 }

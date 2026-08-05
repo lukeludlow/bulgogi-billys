@@ -201,7 +201,6 @@ export const DEFAULT_SETTINGS: Settings = {
     items: ITEMS,
     groceryWeeklySpend: 400,
     packagingCostPerOrder: 0.25,
-    transactions: [],
     blendedFoodCostPercent: 32,
     events: [],
     purchases: [],

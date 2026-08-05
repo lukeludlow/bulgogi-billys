@@ -16,7 +16,6 @@ import {
     type ProcessorFee,
     type Purchase,
     type Settings,
-    type Transaction,
 } from "@/admin/domain/types.ts";
 import type { Database } from "./database.types.ts";
 
@@ -34,7 +33,6 @@ export type BatchLineRow = Row<"batch_lines">;
 export type MenuItemRow = Row<"menu_items">;
 export type VariantRow = Row<"variants">;
 export type RecipeLineRow = Row<"recipe_lines">;
-export type TransactionRow = Row<"transactions">;
 export type EventRow = Row<"events">;
 export type PurchaseRow = Row<"purchases">;
 export type MarketOverrideRow = Row<"market_overrides">;
@@ -65,7 +63,6 @@ export interface DbSnapshot {
     menuItems: MenuItemRow[];
     variants: VariantRow[];
     recipeLines: RecipeLineRow[];
-    transactions: TransactionRow[];
     events: EventRow[];
     purchases: PurchaseRow[];
     marketOverrides: MarketOverrideRow[];
@@ -141,7 +138,6 @@ export function settingsToRows(settings: Settings): DbSnapshot {
         menuItems,
         variants,
         recipeLines,
-        transactions: settings.transactions.map(transactionToRow),
         // Sorted so both sides of a diff serialize identically regardless of
         // the order the UI happened to append rows in.
         events: [...settings.events]
@@ -186,19 +182,6 @@ export function eventToRow(event: MarketEvent): EventRow {
         waste: event.waste,
         employee_hours: event.employeeHours,
         billys_hours: event.billysHours,
-    };
-}
-
-export function transactionToRow(transaction: Transaction): TransactionRow {
-    return {
-        id: transaction.id,
-        // Normalized so a round-trip through timestamptz compares equal.
-        date: new Date(transaction.date).toISOString(),
-        amount: transaction.amount,
-        type: transaction.type,
-        result: transaction.result,
-        method: transaction.method,
-        brand: transaction.brand ?? null,
     };
 }
 
@@ -262,19 +245,6 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
                         })),
                 })),
         }));
-
-    const transactions: Transaction[] = snapshot.transactions.map((row) => {
-        const transaction: Transaction = {
-            id: row.id,
-            date: new Date(row.date).toISOString(),
-            amount: row.amount,
-            type: row.type,
-            result: row.result,
-            method: row.method,
-        };
-        if (row.brand !== null) transaction.brand = row.brand;
-        return transaction;
-    });
 
     const events: MarketEvent[] = [...snapshot.events]
         .sort((a, b) =>
@@ -353,7 +323,6 @@ export function rowsToSettings(snapshot: DbSnapshot): Settings {
         items,
         groceryWeeklySpend: snapshot.settings.grocery_weekly_spend,
         packagingCostPerOrder: snapshot.settings.packaging_cost_per_order,
-        transactions,
         blendedFoodCostPercent: snapshot.settings.blended_food_cost_percent,
         events,
         purchases,
