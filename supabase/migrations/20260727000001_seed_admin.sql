@@ -1,4 +1,5 @@
--- Seed the admin allowlist (replaces the ADMIN_ALLOWED_EMAILS env var).
--- Add future admins with another insert here or in the SQL editor.
-insert into public.admin_users (email) values ('lukeludlow@live.com')
-on conflict do nothing;
+-- The admin allowlist (public.admin_users) is environment data, not schema:
+-- production rows are managed in the Supabase SQL editor, and the local stack
+-- gets a placeholder admin from supabase/seed.sql. This migration used to
+-- insert the production admin here; the file stays (empty) so the local
+-- migration history keeps matching the hosted project's schema_migrations.

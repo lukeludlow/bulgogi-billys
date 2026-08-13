@@ -16,6 +16,7 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+    ADMIN_EMAIL,
     clientAs,
     insertRow,
     readRows,
@@ -279,9 +280,10 @@ describe("an allowlisted admin has full access", () => {
         const client = await as("admin");
         const { data, error } = await client.from("admin_users").select("*");
         expect(error).toBeNull();
-        expect(data).toEqual([{ email: "lukeludlow@live.com" }]);
+        expect(data).toEqual([{ email: ADMIN_EMAIL }]);
 
-        // Membership is managed by migration, never from the app: there is no
+        // Membership is managed by seed (locally) or the SQL editor (hosted),
+        // never from the app: there is no
         // insert policy, so even an admin is refused.
         expect(
             (

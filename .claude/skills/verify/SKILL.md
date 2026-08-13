@@ -41,7 +41,7 @@ seedLocal({                          // replaces only the tables you name
 const browser = await chromium.launch();
 const { context, blocked } = await localContext(browser);
 const page = await context.newPage();
-await signInViaMagicLink(page, { email: "lukeludlow@live.com" });
+await signInViaMagicLink(page, { email: "admin@example.test" });
 
 await page.goto(`${BASE}/admin/events`);
 await page.locator("select[aria-label='Market for 2026-07-19']").selectOption("grogans-mill");

@@ -48,8 +48,8 @@ export const DATA_TABLES = [
 /** An account that exists in auth but not in public.admin_users. */
 export const NON_ADMIN_EMAIL = "not-an-admin@example.test";
 
-/** The seeded allowlisted admin (supabase/migrations/…_seed_admin.sql). */
-export const ADMIN_EMAIL = "lukeludlow@live.com";
+/** The seeded allowlisted admin (supabase/seed.sql). */
+export const ADMIN_EMAIL = "admin@example.test";
 
 interface LocalStatus {
     API_URL: string;

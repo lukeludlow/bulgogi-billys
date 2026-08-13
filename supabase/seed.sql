@@ -13,6 +13,12 @@
 
 -- ── local auth identities for the admin allowlist ───────────────────────────
 
+-- The local admin. Production admins are managed in the SQL editor and never
+-- appear in the repo; everything below derives from this table, so this one
+-- insert is all it takes to make the local stack sign-in-able.
+insert into public.admin_users (email) values ('admin@example.test')
+on conflict do nothing;
+
 -- No password: sign-in is magic-link only, and the token is minted by GoTrue.
 -- The token columns must be '' rather than NULL — GoTrue scans them into plain
 -- Go strings and a NULL fails the whole lookup with "Database error finding
