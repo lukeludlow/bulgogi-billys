@@ -16,23 +16,35 @@ import {
     PHONE_TEXT_HREF,
 } from "@/site/business.ts";
 import { PhoneIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
+import { phoneClickHandlers } from "@/site/analytics.ts";
 
 export default function Contact() {
+    const { onCall, onText } = phoneClickHandlers("contact");
+
     return (
         <div className={"flex flex-col gap-3 text-center"}>
             <PageMeta
-                title="Contact & Catering | Bulgogi Billy's"
-                description="Book Bulgogi Billy's for your next event. We offer Korean fusion catering for gatherings of any size across the greater Houston, TX area."
+                title="Contact | Bulgogi Billy's"
+                description="Call, text, email or message Bulgogi Billy's, the Korean Fusion food vendor serving The Woodlands, Conroe, New Caney and Greater Houston."
                 path="/contact"
             />
             <Heading>Contact</Heading>
             <Divider />
-            <Subheading className={"text-xl md:text-xl"}>
-                Let us cater your next event!
-            </Subheading>
+            <div className="mx-auto flex max-w-xl flex-col items-center gap-3 rounded-xl bg-orange-50 p-6 dark:bg-orange-950/20">
+                <Subheading className={"text-xl md:text-xl"}>
+                    Planning an event?
+                </Subheading>
+                <Text className={"text-lg md:text-lg"}>
+                    See catering packages, get an instant price estimate, and
+                    send the details Billy needs to quote.
+                </Text>
+                <Button href="/catering" color="orange">
+                    Catering &amp; events
+                </Button>
+            </div>
             <Text className={"text-lg md:text-lg"}>
-                From small gatherings to large celebrations, Bulgogi Billy's
-                brings the flavor. Reach out today for rates and availability.
+                Anything else? Send us a message.
             </Text>
             <div>
                 <ContactForm />
@@ -41,13 +53,18 @@ export default function Contact() {
                 <PhoneIcon className="size-6 shrink-0 dark:text-white" />
                 <Link
                     href={PHONE_CALL_HREF}
+                    onClick={onCall}
                     className={"dark:text-white text-lg md:text-lg"}
                 >
                     {BUSINESS.phone.display}
                 </Link>
                 <Text className={"text-lg md:text-lg"}>
                     (call or{" "}
-                    <Link href={PHONE_TEXT_HREF} className={"underline"}>
+                    <Link
+                        href={PHONE_TEXT_HREF}
+                        onClick={onText}
+                        className={"underline"}
+                    >
                         text
                     </Link>
                     )

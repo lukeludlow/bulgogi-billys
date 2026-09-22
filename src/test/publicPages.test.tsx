@@ -12,6 +12,7 @@ import Menu from "@/site/pages/menu/Menu.tsx";
 import Schedule from "@/site/pages/schedule/Schedule.tsx";
 import OrderNow from "@/site/pages/order-now/OrderNow.tsx";
 import Contact from "@/site/pages/contact/Contact.tsx";
+import Catering from "@/site/pages/catering/Catering.tsx";
 import Blog from "@/site/pages/blog/Blog.tsx";
 import BlogPost from "@/site/pages/blog/BlogPost.tsx";
 import NotFound from "@/site/pages/not-found/NotFound.tsx";
@@ -32,6 +33,60 @@ test("the home hero is one eagerly loaded photo, not a carousel", async () => {
     await expect.element(hero).toHaveAttribute("loading", "eager");
     await expect.element(hero).toHaveAttribute("fetchpriority", "high");
     expect(container.querySelectorAll('img[alt="carousel"]')).toHaveLength(0);
+});
+
+test("the home hero leads with locations, menu and catering", async () => {
+    const { getByRole, getByText } = await renderWithProviders(<Home />);
+
+    await expect
+        .element(
+            getByRole("heading", {
+                level: 1,
+                name: "Seoul food, Texas style.",
+            }),
+        )
+        .toBeInTheDocument();
+    await expect
+        .element(getByText("Korean Fusion in Greater Houston."))
+        .toBeInTheDocument();
+    await expect
+        .element(getByRole("link", { name: "This week's locations" }))
+        .toHaveAttribute("href", "/schedule");
+    await expect
+        .element(getByRole("link", { name: "Menu", exact: true }).first())
+        .toHaveAttribute("href", "/menu");
+    await expect
+        .element(getByRole("link", { name: "Catering & events" }).first())
+        .toHaveAttribute("href", "/catering");
+});
+
+test("every home catering link goes to the catering page, not the contact form", async () => {
+    const { getByRole } = await renderWithProviders(<Home />);
+    const links = getByRole("link", { name: "Catering & events" });
+
+    await expect.element(links.first()).toBeInTheDocument();
+    // The hero button and the About section's catering card.
+    expect(links.elements()).toHaveLength(2);
+    for (const link of links.elements()) {
+        expect(link.getAttribute("href")).toBe("/catering");
+    }
+});
+
+test("catering page renders with its title", async () => {
+    await renderWithProviders(<Catering />);
+    await expect
+        .poll(() => document.title)
+        .toBe(
+            "Catering | Bulgogi Billy's Korean Fusion – The Woodlands & Houston",
+        );
+});
+
+test("the contact page points event planners to the catering page", async () => {
+    const { getByRole } = await renderWithProviders(<Contact />);
+
+    await expect
+        .element(getByRole("link", { name: "Catering & events" }))
+        .toHaveAttribute("href", "/catering");
 });
 
 test("menu page renders with its title", async () => {
@@ -83,9 +138,7 @@ test("the order-now placeholder asks search engines not to index it", async () =
 
 test("contact page renders with its title", async () => {
     await renderWithProviders(<Contact />);
-    await expect
-        .poll(() => document.title)
-        .toBe("Contact & Catering | Bulgogi Billy's");
+    await expect.poll(() => document.title).toBe("Contact | Bulgogi Billy's");
 });
 
 test("blog index renders with its title", async () => {

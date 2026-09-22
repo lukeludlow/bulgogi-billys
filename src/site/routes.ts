@@ -4,6 +4,7 @@ import Menu from "@/site/pages/menu/Menu.tsx";
 import Schedule from "@/site/pages/schedule/Schedule.tsx";
 import OrderNow from "@/site/pages/order-now/OrderNow.tsx";
 import Contact from "@/site/pages/contact/Contact.tsx";
+import Catering from "@/site/pages/catering/Catering.tsx";
 import Blog from "@/site/pages/blog/Blog.tsx";
 import BlogPost from "@/site/pages/blog/BlogPost.tsx";
 import NotFound from "@/site/pages/not-found/NotFound.tsx";
@@ -28,6 +29,7 @@ export const SITE_ROUTES: SiteRoute[] = [
     // Kept routable but out of the index until online ordering launches
     // (ONLINE_ORDERING_PLAN.md Phase 8): nothing links here any more.
     { path: "/order-now", Component: OrderNow, indexable: false },
+    { path: "/catering", Component: Catering, indexable: true },
     { path: "/contact", Component: Contact, indexable: true },
     { path: "/blog", Component: Blog, indexable: true },
     // Individual posts are indexed via their own sitemap entries derived from

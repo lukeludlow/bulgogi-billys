@@ -1,19 +1,13 @@
-import { useState, type FormEvent } from "react";
+import type { FormEvent } from "react";
 import { Field, Label } from "@/shared/catalyst-ui-kit/fieldset.tsx";
 import { Input } from "@/shared/catalyst-ui-kit/input.tsx";
 import { Textarea } from "@/shared/catalyst-ui-kit/textarea.tsx";
 import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
+import HoneypotField from "@/site/forms/HoneypotField.tsx";
+import { useFormSubmission } from "@/site/forms/useFormSubmission.ts";
 
 export default function ContactForm() {
-    const [status, setStatus] = useState<{
-        loading: boolean;
-        success: boolean | null;
-        message: string;
-    }>({
-        loading: false,
-        success: null,
-        message: "",
-    });
+    const { status, submit } = useFormSubmission();
 
     return (
         <div className="mx-auto max-w-xl p-6 bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
@@ -22,15 +16,7 @@ export default function ContactForm() {
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Anti-Spam Honeypot Input: Hidden from real users, filled out by bots */}
-                <input
-                    type="text"
-                    name="botcheck"
-                    className="hidden"
-                    style={{ display: "none" }}
-                    tabIndex={-1}
-                    autoComplete="off"
-                />
+                <HoneypotField />
 
                 <Field>
                     <Label>Name</Label>
@@ -89,49 +75,13 @@ export default function ContactForm() {
         // currentTarget is only set during dispatch — grab the form now, it's
         // still needed for the reset after the fetch.
         const form = e.currentTarget;
-        setStatus({ loading: true, success: null, message: "" });
+        const payload = Object.fromEntries(
+            new FormData(form).entries(),
+        ) as Record<string, string>;
 
-        const formData = new FormData(form);
-
-        formData.append("access_key", "e07279ae-8bec-40b4-894b-19aa0add3f0e");
-
-        const payload = Object.fromEntries(formData.entries());
-
-        try {
-            const response = await fetch("https://api.web3forms.com/submit", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                setStatus({
-                    loading: false,
-                    success: true,
-                    message: "Thank you! Your message has been sent.",
-                });
-                form.reset(); // Clear the form on success
-            } else {
-                setStatus({
-                    loading: false,
-                    success: false,
-                    message:
-                        result.message ||
-                        "Something went wrong with the submission.",
-                });
-            }
-        } catch (error) {
-            console.error(error);
-            setStatus({
-                loading: false,
-                success: false,
-                message: "Failed to send message. Please try again later.",
-            });
-        }
+        const sent = await submit(payload, {
+            successMessage: "Thank you! Your message has been sent.",
+        });
+        if (sent) form.reset();
     }
 }

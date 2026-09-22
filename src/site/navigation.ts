@@ -11,8 +11,6 @@ export const NAV_ITEMS: NavItem[] = [
     { label: "Home", url: "/" },
     { label: "Menu", url: "/menu" },
     { label: "Schedule", url: "/schedule" },
-    // The contact form doubles as the catering inquiry until the dedicated
-    // /catering page ships (WEBSITE_REVENUE_PLAN.md Phase 1).
-    { label: "Catering", url: "/contact" },
+    { label: "Catering", url: "/catering" },
     { label: "Contact", url: "/contact" },
 ];

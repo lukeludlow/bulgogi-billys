@@ -1,8 +1,10 @@
 {
+    "cleanUrls": true,
+    "trailingSlash": false,
     "rewrites": [
-        {
-            "source": "/((?!@vite|@react-refresh|@id|@fs|.*\\..*).*)",
-            "destination": "/index.html"
-        }
+        { "source": "/admin", "destination": "/spa.html" },
+        { "source": "/admin/:path*", "destination": "/spa.html" },
+        { "source": "/admin-login", "destination": "/spa.html" },
+        { "source": "/auth/callback", "destination": "/spa.html" }
     ]
 }

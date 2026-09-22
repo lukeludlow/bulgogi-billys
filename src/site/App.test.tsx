@@ -12,7 +12,7 @@ test("every page gets the site footer", async () => {
         .not.toContainElement(getByRole("contentinfo").element());
 });
 
-test("the mobile menu lists Catering, pointing at the contact form", async () => {
+test("the mobile menu lists Catering, pointing at the catering page", async () => {
     const { getByRole } = await renderWithProviders(<App />);
 
     await getByRole("button", { name: "Open navigation" }).click();
@@ -23,5 +23,5 @@ test("the mobile menu lists Catering, pointing at the contact form", async () =>
                 .getByRole("dialog")
                 .getByRole("link", { name: "Catering", exact: true }),
         )
-        .toHaveAttribute("href", "/contact");
+        .toHaveAttribute("href", "/catering");
 });

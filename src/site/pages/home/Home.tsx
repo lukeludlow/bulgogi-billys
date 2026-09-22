@@ -5,6 +5,11 @@ import PageMeta from "@/shared/PageMeta.tsx";
 import RestaurantStructuredData from "@/site/components/RestaurantStructuredData.tsx";
 import ResponsiveImage from "@/site/components/ResponsiveImage.tsx";
 import { SITE_IMAGES } from "@/site/images.ts";
+import { VIRAL_VIDEO } from "@/site/business.ts";
+
+// Outline buttons are transparent; over the hero photo they need a backing.
+const HERO_OUTLINE_BUTTON =
+    "bg-white/85 backdrop-blur-sm data-hover:bg-white dark:bg-zinc-900/75 dark:data-hover:bg-zinc-900";
 
 export default function Home() {
     return (
@@ -41,22 +46,34 @@ export default function Home() {
                             <h1 className="text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-7xl dark:text-white">
                                 Seoul food, Texas style.
                             </h1>
-                            <div className={"mt-8"}>
+                            <p className="mt-6 text-xl font-medium text-gray-800 sm:text-2xl dark:text-gray-100">
+                                Korean Fusion in Greater Houston.
+                            </p>
+                            <div className={"mt-4"}>
                                 <TextLink
-                                    href={
-                                        "https://www.tiktok.com/@davidspov_/video/7568650366590504247"
-                                    }
+                                    href={VIRAL_VIDEO.url}
                                     className={"text-lg md:text-lg"}
                                 >
                                     As seen on TikTok!
                                 </TextLink>
                             </div>
-                            <div className="mt-10 flex items-center justify-center gap-x-6">
-                                <Button href={"/menu"} color={"orange"}>
+                            <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-x-4">
+                                <Button href={"/schedule"} color={"orange"}>
+                                    This week's locations
+                                </Button>
+                                <Button
+                                    href={"/menu"}
+                                    outline
+                                    className={HERO_OUTLINE_BUTTON}
+                                >
                                     Menu
                                 </Button>
-                                <Button href={"/schedule"} outline>
-                                    Schedule
+                                <Button
+                                    href={"/catering"}
+                                    outline
+                                    className={HERO_OUTLINE_BUTTON}
+                                >
+                                    Catering &amp; events
                                 </Button>
                             </div>
                         </div>

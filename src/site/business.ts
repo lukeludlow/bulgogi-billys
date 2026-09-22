@@ -19,3 +19,14 @@ export const BUSINESS = {
 export const PHONE_CALL_HREF = `tel:${BUSINESS.phone.e164}`;
 export const PHONE_TEXT_HREF = `sms:${BUSINESS.phone.e164}`;
 export const EMAIL_HREF = `mailto:${BUSINESS.email}`;
+
+/**
+ * The viral video that put the business on the map. It lives on the
+ * creator's account — the business has no TikTok of its own — so every link
+ * to it credits them.
+ */
+export const VIRAL_VIDEO = {
+    url: "https://www.tiktok.com/@davidspov_/video/7568650366590504247",
+    creator: "@davidspov_",
+    views: "24M+",
+} as const;

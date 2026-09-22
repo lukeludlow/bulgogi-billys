@@ -1,6 +1,15 @@
-import { expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
+import { track } from "@vercel/analytics";
 import SiteFooter from "@/site/components/SiteFooter.tsx";
+import { blockPhoneLinkNavigation } from "@/test/blockPhoneLinks.ts";
 import { renderWithProviders } from "@/test/renderWithProviders.tsx";
+
+vi.mock("@vercel/analytics", () => ({ track: vi.fn() }));
+blockPhoneLinkNavigation();
+
+afterEach(() => {
+    vi.clearAllMocks();
+});
 
 test("offers tap-to-call and tap-to-text with the business number", async () => {
     const { getByRole } = await renderWithProviders(<SiteFooter />);
@@ -38,7 +47,7 @@ test("links catering but never the blog", async () => {
 
     await expect
         .element(getByRole("link", { name: "Catering", exact: true }))
-        .toHaveAttribute("href", "/contact");
+        .toHaveAttribute("href", "/catering");
     const hrefs = Array.from(container.querySelectorAll("a")).map((a) =>
         a.getAttribute("href"),
     );
@@ -53,4 +62,18 @@ test("names the service area in Korean Fusion terms", async () => {
         .toHaveTextContent(
             "Korean Fusion catering & weekend markets — The Woodlands • Conroe • New Caney • Greater Houston",
         );
+});
+
+test("records which footer link a visitor used to call or text", async () => {
+    const { getByRole } = await renderWithProviders(<SiteFooter />);
+
+    await getByRole("link", { name: "Call", exact: true }).click();
+    await getByRole("link", { name: "Text", exact: true }).click();
+
+    expect(track).toHaveBeenCalledWith("click_to_call", {
+        placement: "footer",
+    });
+    expect(track).toHaveBeenCalledWith("click_to_text", {
+        placement: "footer",
+    });
 });

@@ -1,5 +1,5 @@
-import { lazy, StrictMode, Suspense } from "react";
-import { createRoot } from "react-dom/client";
+import { lazy, Suspense } from "react";
+import { createRoot, hydrateRoot } from "react-dom/client";
 // @ts-expect-error inter is CSS only
 import "@fontsource-variable/inter";
 import "@/index.css";
@@ -8,10 +8,11 @@ import {
     RouterProvider,
     type RouteObject,
 } from "react-router";
-import { Analytics } from "@vercel/analytics/react";
-import App from "@/site/App.tsx";
-import { SITE_ROUTES } from "@/site/routes.ts";
+import AppRoot from "@/AppRoot.tsx";
+import { captureAttribution } from "@/site/attribution.ts";
+import { SITE_ROUTE_TREE } from "@/site/router.ts";
 import { ADMIN_ROUTES } from "@/admin/routes.ts";
+import { removePrerenderedHead, shouldHydrate } from "@/ssrHtml.ts";
 
 // Lazy-loaded so the admin code (and through ADMIN_ROUTES' own lazy pages,
 // recharts and the Supabase client) only ships to the admin routes, keeping
@@ -21,12 +22,6 @@ const AuthCallback = lazy(() => import("@/admin/AuthCallback.tsx"));
 const RequireAdmin = lazy(() => import("@/admin/RequireAdmin.tsx"));
 const AdminLayout = lazy(() => import("@/admin/AdminLayout.tsx"));
 
-const siteChildren: RouteObject[] = SITE_ROUTES.map(({ path, Component }) =>
-    path === "/"
-        ? { index: true, element: <Component /> }
-        : { path, element: <Component /> },
-);
-
 // "/admin" itself is the index page; the others register by their segment.
 const adminChildren: RouteObject[] = ADMIN_ROUTES.map(({ path, Component }) =>
     path === "/admin"
@@ -34,12 +29,12 @@ const adminChildren: RouteObject[] = ADMIN_ROUTES.map(({ path, Component }) =>
         : { path: path.slice("/admin/".length), element: <Component /> },
 );
 
+// First-touch UTM tags from printed and posted links (tent QR, flyers, …),
+// kept for the session so a catering inquiry can say where it came from.
+captureAttribution(window.location.href);
+
 const router = createBrowserRouter([
-    {
-        path: "/",
-        element: <App />,
-        children: siteChildren,
-    },
+    SITE_ROUTE_TREE,
     {
         path: "/admin-login",
         element: (
@@ -69,9 +64,20 @@ const router = createBrowserRouter([
     },
 ]);
 
-createRoot(document.getElementById("root")!).render(
-    <StrictMode>
+const container = document.getElementById("root")!;
+const app = (
+    <AppRoot>
         <RouterProvider router={router} />
-        <Analytics />
-    </StrictMode>,
+    </AppRoot>
 );
+
+// Public pages are prerendered at build time (scripts/prerender.ts); hydrate
+// them. Anything else — the admin shell, 404.html served at an unknown URL,
+// the dev server — renders from scratch.
+if (shouldHydrate(container.dataset.prerendered, window.location.pathname)) {
+    hydrateRoot(container, app);
+} else {
+    removePrerenderedHead(document);
+    container.replaceChildren();
+    createRoot(container).render(app);
+}

@@ -14,6 +14,7 @@ import {
     PHONE_TEXT_HREF,
 } from "@/site/business.ts";
 import { NAV_ITEMS } from "@/site/navigation.ts";
+import { phoneClickHandlers } from "@/site/analytics.ts";
 import InstagramIcon from "@/site/components/icons/InstagramIcon.tsx";
 import FacebookIcon from "@/site/components/icons/FacebookIcon.tsx";
 
@@ -25,6 +26,8 @@ const FOOTER_LINKS = NAV_ITEMS.filter(({ url }) => url !== "/");
  * before they fill in a form.
  */
 export default function SiteFooter() {
+    const { onCall, onText } = phoneClickHandlers("footer");
+
     return (
         <footer className="border-t border-zinc-950/5 bg-white px-6 py-10 dark:border-white/10 dark:bg-zinc-900">
             <div className="mx-auto grid max-w-4xl gap-8 sm:grid-cols-3">
@@ -45,16 +48,21 @@ export default function SiteFooter() {
                     </Subheading>
                     <TextLink
                         href={PHONE_CALL_HREF}
+                        onClick={onCall}
                         className="text-lg font-semibold"
                     >
                         {BUSINESS.phone.display}
                     </TextLink>
                     <div className="flex gap-3">
-                        <Button href={PHONE_CALL_HREF} color="orange">
+                        <Button
+                            href={PHONE_CALL_HREF}
+                            onClick={onCall}
+                            color="orange"
+                        >
                             <PhoneIcon data-slot="icon" />
                             Call
                         </Button>
-                        <Button href={PHONE_TEXT_HREF} outline>
+                        <Button href={PHONE_TEXT_HREF} onClick={onText} outline>
                             <ChatBubbleLeftEllipsisIcon data-slot="icon" />
                             Text
                         </Button>
@@ -99,7 +107,12 @@ export default function SiteFooter() {
                     </div>
                 </nav>
             </div>
-            <Text className="mt-10 text-center text-sm">
+            {/* Prerendered at build time: after New Year the server's year can
+                trail the visitor's until the next deploy, which is fine. */}
+            <Text
+                className="mt-10 text-center text-sm"
+                suppressHydrationWarning
+            >
                 © {new Date().getFullYear()} {BUSINESS.legalName}
             </Text>
         </footer>

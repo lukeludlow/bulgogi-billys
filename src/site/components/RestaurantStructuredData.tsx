@@ -1,4 +1,6 @@
+import { BASE_URL } from "@/shared/PageMeta.tsx";
 import { BUSINESS } from "@/site/business.ts";
+import { ogImageUrl, SITE_IMAGES } from "@/site/images.ts";
 
 const structuredData = {
     "@context": "https://schema.org",
@@ -9,7 +11,7 @@ const structuredData = {
     telephone: BUSINESS.phone.e164,
     servesCuisine: ["Korean", "Korean Fusion", "American"],
     priceRange: "$$",
-    image: "https://www.bulgogibillys.com/images/fries_h_screen_small.png",
+    image: `${BASE_URL}${ogImageUrl(SITE_IMAGES.bulgogiFries)}`,
     hasMenu: "https://www.bulgogibillys.com/menu",
     sameAs: [BUSINESS.instagram.url, BUSINESS.facebook.url],
     location: [

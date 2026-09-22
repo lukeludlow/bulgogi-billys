@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
     imageSrcSet,
     imageUrl,
+    ogImageUrl,
     SITE_IMAGES,
     type SiteImage,
 } from "@/site/images.ts";
@@ -11,6 +12,12 @@ const images: [string, SiteImage][] = Object.entries(SITE_IMAGES);
 test("imageUrl points at the WebP derivative for a width", () => {
     expect(imageUrl(SITE_IMAGES.bulgogiFries, 480)).toBe(
         "/images/opt/bulgogi-fries-480.webp",
+    );
+});
+
+test("ogImageUrl points at the link-preview JPEG", () => {
+    expect(ogImageUrl(SITE_IMAGES.bulgogiFries)).toBe(
+        "/images/opt/bulgogi-fries-og.jpg",
     );
 });
 

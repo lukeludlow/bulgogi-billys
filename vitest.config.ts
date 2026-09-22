@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 // Three tiers (REFACTOR_PLAN §5.1). Pure-logic tests are .test.ts and run in
@@ -11,7 +12,9 @@ import path from "path";
 // tier needs Docker, so it is opt-in through `npm run test:db` / `verify.sh
 // --db`.
 export default defineConfig({
-    plugins: [react()],
+    // Tailwind too, so browser tests render the real layout: Catalyst's
+    // radios and checkboxes are empty spans that only have a size once styled.
+    plugins: [react(), tailwindcss()],
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "src"),

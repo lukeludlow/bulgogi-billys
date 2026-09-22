@@ -203,18 +203,18 @@ export default function About() {
                             From small backyard gatherings to massive
                             Texas-sized celebrations, Bulgogi Billy's brings the
                             flavor. We offer catering that your guests will be
-                            talking about for weeks. Reach out today for custom
-                            rates and availability!
+                            talking about for weeks. See our packages and get an
+                            instant price estimate!
                         </Text>
                     </div>
                 </div>
                 <div className={"flex justify-center"}>
                     <Button
-                        href={"/contact"}
+                        href={"/catering"}
                         color={"orange"}
                         className={"w-full"}
                     >
-                        Contact
+                        Catering &amp; events
                     </Button>
                 </div>
             </div>

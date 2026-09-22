@@ -60,10 +60,13 @@ also a professional photographer.
 
 **User-facing**
 
-- Auto-playing image carousel with manual navigation controls (homepage hero)
+- Homepage hero with this week's locations, menu, and catering calls to action
+- Catering page: service styles, packages, an instant price estimator, FAQ, and
+  a qualifying inquiry form that arrives prefilled from the estimate
 - Menu page with all 3 signature items, photos, and descriptions
 - Schedule page with market locations, hours, and direct Google Maps links
-- Catering inquiry contact form with anti-spam honeypot (Web3Forms integration)
+- Tap-to-call / tap-to-text footer on every page
+- Contact and catering forms with an anti-spam honeypot (Web3Forms integration)
 - Blog engine with per-post routes and per-post sitemap entries
 - Dark mode toggle — respects OS preference, persists via `localStorage`
 - Fully responsive, mobile-first design
@@ -73,13 +76,19 @@ also a professional photographer.
 
 - Per-route SEO: unique `<title>`, `<meta description>`, and
   `<link rel="canonical">` on every page
-- Open Graph meta tags for rich social media sharing previews
+- Per-page Open Graph and Twitter card tags, with a generated link-preview JPEG
 - JSON-LD structured data (`FoodEstablishment` + `LocalBusiness` schema.org
   types)
 - `sitemap.xml` and `robots.txt` for search engine crawlability — the sitemap is
   asserted against the route manifest by a test, so it can't drift
-- Vercel Analytics for traffic monitoring
-- SPA routing with Vercel rewrite rules (`vercel.json`)
+- Build-time prerendering: every public page ships as real HTML
+  (`react-dom/server` + React Router's static router) and hydrates in the
+  browser, so crawlers and link previews see content without JavaScript; unknown
+  URLs return a real 404, and only the admin routes rewrite to the SPA shell
+  (`vercel.json`)
+- Responsive WebP images generated from a typed registry (`npm run images`)
+- Vercel Analytics page views plus custom conversion events (estimator use,
+  inquiries, click-to-call/text) and first-touch UTM attribution
 
 ---
 
@@ -162,15 +171,15 @@ scratch) and `--dist` (the bundle-boundary assertion above).
 | Framework     | React 19 + TypeScript 6         | Strict TypeScript config              |
 | Build Tool    | Vite 8                          | Path aliasing (`@/`) configured       |
 | Styling       | Tailwind CSS 4                  | CSS-first config, custom dark variant |
-| Routing       | React Router 7                  | Nested routes, SPA rewrites           |
+| Routing       | React Router 7                  | Nested routes, build-time prerender   |
 | Backend       | Supabase                        | Postgres + Auth, row-level security   |
 | UI Components | Headless UI 2 + Catalyst UI Kit | Accessible, composable primitives     |
 | Charts        | Recharts 3                      | Interactive dashboard charts          |
 | Icons         | Heroicons 2                     |                                       |
-| Animation     | Motion 12                       | Carousel transitions                  |
+| Animation     | Motion 12                       | Catalyst navbar indicator             |
 | Testing       | Vitest 4 + Playwright           | Unit, real-browser, and db tiers      |
 | Deployment    | Vercel                          | Auto-deploy from `main` branch        |
-| Analytics     | Vercel Analytics 2              | Zero-config traffic tracking          |
+| Analytics     | Vercel Analytics 2              | Page views + custom conversion events |
 | Forms         | Web3Forms                       | No-backend form submissions           |
 | Typography    | Inter variable font             | `@fontsource-variable/inter`          |
 | Linting       | ESLint 10 + TypeScript-ESLint   | `react-hooks` plugin, boundary rules  |
@@ -184,9 +193,10 @@ scratch) and `--dist` (the bundle-boundary assertion above).
 src/
 ├── site/                    # Public website (bulgogibillys.com)
 │   ├── App.tsx              # Layout shell (navbar + mobile sidebar)
-│   ├── routes.ts            # Public route manifest (drives router + sitemap test)
-│   ├── pages/               # home, menu, schedule, order-now, contact, blog, not-found
-│   └── components/          # JSON-LD markup, social icons
+│   ├── routes.ts            # Public route manifest (drives router, prerender + sitemap test)
+│   ├── pages/               # home, menu, schedule, catering, order-now, contact, blog, not-found
+│   ├── catering/            # Pure catering logic: pricing model, inquiry payload, FAQ
+│   └── components/          # Footer, responsive images, JSON-LD markup, social icons
 ├── admin/                   # Private dashboard, everything behind RequireAdmin
 │   ├── routes.ts            # Admin route manifest (drives router, nav, headings, meta)
 │   ├── AdminLayout.tsx      # Dashboard shell; RequireAdmin gates every admin route
@@ -203,7 +213,9 @@ src/
 │   ├── PageMeta.tsx         # Per-route SEO head management
 │   └── theme.ts
 ├── test/                    # Test infra, fixtures, cross-cutting tests
+├── entry-server.tsx         # Build-time prerender entry (public site only)
 └── main.tsx                 # Composition root — the only file importing both sides
+scripts/                     # optimize-images (WebP/OG derivatives), prerender (postbuild)
 supabase/
 ├── migrations/              # 8 versioned schema migrations
 ├── tests/                   # db tier: schema, RLS matrix, transactional RPC

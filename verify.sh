@@ -55,6 +55,25 @@ check_dist() {
         fi
     done
     echo "public entry chunk is free of supabase-js/recharts code"
+
+    # scripts/prerender.ts: public pages ship real HTML, the admin shell doesn't.
+    local page
+    for page in index menu catering 404; do
+        grep -q 'data-prerendered=' "dist/${page}.html" || {
+            echo "dist/${page}.html was not prerendered"
+            return 1
+        }
+    done
+    grep -q '<title data-prerender="">Catering' dist/catering.html &&
+        grep -q 'property="og:title"' dist/catering.html || {
+        echo "dist/catering.html is missing its prerendered title or og:title"
+        return 1
+    }
+    if [ ! -f dist/spa.html ] || grep -q 'data-prerendered=' dist/spa.html; then
+        echo "dist/spa.html must be the empty admin shell"
+        return 1
+    fi
+    echo "public pages are prerendered; dist/spa.html is the empty admin shell"
 }
 
 stage "lint" npx eslint .

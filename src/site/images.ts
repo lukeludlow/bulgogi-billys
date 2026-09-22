@@ -19,9 +19,18 @@ export interface SiteImage {
     /** Derivative widths in px, ascending and never wider than the master. */
     widths: readonly number[];
     alt: string;
+    /** Also generate a link-preview JPEG: public/images/opt/<name>-og.jpg. */
+    og?: boolean;
 }
 
 export const IMAGE_DIR = "/images/opt";
+
+/**
+ * Link-preview size: the 1.91:1 ratio Facebook, iMessage and Slack crop to,
+ * as wide as the 1024 px menu masters allow. JPEG rather than WebP because
+ * every scraper reads it.
+ */
+export const OG_IMAGE_SIZE = { width: 1024, height: 536 } as const;
 
 const MENU_PHOTO_WIDTHS = [480, 768, 1024] as const;
 
@@ -33,6 +42,7 @@ export const SITE_IMAGES = {
         height: 683,
         widths: MENU_PHOTO_WIDTHS,
         alt: "Bulgogi fries topped with beef bulgogi, cheddar-jack cheese, Seoul sauce, Sriracha and sour cream",
+        og: true,
     },
     bulgogiRice: {
         source: "public/images/rice_h_screen_small.png",
@@ -86,6 +96,11 @@ export const SITE_IMAGES = {
 
 export function imageUrl(image: SiteImage, width: number): string {
     return `${IMAGE_DIR}/${image.name}-${width}.webp`;
+}
+
+/** Site-relative path of an image's link-preview JPEG. */
+export function ogImageUrl(image: SiteImage): string {
+    return `${IMAGE_DIR}/${image.name}-og.jpg`;
 }
 
 export function imageSrcSet(image: SiteImage): string {

@@ -2,6 +2,7 @@
 .claude/
 # Build and test artifacts.
 dist/
+dist-ssr/
 supabase/.temp/
 .vitest-attachments/
 **/__screenshots__/

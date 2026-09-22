@@ -1,21 +1,26 @@
 import { Switch } from "@/shared/catalyst-ui-kit/switch.tsx";
-import { getIsDarkMode } from "@/shared/theme.ts";
+import {
+    getIsDarkMode,
+    setDarkMode,
+    subscribeToTheme,
+} from "@/shared/theme.ts";
 import { MoonIcon, SunIcon } from "@heroicons/react/16/solid";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+// Prerendered HTML can't know the visitor's theme, so the server renders the
+// switch off and hydration flips it to the real value. There is deliberately
+// no mount effect writing the theme back: the inline script in index.html
+// already applied it before first paint, and an effect would run with the
+// server's value during hydration and overwrite the visitor's choice.
+const serverSnapshot = () => false;
 
 export default function DarkModeToggle() {
-    const [isDarkMode, setIsDarkMode] = useState<boolean>(getIsDarkMode());
+    const isDarkMode = useSyncExternalStore(
+        subscribeToTheme,
+        getIsDarkMode,
+        serverSnapshot,
+    );
     const iconSize = 5;
-
-    useEffect(() => {
-        if (isDarkMode) {
-            document.documentElement.classList.add("dark");
-            localStorage.setItem("theme", "dark");
-        } else {
-            document.documentElement.classList.remove("dark");
-            localStorage.setItem("theme", "light");
-        }
-    }, [isDarkMode]);
 
     return (
         <div
@@ -24,7 +29,7 @@ export default function DarkModeToggle() {
             }
         >
             <SunIcon className={`size-${iconSize}`} />
-            <Switch checked={isDarkMode} onChange={setIsDarkMode} />
+            <Switch checked={isDarkMode} onChange={setDarkMode} />
             <MoonIcon className={`size-${iconSize}`} />
         </div>
     );

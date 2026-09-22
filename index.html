@@ -11,22 +11,10 @@
             href="/src/assets/bulgogi_billys_icon.png"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <!-- title, description, and canonical are rendered per-page by PageMeta (React 19 hoists them into <head>) -->
-        <meta property="og:type" content="restaurant" />
+        <!-- title, description, canonical and the og:/twitter: tags are rendered
+             per page by PageMeta, and prerendered into each page's HTML at build
+             time (scripts/prerender.ts) -->
         <meta property="og:site_name" content="Bulgogi Billy's" />
-        <meta
-            property="og:title"
-            content="Bulgogi Billy's | Korean Fusion Food Truck – Houston, TX"
-        />
-        <meta
-            property="og:description"
-            content="Bulgogi Billy's serves Korean-American fusion food every weekend at farmers markets in The Woodlands, Conroe, and New Caney, TX. Try our signature bulgogi fries, tacos, and rice bowls!"
-        />
-        <meta property="og:url" content="https://www.bulgogibillys.com/" />
-        <meta
-            property="og:image"
-            content="https://www.bulgogibillys.com/images/fries_h_screen_small.png"
-        />
         <script>
             (function () {
                 var isDark =

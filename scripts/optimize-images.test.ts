@@ -1,15 +1,26 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "vitest";
-import { IMAGE_DIR, imageUrl, SITE_IMAGES } from "@/site/images.ts";
+import {
+    IMAGE_DIR,
+    imageUrl,
+    ogImageUrl,
+    SITE_IMAGES,
+    type SiteImage,
+} from "@/site/images.ts";
 
 // A market-day visitor is on LTE: no single image should cost more than this.
 const MAX_BYTES = 150 * 1024;
 
 const publicDir = path.resolve(__dirname, "../public");
 
-const derivatives = Object.values(SITE_IMAGES).flatMap((image) =>
-    image.widths.map((width) => imageUrl(image, width)),
+// Every file `npm run images` writes: a WebP per width, plus the link-preview
+// JPEG for images flagged `og`.
+const derivatives = (Object.values(SITE_IMAGES) as SiteImage[]).flatMap(
+    (image) => [
+        ...image.widths.map((width) => imageUrl(image, width)),
+        ...(image.og ? [ogImageUrl(image)] : []),
+    ],
 );
 
 test("every registered derivative has been generated (npm run images)", () => {

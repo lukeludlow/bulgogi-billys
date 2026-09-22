@@ -378,6 +378,25 @@ derivatives.
 
 ### Phase 1 — Catering page + discoverability (target: live by ~Oct 6)
 
+**Status (2026-09-22):** built on the `public-site-improvement` branch.
+
+- **`/catering`** follows §3. The proposed §3.2 prices are published (Luke's
+  call, still pending Billy's sign-off), and every number lives in
+  `CATERING_PRICING` in `src/site/catering/pricing.ts`. Add-ons and travel
+  beyond 25 miles are "quoted separately" rather than priced. The FAQ leaves out
+  tent space/power and permits/insurance until Billy confirms them, and there
+  are no testimonials yet.
+- **Prerendering.** `npm run build` ends with `scripts/prerender.ts`, which
+  writes `dist/<path>.html` for every public page plus `dist/404.html`.
+  `vercel.json` turns on `cleanUrls` and rewrites only the admin routes to the
+  SPA shell (`dist/spa.html`). Check status codes and link previews on the first
+  Vercel preview deploy.
+- **Events** go to Vercel Analytics → Events: `catering_estimate_used`,
+  `catering_inquiry_submitted`, `click_to_call` and `click_to_text` (the last
+  two carry a `placement`).
+- **Inquiries** reach the business inbox through Web3Forms with every answer
+  labeled, the estimate the buyer saw, and the campaign that brought them in.
+
 1. **`/catering`**, as specified in §3.
 2. **Build-time prerendering** (fixes T1 and T2).
     - A postbuild script renders every `indexable` route in `SITE_ROUTES` with
@@ -400,6 +419,18 @@ derivatives.
     - Adopt one UTM convention for every printed and posted link: `utm_source` =
       `tent | receipt | instagram | facebook | flyer | email`, and
       `utm_campaign` = the promotion name.
+    - The site keeps a visitor's first tagged link for the session, so the
+      inquiry email's **Campaign** line says which QR code or post brought them
+      in. Ready-made links:
+
+    | Where the link lives  | Link                                                                               |
+    | --------------------- | ---------------------------------------------------------------------------------- |
+    | Tent QR sign          | `https://www.bulgogibillys.com/catering?utm_source=tent&utm_campaign=fall-2026`    |
+    | Square receipt footer | `https://www.bulgogibillys.com/catering?utm_source=receipt&utm_campaign=fall-2026` |
+    | Instagram bio         | `https://www.bulgogibillys.com/catering?utm_source=instagram&utm_campaign=bio`     |
+    | Facebook page button  | `https://www.bulgogibillys.com/catering?utm_source=facebook&utm_campaign=page`     |
+    | A flyer               | `…/catering?utm_source=flyer&utm_campaign=<flyer-name>`                            |
+    | An email              | `…/catering?utm_source=email&utm_campaign=<email-name>`                            |
 
 ### Phase 2 — Menu, schedule, proof (weeks 2–5)
 
@@ -500,6 +531,11 @@ over month without weekend market revenue falling.
   both `tel:` and `sms:` links.
 - **Vegetarian option for groups:** allowed. The catering form lets buyers ask
   for one (see §3.1 item 9).
+- **Launch pricing (Sept 22):** `/catering` goes live with the proposed prices
+  in decision 1 below, so the page can meet the early-October date. Billy's
+  changes are an edit to `CATERING_PRICING`.
+- **Add-ons and travel beyond ~25 miles:** buyers can tick them in the
+  estimator, but they are quoted by Billy, not priced on the site.
 
 **Still open:**
 
@@ -518,6 +554,8 @@ over month without weekend market revenue falling.
 7. **Photo shoot**: about six excellent shots (fries, tacos, rice bowl, the tent
    in action, a catered spread, the family). Six great photos beat a gallery of
    average ones.
+8. **Tent footprint and power needs, and permit/insurance status.** The catering
+   FAQ leaves both questions out until Billy confirms the facts.
 
 ---
 

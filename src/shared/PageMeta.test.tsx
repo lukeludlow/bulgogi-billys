@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { render } from "vitest-browser-react";
-import PageMeta, { BASE_URL } from "./PageMeta.tsx";
+import PageMeta, { BASE_URL, DEFAULT_OG_IMAGE } from "./PageMeta.tsx";
 
 test("uses the www subdomain as the canonical base URL", () => {
     expect(BASE_URL).toBe("https://www.bulgogibillys.com");
@@ -60,4 +60,56 @@ test("omits the robots meta tag when noindex is not set", async () => {
 
     await expect.poll(() => document.title).toBe("Public Page");
     expect(document.querySelector('meta[name="robots"]')).toBeNull();
+});
+
+function metaContent(selector: string): string | null | undefined {
+    return document.querySelector(selector)?.getAttribute("content");
+}
+
+test("renders link-preview tags from the title and description", async () => {
+    render(
+        <PageMeta
+            title="Catering | Bulgogi Billy's"
+            description="Korean Fusion catering."
+            path="/catering"
+        />,
+    );
+
+    await expect
+        .poll(() => metaContent('meta[property="og:title"]'))
+        .toBe("Catering | Bulgogi Billy's");
+    expect(metaContent('meta[property="og:description"]')).toBe(
+        "Korean Fusion catering.",
+    );
+    expect(metaContent('meta[property="og:type"]')).toBe("website");
+    expect(metaContent('meta[property="og:url"]')).toBe(
+        "https://www.bulgogibillys.com/catering",
+    );
+    expect(metaContent('meta[property="og:image"]')).toBe(DEFAULT_OG_IMAGE);
+    expect(metaContent('meta[name="twitter:card"]')).toBe(
+        "summary_large_image",
+    );
+});
+
+test("omits og:url when the page declares no canonical path", async () => {
+    render(<PageMeta title="No URL" description="desc" />);
+
+    await expect
+        .poll(() => metaContent('meta[property="og:title"]'))
+        .toBe("No URL");
+    expect(document.querySelector('meta[property="og:url"]')).toBeNull();
+});
+
+test("uses a page's own preview image when given one", async () => {
+    render(
+        <PageMeta
+            title="Tacos"
+            description="desc"
+            image="https://www.bulgogibillys.com/images/opt/tacos-og.jpg"
+        />,
+    );
+
+    await expect
+        .poll(() => metaContent('meta[property="og:image"]'))
+        .toBe("https://www.bulgogibillys.com/images/opt/tacos-og.jpg");
 });
