@@ -119,7 +119,9 @@ prices, deposit and payment terms, and a structured inquiry form (event date,
 headcount, location, budget) replacing the generic contact form for catering
 leads. Catering is larger, weather-proof revenue (§12.2), and every inquiry
 field we capture up front saves a back-and-forth. Track inquiries in the
-dashboard (feeds the §27 KPI "catering inquiries").
+dashboard (feeds the §27 KPI "catering inquiries"). Full spec — pricing,
+estimator, form fields — in [WEBSITE_REVENUE_PLAN.md](WEBSITE_REVENUE_PLAN.md)
+§3.
 
 ---
 
