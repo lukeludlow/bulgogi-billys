@@ -4,7 +4,7 @@
  *
  * Reads Vite's dist/index.html as the template and keeps an untouched copy as
  * dist/spa.html — the shell vercel.json rewrites the client-only admin routes
- * to. Then, with the SSR bundle from `vite build --ssr src/entry-server.tsx`,
+ * to, at its clean URL /spa. Then, with the SSR bundle from `vite build --ssr src/entry-server.tsx`,
  * writes dist/index.html, dist/<path>.html per page, and dist/404.html.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -13,6 +13,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
     injectPage,
     outputFileFor,
+    SPA_SHELL_FILE,
     type ServerEntry,
 } from "./prerenderHtml.ts";
 
@@ -20,7 +21,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
 
 const template = await readFile(path.join(dist, "index.html"), "utf8");
-await writeFile(path.join(dist, "spa.html"), template);
+await writeFile(path.join(dist, SPA_SHELL_FILE), template);
 
 const entryUrl = pathToFileURL(path.join(root, "dist-ssr", "entry-server.js"));
 const { render, PRERENDER_PATHS, NOT_FOUND_PATH } = (await import(

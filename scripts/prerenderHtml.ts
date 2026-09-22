@@ -17,6 +17,13 @@ export interface ServerEntry {
 const EMPTY_ROOT = '<div id="root"></div>';
 
 /**
+ * Vite's untouched index.html, kept for the client-only admin routes.
+ * vercel.json rewrites them to it by its clean URL, /spa — with `cleanUrls`
+ * on, /spa.html itself only redirects, so a rewrite to it would 404.
+ */
+export const SPA_SHELL_FILE = "spa.html";
+
+/**
  * The dist/ file a path is served from. Flat `<path>.html` files, which
  * Vercel's `cleanUrls` serves at the extensionless URL; the not-found page
  * becomes 404.html, which Vercel serves with a real 404 status.

@@ -2,9 +2,9 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "rewrites": [
-        { "source": "/admin", "destination": "/spa.html" },
-        { "source": "/admin/:path*", "destination": "/spa.html" },
-        { "source": "/admin-login", "destination": "/spa.html" },
-        { "source": "/auth/callback", "destination": "/spa.html" }
+        { "source": "/admin", "destination": "/spa" },
+        { "source": "/admin/:path*", "destination": "/spa" },
+        { "source": "/admin-login", "destination": "/spa" },
+        { "source": "/auth/callback", "destination": "/spa" }
     ]
 }

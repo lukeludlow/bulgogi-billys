@@ -81,9 +81,9 @@ export default defineConfig([
         },
     },
     {
-        // The sitemap test reads public/sitemap.xml and public/robots.txt as
-        // ?raw text; public/ is outside src/, so no @/ path can reach it.
-        files: ["src/test/sitemap.test.ts"],
+        // These tests read files outside src/ (public/sitemap.xml,
+        // public/robots.txt, vercel.json, scripts/), which no @/ path reaches.
+        files: ["src/test/sitemap.test.ts", "src/test/vercelConfig.test.ts"],
         rules: {
             "no-restricted-imports": "off",
         },
