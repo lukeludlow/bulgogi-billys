@@ -6,7 +6,7 @@ export default function OrderNow() {
             <PageMeta
                 title="Order Online | Bulgogi Billy's"
                 description="Order Korean fusion favorites from Bulgogi Billy's. Online ordering is coming soon — visit us at farmers markets in The Woodlands, Conroe, and New Caney, TX."
-                path="/order-now"
+                noindex
             />
             <div className="text-center">
                 <p className="text-base font-semibold text-orange-600 dark:text-orange-400">

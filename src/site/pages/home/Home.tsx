@@ -1,35 +1,12 @@
 import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
-import { useEffect, useState } from "react";
 import About from "@/site/pages/about/About.tsx";
 import { TextLink } from "@/shared/catalyst-ui-kit/text.tsx";
-import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
 import PageMeta from "@/shared/PageMeta.tsx";
 import RestaurantStructuredData from "@/site/components/RestaurantStructuredData.tsx";
+import ResponsiveImage from "@/site/components/ResponsiveImage.tsx";
+import { SITE_IMAGES } from "@/site/images.ts";
 
 export default function Home() {
-    const images = [
-        "/images/fries_h_screen_small.png",
-        "/images/rice_h_screen_small.png",
-        "/images/tacos_h_screen_small.png",
-    ];
-
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    // ... inside your component
-    useEffect(() => {
-        const nextSlide = () => {
-            setCurrentIndex((prev) =>
-                prev === images.length - 1 ? 0 : prev + 1,
-            );
-        };
-        const interval = setInterval(() => {
-            nextSlide();
-        }, 5000);
-
-        // Cleanup: clear the interval if the component unmounts
-        return () => clearInterval(interval);
-    }, [currentIndex, images.length]);
-
     return (
         <div className="bg-white dark:bg-zinc-900">
             <PageMeta
@@ -39,55 +16,12 @@ export default function Home() {
             />
             <RestaurantStructuredData />
             <div className="relative isolate overflow-hidden pt-14">
-                {/* Images Container */}
-                <div
-                    className="absolute -z-20 inset-0 flex transition-transform duration-700 ease-in-out size-full"
-                    style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-                >
-                    {images.map((src, index) => (
-                        <img
-                            key={index}
-                            src={src}
-                            alt="carousel"
-                            className="size-full object-cover shrink-0"
-                        />
-                    ))}
-                </div>
-
-                {/* Indicator Dots */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 flex-row items-center">
-                    <Button
-                        outline
-                        onClick={() => {
-                            let nextIndex = currentIndex - 1;
-                            if (nextIndex < 0) {
-                                nextIndex = images.length - 1;
-                            }
-                            setCurrentIndex(nextIndex);
-                        }}
-                    >
-                        <ArrowLeftIcon />
-                    </Button>
-                    {images.map((_, i) => (
-                        <div
-                            key={i}
-                            className={`size-2 transition-colors ${i === currentIndex ? "bg-white" : "bg-white/30"} rounded-lg`}
-                        />
-                    ))}
-                    <Button
-                        outline
-                        onClick={() =>
-                            setCurrentIndex((currentIndex + 1) % images.length)
-                        }
-                    >
-                        <ArrowRightIcon />
-                    </Button>
-                </div>
-                {/*<div className={"absolute bottom-15"}>*/}
-                {/*    <Button outline>*/}
-                {/*        <ArrowLeftIcon />*/}
-                {/*    </Button>*/}
-                {/*</div>*/}
+                <ResponsiveImage
+                    image={SITE_IMAGES.bulgogiFries}
+                    sizes="100vw"
+                    priority
+                    className="absolute inset-0 -z-20 size-full object-cover"
+                />
                 <div className="absolute inset-0 -z-15 bg-white/20 dark:bg-black/40"></div>
                 <div
                     aria-hidden="true"

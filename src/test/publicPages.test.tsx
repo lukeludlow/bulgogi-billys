@@ -16,6 +16,7 @@ import Blog from "@/site/pages/blog/Blog.tsx";
 import BlogPost from "@/site/pages/blog/BlogPost.tsx";
 import NotFound from "@/site/pages/not-found/NotFound.tsx";
 import { posts } from "@/site/pages/blog/posts.ts";
+import { SITE_IMAGES } from "@/site/images.ts";
 
 test("home page renders with its title", async () => {
     await renderWithProviders(<Home />);
@@ -24,11 +25,32 @@ test("home page renders with its title", async () => {
         .toBe("Bulgogi Billy's | Korean Fusion Food Truck – Houston, TX");
 });
 
+test("the home hero is one eagerly loaded photo, not a carousel", async () => {
+    const { getByRole, container } = await renderWithProviders(<Home />);
+    const hero = getByRole("img", { name: SITE_IMAGES.bulgogiFries.alt });
+
+    await expect.element(hero).toHaveAttribute("loading", "eager");
+    await expect.element(hero).toHaveAttribute("fetchpriority", "high");
+    expect(container.querySelectorAll('img[alt="carousel"]')).toHaveLength(0);
+});
+
 test("menu page renders with its title", async () => {
     await renderWithProviders(<Menu />);
     await expect
         .poll(() => document.title)
         .toBe("Menu | Bulgogi Billy's Korean Fusion");
+});
+
+test("the menu sends visitors to the schedule, not the order-now dead end", async () => {
+    const { getByRole, container } = await renderWithProviders(<Menu />);
+    const ctas = getByRole("link", { name: "Find us this weekend" });
+
+    await expect.element(ctas.first()).toBeInTheDocument();
+    expect(ctas.elements()).toHaveLength(2);
+    for (const cta of ctas.elements()) {
+        expect(cta.getAttribute("href")).toBe("/schedule");
+    }
+    expect(container.querySelector('a[href="/order-now"]')).toBeNull();
 });
 
 test("schedule page renders with its title", async () => {
@@ -45,6 +67,18 @@ test("order-now page renders with its title", async () => {
     await expect
         .poll(() => document.title)
         .toBe("Order Online | Bulgogi Billy's");
+});
+
+test("the order-now placeholder asks search engines not to index it", async () => {
+    await renderWithProviders(<OrderNow />);
+    await expect
+        .poll(() =>
+            document
+                .querySelector('meta[name="robots"]')
+                ?.getAttribute("content"),
+        )
+        .toBe("noindex");
+    expect(document.querySelector('link[rel="canonical"]')).toBeNull();
 });
 
 test("contact page renders with its title", async () => {

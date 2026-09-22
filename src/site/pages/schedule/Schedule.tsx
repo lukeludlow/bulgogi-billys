@@ -6,6 +6,9 @@ import InstagramIcon from "@/site/components/icons/InstagramIcon.tsx";
 import FacebookIcon from "@/site/components/icons/FacebookIcon.tsx";
 import ScheduleItem from "@/site/pages/schedule/ScheduleItem.tsx";
 import PageMeta from "@/shared/PageMeta.tsx";
+import ResponsiveImage from "@/site/components/ResponsiveImage.tsx";
+import { SITE_IMAGES } from "@/site/images.ts";
+import { BUSINESS } from "@/site/business.ts";
 
 export default function Schedule() {
     return (
@@ -26,9 +29,10 @@ export default function Schedule() {
             </div>
 
             <div className="rounded-lg overflow-hidden shadow-sm">
-                <img
-                    src="/images/fries_h_screen_small.png"
-                    alt="Bulgogi Billy's fries"
+                <ResponsiveImage
+                    image={SITE_IMAGES.bulgogiFries}
+                    sizes="(min-width: 56rem) 56rem, 100vw"
+                    priority
                     className="w-full h-40 object-cover object-center"
                 />
             </div>
@@ -72,25 +76,23 @@ export default function Schedule() {
                     <div className="flex items-center justify-center gap-2">
                         <InstagramIcon />
                         <Link
-                            href={"https://www.instagram.com/bulgogibillys/"}
+                            href={BUSINESS.instagram.url}
                             className={
                                 "dark:text-white font-semibold text-base"
                             }
                         >
-                            @bulgogibillys
+                            {BUSINESS.instagram.handle}
                         </Link>
                     </div>
                     <div className="flex items-center justify-center gap-2">
                         <FacebookIcon />
                         <Link
-                            href={
-                                "https://www.facebook.com/p/Bulgogi-Billys-LLC-61560725494736/"
-                            }
+                            href={BUSINESS.facebook.url}
                             className={
                                 "dark:text-white font-semibold text-base"
                             }
                         >
-                            Bulgogi Billy's LLC
+                            {BUSINESS.facebook.name}
                         </Link>
                     </div>
                 </div>

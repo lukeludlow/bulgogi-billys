@@ -86,4 +86,15 @@ export default defineConfig([
             "no-restricted-imports": "off",
         },
     },
+    {
+        // Node scripts run outside Vite, where the @/ alias doesn't resolve,
+        // so they reach into src/ with relative imports.
+        files: ["scripts/**"],
+        languageOptions: {
+            globals: globals.node,
+        },
+        rules: {
+            "no-restricted-imports": "off",
+        },
+    },
 ]);

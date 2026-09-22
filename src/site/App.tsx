@@ -14,22 +14,37 @@ import {
 import { StackedLayout } from "@/shared/catalyst-ui-kit/stacked-layout.tsx";
 import { Outlet } from "react-router";
 import DarkModeToggle from "@/shared/dark-mode-toggle/DarkModeToggle.tsx";
+import ResponsiveImage from "@/site/components/ResponsiveImage.tsx";
+import SiteFooter from "@/site/components/SiteFooter.tsx";
+import { SITE_IMAGES } from "@/site/images.ts";
+import { NAV_ITEMS } from "@/site/navigation.ts";
 
-const navItems = [
-    { label: "Home", url: "/" },
-    { label: "Menu", url: "/menu" },
-    { label: "Schedule", url: "/schedule" },
-    { label: "Contact", url: "/contact" },
-];
+function NavbarLogo() {
+    return (
+        <ResponsiveImage
+            image={SITE_IMAGES.logo}
+            sizes="108px"
+            loading="eager"
+            alt="Bulgogi Billy's home"
+            className="h-10 w-auto"
+        />
+    );
+}
 
 export default function App() {
     return (
         <StackedLayout
             navbar={
                 <Navbar>
-                    <div className={"grid grid-cols-3 grow"}>
+                    {/* The logo column sizes to the logo, so the nav links
+                        get the rest of the row even on narrow desktops. */}
+                    <div
+                        className={
+                            "grid grid-cols-3 lg:grid-cols-[1fr_auto_1fr] grow"
+                        }
+                    >
                         <NavbarSection className="max-lg:hidden">
-                            {navItems.map(({ label, url }) => (
+                            {NAV_ITEMS.map(({ label, url }) => (
                                 <NavbarItem key={label} href={url}>
                                     {label}
                                 </NavbarItem>
@@ -39,13 +54,7 @@ export default function App() {
                             className={"justify-center max-lg:hidden"}
                         >
                             <NavbarItem href={"/"}>
-                                <img
-                                    src={
-                                        "/images/Bulgogi Billy's Logo (Transparent PNG FINAL).png"
-                                    }
-                                    alt={"Bulgogi Billy's Logo"}
-                                    className={"w-25 h-10"}
-                                />
+                                <NavbarLogo />
                             </NavbarItem>
                         </NavbarSection>
                         <NavbarSection
@@ -58,13 +67,7 @@ export default function App() {
                                     "flex flex-row col-span-2 justify-center max-sm:pr-2 md:pl-8"
                                 }
                             >
-                                <img
-                                    src={
-                                        "/images/Bulgogi Billy's Logo (Transparent PNG FINAL).png"
-                                    }
-                                    alt={"Bulgogi Billy's Logo"}
-                                    className={"w-25 h-10"}
-                                />
+                                <NavbarLogo />
                             </NavbarItem>
                         </NavbarSection>
                         <NavbarSection className={"justify-end"}>
@@ -78,17 +81,15 @@ export default function App() {
             sidebar={
                 <Sidebar>
                     <SidebarHeader>
-                        <img
-                            src={
-                                "/images/Bulgogi Billy's Logo (Transparent PNG FINAL).png"
-                            }
-                            alt={"Bulgogi Billy's Logo"}
-                            className={"w-50 h-20"}
+                        <ResponsiveImage
+                            image={SITE_IMAGES.logo}
+                            sizes="216px"
+                            className={"h-20 w-auto self-start"}
                         />
                     </SidebarHeader>
                     <SidebarBody>
                         <SidebarSection>
-                            {navItems.map(({ label, url }) => (
+                            {NAV_ITEMS.map(({ label, url }) => (
                                 <SidebarItem key={label} href={url}>
                                     {label}
                                 </SidebarItem>
@@ -97,6 +98,7 @@ export default function App() {
                     </SidebarBody>
                 </Sidebar>
             }
+            footer={<SiteFooter />}
         >
             <Outlet />
         </StackedLayout>

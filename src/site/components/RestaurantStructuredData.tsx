@@ -1,17 +1,17 @@
+import { BUSINESS } from "@/site/business.ts";
+
 const structuredData = {
     "@context": "https://schema.org",
     "@type": ["FoodEstablishment", "LocalBusiness"],
-    name: "Bulgogi Billy's",
+    name: BUSINESS.name,
     url: "https://www.bulgogibillys.com",
-    email: "bulgogibillys@gmail.com",
+    email: BUSINESS.email,
+    telephone: BUSINESS.phone.e164,
     servesCuisine: ["Korean", "Korean Fusion", "American"],
     priceRange: "$$",
     image: "https://www.bulgogibillys.com/images/fries_h_screen_small.png",
     hasMenu: "https://www.bulgogibillys.com/menu",
-    sameAs: [
-        "https://www.instagram.com/bulgogibillys/",
-        "https://www.facebook.com/p/Bulgogi-Billys-LLC-61560725494736/",
-    ],
+    sameAs: [BUSINESS.instagram.url, BUSINESS.facebook.url],
     location: [
         {
             "@type": "Place",

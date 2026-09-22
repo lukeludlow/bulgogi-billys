@@ -54,10 +54,13 @@ function MobileSidebar({
 export function StackedLayout({
     navbar,
     sidebar,
+    footer,
     children,
 }: React.PropsWithChildren<{
     navbar: React.ReactNode;
     sidebar: React.ReactNode;
+    /** Local addition: rendered after <main> so a <footer> keeps its contentinfo landmark. */
+    footer?: React.ReactNode;
 }>) {
     const [showSidebar, setShowSidebar] = useState(false);
 
@@ -90,6 +93,8 @@ export function StackedLayout({
                     <div className="mx-auto">{children}</div>
                 </div>
             </main>
+
+            {footer}
         </div>
     );
 }

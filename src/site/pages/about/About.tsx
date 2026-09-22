@@ -3,6 +3,8 @@ import { Divider } from "@/shared/catalyst-ui-kit/divider.tsx";
 import { Text } from "@/shared/catalyst-ui-kit/text.tsx";
 import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
 import MostPopularBadge from "@/site/pages/menu/MostPopularBadge.tsx";
+import ResponsiveImage from "@/site/components/ResponsiveImage.tsx";
+import { SITE_IMAGES } from "@/site/images.ts";
 
 export default function About() {
     const cardClass =
@@ -34,10 +36,10 @@ export default function About() {
                         </Text>
                     </div>
                     <div className="p-6 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/20 order-1 md:order-2">
-                        <img
-                            src="/images/billy-and-mom.jpeg"
+                        <ResponsiveImage
+                            image={SITE_IMAGES.billyAndMom}
+                            sizes="(min-width: 768px) 24rem, 100vw"
                             className="rounded-lg object-cover h-auto w-auto shadow-sm"
-                            alt="billy-and-mom"
                         />
                     </div>
                 </div>
@@ -50,10 +52,9 @@ export default function About() {
                         What exactly is bulgogi?
                     </Subheading>
                     <Text className="text-lg md:text-lg">
-                        It literally translates to "fire meat." We take Korean
-                        marinated beef or tender pork, marinate it in Mom’s
-                        authentic blend, and flame-grill it to absolute
-                        perfection.
+                        It literally translates to "fire meat." We take tender
+                        beef, marinate it in Mom’s authentic blend, and
+                        flame-grill it to absolute perfection.
                     </Text>
                     <Text className="text-lg md:text-lg">
                         Because we’re in Texas, we couldn't resist putting a
@@ -76,9 +77,9 @@ export default function About() {
                             </div>
                             <Text className="text-sm">
                                 A mountain of crispy French fries piled high
-                                with your choice of beef or pork bulgogi, melted
-                                cheddar-jack cheese, sour cream, Sriracha, and
-                                our signature Seoul Sauce.
+                                with beef bulgogi, melted cheddar-jack cheese,
+                                sour cream, Sriracha, and our signature Seoul
+                                Sauce.
                             </Text>
                         </div>
                         <div className="p-4 rounded-lg bg-gray-50 dark:bg-zinc-900/40 border border-gray-100 dark:border-white/5">
@@ -98,8 +99,8 @@ export default function About() {
                             </Heading>
                             <Text className="text-sm">
                                 Keep it classic with a comforting bowl of
-                                steamed white rice, our signature meat, and a
-                                side of traditional, spicy Korean pickled
+                                steamed white rice, our signature beef bulgogi,
+                                and a side of traditional, spicy Korean pickled
                                 cabbage.
                             </Text>
                         </div>
@@ -188,10 +189,10 @@ export default function About() {
             <div className={cardClass}>
                 <div className="grid grid-cols-1 md:grid-cols-3">
                     <div className="p-6 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/20 md:col-span-1">
-                        <img
-                            src="/images/cartoon-billy.jpeg"
-                            className="rounded-lg object-contain max-h-48"
-                            alt="cartoon-billy"
+                        <ResponsiveImage
+                            image={SITE_IMAGES.cartoonBilly}
+                            sizes="8rem"
+                            className="rounded-lg object-contain max-h-48 w-auto"
                         />
                     </div>
                     <div className="p-6 flex flex-col gap-4 justify-center md:col-span-2">

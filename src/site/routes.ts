@@ -25,7 +25,9 @@ export const SITE_ROUTES: SiteRoute[] = [
     { path: "/", Component: Home, indexable: true },
     { path: "/menu", Component: Menu, indexable: true },
     { path: "/schedule", Component: Schedule, indexable: true },
-    { path: "/order-now", Component: OrderNow, indexable: true },
+    // Kept routable but out of the index until online ordering launches
+    // (ONLINE_ORDERING_PLAN.md Phase 8): nothing links here any more.
+    { path: "/order-now", Component: OrderNow, indexable: false },
     { path: "/contact", Component: Contact, indexable: true },
     { path: "/blog", Component: Blog, indexable: true },
     // Individual posts are indexed via their own sitemap entries derived from

@@ -357,6 +357,13 @@ sitemap.
 
 ### Phase 0 — Quick wins (this week; each under half a day)
 
+**Status (2026-09-22):** 0.1–0.5 and 0.9 are built on the
+`public-site-improvement` branch. 0.6–0.8 (off-site, tent/receipt, gift cards)
+are still open. Implementation notes: contact facts live in
+`src/site/business.ts`, the nav in `src/site/navigation.ts`, and photos in the
+`src/site/images.ts` registry; `npm run images` regenerates the WebP
+derivatives.
+
 | #   | Change                                                                                                                                                                                                                                                                               | Why                                                                                        |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | 0.1 | Replace the Menu "Order" buttons with **"Find us this weekend" → `/schedule`**. Set `/order-now` to `indexable: false` and remove it from `sitemap.xml` until ONLINE_ORDERING_PLAN Phase 8.                                                                                          | Stops sending hungry visitors to a dead end (R1).                                          |
