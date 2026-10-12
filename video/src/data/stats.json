@@ -1,0 +1,242 @@
+{
+    "through": "2026-10-12",
+    "visitors": 1158,
+    "publicPageViews": 2499,
+    "mobileShare": 0.5785837651122625,
+    "countries": [
+        {
+            "code": "US",
+            "visitors": 1064
+        },
+        {
+            "code": "IE",
+            "visitors": 14
+        },
+        {
+            "code": "PL",
+            "visitors": 14
+        },
+        {
+            "code": "CA",
+            "visitors": 10
+        },
+        {
+            "code": "BR",
+            "visitors": 6
+        },
+        {
+            "code": "DE",
+            "visitors": 6
+        },
+        {
+            "code": "FR",
+            "visitors": 6
+        },
+        {
+            "code": "NL",
+            "visitors": 6
+        },
+        {
+            "code": "SG",
+            "visitors": 6
+        },
+        {
+            "code": "GB",
+            "visitors": 4
+        },
+        {
+            "code": "SE",
+            "visitors": 4
+        },
+        {
+            "code": "IN",
+            "visitors": 3
+        },
+        {
+            "code": "CN",
+            "visitors": 2
+        },
+        {
+            "code": "MX",
+            "visitors": 2
+        },
+        {
+            "code": "PH",
+            "visitors": 2
+        },
+        {
+            "code": "AR",
+            "visitors": 1
+        },
+        {
+            "code": "AU",
+            "visitors": 1
+        },
+        {
+            "code": "CO",
+            "visitors": 1
+        },
+        {
+            "code": "CR",
+            "visitors": 1
+        },
+        {
+            "code": "IT",
+            "visitors": 1
+        },
+        {
+            "code": "KR",
+            "visitors": 1
+        },
+        {
+            "code": "NG",
+            "visitors": 1
+        },
+        {
+            "code": "PE",
+            "visitors": 1
+        },
+        {
+            "code": "RO",
+            "visitors": 1
+        }
+    ],
+    "topPages": [
+        {
+            "path": "/",
+            "label": "Home",
+            "visitors": 957
+        },
+        {
+            "path": "/menu",
+            "label": "Menu",
+            "visitors": 282
+        },
+        {
+            "path": "/schedule",
+            "label": "Schedule",
+            "visitors": 251
+        },
+        {
+            "path": "/contact",
+            "label": "Contact",
+            "visitors": 107
+        },
+        {
+            "path": "/order-now",
+            "label": "Order",
+            "visitors": 68
+        },
+        {
+            "path": "/about",
+            "label": "About",
+            "visitors": 11
+        },
+        {
+            "path": "/order",
+            "label": "Order",
+            "visitors": 4
+        },
+        {
+            "path": "/blog",
+            "label": "Blog",
+            "visitors": 3
+        },
+        {
+            "path": "/blog/the-tiktok-that-put-bulgogi-billys-on-the-map",
+            "label": "The tiktok that put bulgogi billys on the map",
+            "visitors": 3
+        }
+    ],
+    "referrers": [
+        {
+            "name": "Google",
+            "visitors": 174
+        },
+        {
+            "name": "Instagram",
+            "visitors": 71
+        },
+        {
+            "name": "Facebook",
+            "visitors": 37
+        },
+        {
+            "name": "Email",
+            "visitors": 28
+        }
+    ],
+    "search": {
+        "clicks": 153,
+        "impressions": 1100,
+        "brandQuery": "bulgogi billys",
+        "brandPosition": 2.95,
+        "monthly": [
+            {
+                "month": "2026-05",
+                "label": "May",
+                "clicks": 2,
+                "impressions": 10,
+                "complete": false
+            },
+            {
+                "month": "2026-06",
+                "label": "Jun",
+                "clicks": 7,
+                "impressions": 140,
+                "complete": true
+            },
+            {
+                "month": "2026-07",
+                "label": "Jul",
+                "clicks": 28,
+                "impressions": 200,
+                "complete": true
+            },
+            {
+                "month": "2026-08",
+                "label": "Aug",
+                "clicks": 35,
+                "impressions": 347,
+                "complete": true
+            },
+            {
+                "month": "2026-09",
+                "label": "Sep",
+                "clicks": 58,
+                "impressions": 289,
+                "complete": true
+            },
+            {
+                "month": "2026-10",
+                "label": "Oct",
+                "clicks": 23,
+                "impressions": 114,
+                "complete": false
+            }
+        ],
+        "growth": {
+            "from": {
+                "month": "2026-06",
+                "label": "Jun",
+                "clicks": 7,
+                "impressions": 140,
+                "complete": true
+            },
+            "to": {
+                "month": "2026-09",
+                "label": "Sep",
+                "clicks": 58,
+                "impressions": 289,
+                "complete": true
+            },
+            "multiple": 8.285714285714286
+        },
+        "emergingQueries": [
+            "catering conroe",
+            "caterers near me",
+            "catering near me",
+            "graduation party near me"
+        ]
+    }
+}

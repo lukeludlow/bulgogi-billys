@@ -40,7 +40,14 @@ export default defineConfig({
                     // happy-dom rather than node for the two DOM touchpoints:
                     // journal.ts (localStorage) and sitemap.test.ts (DOMParser).
                     environment: "happy-dom",
-                    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+                    include: [
+                        "src/**/*.test.ts",
+                        "scripts/**/*.test.ts",
+                        // The website-impact video's dependency-free data
+                        // modules; `npm --prefix video test` runs all of them.
+                        "video/src/data/**/*.test.ts",
+                        "video/scripts/stats/**/*.test.ts",
+                    ],
                 },
             },
             {

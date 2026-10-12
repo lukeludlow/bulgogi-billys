@@ -1,0 +1,46 @@
+{
+    "name": "bulgogi-billys-video",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "description": "Website-impact video for Billy, rendered with Remotion.",
+    "engines": {
+        "node": ">=22.18"
+    },
+    "scripts": {
+        "stats": "node scripts/build-stats.ts",
+        "map": "node scripts/build-map.ts",
+        "screens": "node scripts/capture-screens.ts",
+        "vo": "node --env-file=../.env scripts/voiceover.ts",
+        "studio": "remotion studio",
+        "still": "node scripts/stills.ts",
+        "render": "remotion render WebsiteImpact-Vertical out/bulgogi-billys-impact-vertical.mp4 && remotion render WebsiteImpact-Landscape out/bulgogi-billys-impact-landscape.mp4",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@heroicons/react": "^2.2.0",
+        "@remotion/cli": "4.0.535",
+        "@remotion/google-fonts": "4.0.535",
+        "@remotion/media-parser": "4.0.535",
+        "d3-geo": "^3.1.1",
+        "i18n-iso-countries": "^7.14.0",
+        "react": "^19.2.6",
+        "react-dom": "^19.2.6",
+        "remotion": "4.0.535",
+        "topojson-client": "^3.1.0",
+        "world-atlas": "^2.0.2"
+    },
+    "devDependencies": {
+        "@remotion/bundler": "4.0.535",
+        "@remotion/renderer": "4.0.535",
+        "@types/d3-geo": "^3.1.1",
+        "@types/geojson": "^7946.0.16",
+        "@types/node": "^24.12.2",
+        "@types/react": "^19.2.14",
+        "@types/topojson-client": "^3.1.5",
+        "@types/topojson-specification": "^1.0.5",
+        "playwright": "1.61.1",
+        "typescript": "~6.0.2"
+    }
+}

@@ -31,6 +31,8 @@ export default defineConfig([
         "supabase/.temp",
         // Vendored Tailwind Plus Catalyst kit — third-party code, not ours to lint.
         "src/shared/catalyst-ui-kit",
+        // Rendered video output and Remotion's bundle cache.
+        "video/out",
     ]),
     {
         files: ["**/*.{ts,tsx}"],
@@ -86,6 +88,18 @@ export default defineConfig([
         files: ["src/test/sitemap.test.ts", "src/test/vercelConfig.test.ts"],
         rules: {
             "no-restricted-imports": "off",
+        },
+    },
+    {
+        // The website-impact video is its own Remotion package: no @/ alias,
+        // no Vite fast refresh, and its scripts/ run under Node.
+        files: ["video/**"],
+        languageOptions: {
+            globals: { ...globals.browser, ...globals.node },
+        },
+        rules: {
+            "no-restricted-imports": "off",
+            "react-refresh/only-export-components": "off",
         },
     },
     {

@@ -1,4 +1,5 @@
 import type { Transaction } from "@/admin/domain/types.ts";
+import { parseCsv } from "@/shared/csv.ts";
 
 /**
  * Parse a processor "transactions" CSV export into `Transaction[]`.
@@ -13,7 +14,7 @@ import type { Transaction } from "@/admin/domain/types.ts";
  * (Approved/Declined/Errored) is kept — the analytics layer decides what counts.
  */
 export function parseTransactionsCsv(text: string): Transaction[] {
-    const rows = parseCsv(stripBom(text));
+    const rows = parseCsv(text);
     if (rows.length === 0) return [];
 
     const header = rows[0].map((cell) => cell.trim().toLowerCase());
@@ -54,10 +55,6 @@ export function parseTransactionsCsv(text: string): Transaction[] {
     return transactions;
 }
 
-function stripBom(text: string): string {
-    return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
-}
-
 /** Turn "$1,234.50" or "-$4.00" into a number; null if it isn't a number. */
 function parseAmount(raw: string): number | null {
     const cleaned = raw.replace(/[$,\s]/g, "");
@@ -88,54 +85,4 @@ function parseDate(raw: string): string | null {
     );
     if (Number.isNaN(date.getTime())) return null;
     return date.toISOString();
-}
-
-/**
- * Minimal RFC-4180-ish CSV reader: handles quoted fields, escaped quotes (""),
- * and both \n and \r\n line endings. Good enough for processor exports, which
- * are machine-generated.
- */
-function parseCsv(text: string): string[][] {
-    const rows: string[][] = [];
-    let row: string[] = [];
-    let field = "";
-    let inQuotes = false;
-
-    for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        if (inQuotes) {
-            if (char === '"') {
-                if (text[i + 1] === '"') {
-                    field += '"';
-                    i++;
-                } else {
-                    inQuotes = false;
-                }
-            } else {
-                field += char;
-            }
-            continue;
-        }
-        if (char === '"') {
-            inQuotes = true;
-        } else if (char === ",") {
-            row.push(field);
-            field = "";
-        } else if (char === "\n") {
-            row.push(field);
-            rows.push(row);
-            row = [];
-            field = "";
-        } else if (char === "\r") {
-            // handled by the \n branch; ignore a lone \r
-        } else {
-            field += char;
-        }
-    }
-    // Flush the last field/row if the file didn't end with a newline.
-    if (field !== "" || row.length > 0) {
-        row.push(field);
-        rows.push(row);
-    }
-    return rows;
 }

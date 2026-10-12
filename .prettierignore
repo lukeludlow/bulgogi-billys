@@ -6,3 +6,8 @@ dist-ssr/
 supabase/.temp/
 .vitest-attachments/
 **/__screenshots__/
+# Website-impact video: render output and generated data.
+video/out/
+video/src/data/stats.json
+video/src/data/voiceover.json
+video/src/data/worldDots.json

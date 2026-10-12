@@ -39,3 +39,15 @@ supabase/.temp
 supabase/.branches
 
 docs/Bulgogi Billy’s Family Business Growth Plan.pdf
+
+analytics
+
+# Website-impact video: renders and regenerable media
+video/out/
+# copies of public/images/opt/, recreated by `npm run screens`
+video/public/brand/
+# site screenshots, recreated by `npm run screens`
+video/public/screens/
+# Luke's cloned-voice clips + their timings, recreated by `npm run vo`
+video/public/vo/
+video/src/data/voiceover.json
