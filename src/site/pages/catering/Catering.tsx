@@ -45,11 +45,14 @@ export default function Catering() {
     const [estimateInput, setEstimateInput] = useState<EstimateInput>(
         DEFAULT_ESTIMATE_INPUT,
     );
+    // The packages follow the estimate only once the visitor has used it.
+    const [estimateUsed, setEstimateUsed] = useState(false);
     const estimateTracked = useRef(false);
     const heroPhone = phoneClickHandlers("catering_hero");
 
     function changeEstimate(next: EstimateInput) {
         setEstimateInput(next);
+        setEstimateUsed(true);
         if (!estimateTracked.current) {
             estimateTracked.current = true;
             trackSiteEvent("catering_estimate_used", { style: next.style });
@@ -129,6 +132,7 @@ export default function Catering() {
 
             <ServiceStyles />
             <Packages
+                estimate={estimateUsed ? estimateInput : null}
                 onChoose={(pkg) => {
                     changeEstimate(packageInput(pkg));
                     goToEstimate();

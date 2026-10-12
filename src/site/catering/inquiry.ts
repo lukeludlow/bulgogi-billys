@@ -56,8 +56,6 @@ export interface InquiryFields {
     location: string;
     eventType: keyof typeof EVENT_TYPES;
     budget: keyof typeof BUDGET_RANGES;
-    vegetarianNeeded: boolean;
-    vegetarianGuests: number | null;
     dietaryNeeds: string;
     heardFrom: keyof typeof HEARD_FROM | "";
     notes: string;
@@ -74,7 +72,6 @@ function pick<T extends Record<string, string>>(
 /** Reads the inquiry form's fields, falling back to safe defaults. */
 export function readInquiryForm(data: FormData): InquiryFields {
     const text = (key: string) => String(data.get(key) ?? "").trim();
-    const vegetarianGuests = Number.parseInt(text("vegetarianGuests"), 10);
     const heardFrom = text("heardFrom");
     const style = text("style") as ServiceStyleId;
 
@@ -95,11 +92,6 @@ export function readInquiryForm(data: FormData): InquiryFields {
         location: text("location"),
         eventType: pick(EVENT_TYPES, text("eventType"), "other"),
         budget: pick(BUDGET_RANGES, text("budget"), "unsure"),
-        vegetarianNeeded: data.has("vegetarianNeeded"),
-        vegetarianGuests:
-            Number.isFinite(vegetarianGuests) && vegetarianGuests > 0
-                ? vegetarianGuests
-                : null,
         dietaryNeeds: text("dietaryNeeds"),
         heardFrom: Object.hasOwn(HEARD_FROM, heardFrom)
             ? (heardFrom as keyof typeof HEARD_FROM)
@@ -159,11 +151,6 @@ export function buildInquiryPayload(
     const date = fields.eventDate
         ? formatEventDate(fields.eventDate)
         : "date TBD";
-    const vegetarian = fields.vegetarianNeeded
-        ? fields.vegetarianGuests
-            ? `Yes — ${fields.vegetarianGuests} guests`
-            : "Yes — count TBD"
-        : "No";
 
     const payload: Record<string, string | number> = {
         subject: `Catering inquiry — ${fields.guests} guests, ${date}`,
@@ -180,8 +167,7 @@ export function buildInquiryPayload(
         "Event location / ZIP": fields.location,
         "Event type": EVENT_TYPES[fields.eventType],
         Budget: BUDGET_RANGES[fields.budget],
-        "Vegetarian option": vegetarian,
-        "Other dietary needs": fields.dietaryNeeds,
+        "Dietary needs": fields.dietaryNeeds,
         "Heard about us from": fields.heardFrom
             ? HEARD_FROM[fields.heardFrom]
             : "",

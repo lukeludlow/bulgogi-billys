@@ -93,11 +93,11 @@ test("sends a labeled inquiry with the estimate and campaign, then confirms", as
         "Event location / ZIP": "77380",
         "Event type": "Office / corporate",
         Budget: "Not sure yet",
-        "Vegetarian option": "No",
-        "Estimate shown": expect.stringContaining("Estimated $680 – $820"),
+        "Estimate shown": expect.stringContaining("Estimated $600 – $850"),
         Campaign: "tent / fall-2026 (landed on /catering)",
         botcheck: "",
     });
+    expect(sentPayload(fetchMock)).not.toHaveProperty("Vegetarian option");
     expect(track).toHaveBeenCalledWith("catering_inquiry_submitted", {
         style: "dropoff",
         guests: 40,
@@ -105,25 +105,6 @@ test("sends a labeled inquiry with the estimate and campaign, then confirms", as
     await expect
         .element(screen.getByRole("textbox", { name: "Name" }))
         .toHaveValue("");
-});
-
-test("asks how many vegetarian guests once a vegetarian option is ticked", async () => {
-    const fetchMock = stubFetch({ success: true });
-    const screen = await renderWithProviders(<Harness />);
-    const count = screen.getByRole("spinbutton", {
-        name: "How many vegetarian guests?",
-    });
-
-    await expect.element(count).not.toBeInTheDocument();
-    await screen
-        .getByRole("checkbox", { name: "Vegetarian option needed" })
-        .click();
-    await count.fill("6");
-    await fillRequired(screen);
-    await submitButton(screen).click();
-
-    await expect.poll(() => fetchMock.mock.calls.length).toBe(1);
-    expect(sentPayload(fetchMock)["Vegetarian option"]).toBe("Yes — 6 guests");
 });
 
 test("warns, without blocking, that Saturday mornings are the market", async () => {

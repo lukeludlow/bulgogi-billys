@@ -190,33 +190,36 @@ sitemap.
 
     | Service style            | What it is                                                                                                          | Public price                                                    |
     | ------------------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-    | **Drop-off Bulgogi Bar** | Trays: beef bulgogi, steamed rice, kimchi, Seoul sauce. Fries or tortillas as add-ons.                              | **From $17/person**, 20-guest minimum                           |
-    | **On-site Tent Service** | Billy sets up the tent and cooks to order from a short menu. The "experience" tier: the thing people saw on TikTok. | **From $22/person**. Minimum $1,000 Mon–Thu / $1,500 Fri–Sun    |
+    | **Drop-off Bulgogi Bar** | Trays: beef bulgogi, steamed rice, kimchi, Seoul sauce. Fries or tortillas as add-ons.                              | **From $15/person** ($15–$21.25 range), 20-guest minimum        |
+    | **On-site Tent Service** | Billy sets up the tent and cooks to order from a short menu. The "experience" tier: the thing people saw on TikTok. | **From $22/person**. Minimum $800 Mon–Thu / $1,200 Fri–Sun      |
     | **Employee-Paid Pop-Up** | For office parks, breweries and apartment communities. Guests buy their own meals.                                  | **$0 to host.** Needs ~40+ expected buyers or a sales guarantee |
 
     The pop-up is §12.3 weekday vending. Test one location at a time, and prove
     positive contribution before buying equipment (§23.4).
 
-3. **Packages for 20 / 40 / 60 / 100 guests** (§12.2). These are named cards
-   with example ranges. The ranges come straight from the estimator (§3.3), so
-   the two can't disagree.
+3. **Packages for 40 / 60 / 100 guests** (§12.2). These are named cards with
+   example ranges and a list of what each includes. The ranges come straight
+   from the estimator (§3.3), so the two can't disagree.
 
-    | Package          | Guests | Suggested style | Example range             |
-    | ---------------- | ------ | --------------- | ------------------------- |
-    | **Backyard**     | 20     | Drop-off        | $340 – $410               |
-    | **Office Lunch** | 40     | Drop-off        | $680 – $820               |
-    | **Party**        | 60     | On-site         | $1,320 – $1,585 (weekday) |
-    | **Big Event**    | 100    | On-site         | $2,200 – $2,640           |
+    | Package                     | Guests | Suggested style | Example range   | Selected when the estimate is… |
+    | --------------------------- | ------ | --------------- | --------------- | ------------------------------ |
+    | **Office Lunch & Backyard** | 40     | Drop-off        | $600 – $850     | drop-off, any size             |
+    | **Party**                   | 60     | On-site         | $1,320 – $1,585 | on-site, under 80 guests       |
+    | **Big Event**               | 100    | On-site         | $2,200 – $2,640 | on-site, 80+ guests            |
+
+    Once the visitor uses the estimator (or picks a package), the package their
+    answers fall into is marked "Matches your estimate" and the others dim,
+    though they stay clickable. A pop-up matches none.
 
 4. **Instant estimator.** This is the "semi-transparent but flexible" part.
     - **Inputs:**
         - guests (stepper)
         - service style
         - day of week
-        - distance band (≤25 mi of The Woodlands/Conroe, 25–45 mi, 45+ mi)
+        - distance band (≤15 mi of The Woodlands/Conroe, 16–30 mi, 31–40 mi)
         - add-ons: extra tacos, Texas-size portions, drinks, extra kimchi
-    - **Output:** a **range**, not a quote. For example: "Estimated **$1,500 –
-      $1,800** · weekend minimum applied · 50% deposit ($750) holds your date."
+    - **Output:** a **range**, not a quote. For example: "Estimated **$1,200 –
+      $1,440** · weekend minimum applied · 50% deposit ($600) holds your date."
     - **CTA:** _Get my exact quote_. It scrolls to the form with the answers
       prefilled.
     - **Why a range:** it sets expectations, screens out budgets that won't
@@ -224,7 +227,7 @@ sitemap.
       costs"). It still leaves Billy room to adjust for menu, travel and service
       hours.
 5. **"What affects your price."** Menu choices, headcount, day and time, service
-   hours, and travel (free within ~25 miles, quoted beyond).
+   hours, and travel (free within 15 miles, quoted up to 40).
 6. **How booking works** (§12.2 contract terms, §23.2 deposits):
     1. You send an inquiry, and we reply with a quote within 24 hours.
     2. A **50% deposit** holds your date. It is sent as a **Square Invoice**,
@@ -246,9 +249,6 @@ sitemap.
     - Launch with the video and whatever real quotes exist. **Never invent
       testimonials.**
 8. **FAQ.**
-    - Is there a vegetarian option? "Yes, for groups. Tick _Vegetarian option
-      needed_ on the form and tell us how many guests, and we'll include it in
-      your quote."
     - Is it gluten-free? (The marinade contains soy sauce, so the honest answer
       is "ask us.")
     - How spicy is it?
@@ -259,25 +259,24 @@ sitemap.
     - Can you do Saturday mornings?
 9. **Inquiry form.**
 
-    | Field                     | Type / hint                                                                 | Why                                                                                                                          |
-    | ------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-    | Name                      | text, required                                                              | Basic contact.                                                                                                               |
-    | Company / organization    | text, optional                                                              | Separates corporate from private leads; corporate clients are repeat buyers.                                                 |
-    | Phone                     | tel, required                                                               | Catering is closed by phone. This is the fastest route to a deposit.                                                         |
-    | Email                     | email, required                                                             | Where the written quote and Square Invoice go.                                                                               |
-    | Preferred contact         | radio: call / text / email                                                  | Respects the buyer's workday and raises the reply rate.                                                                      |
-    | Event date                | date, required, hint "Saturdays AM unavailable"                             | Billy checks availability first; this avoids a wasted quote.                                                                 |
-    | Start time                | time                                                                        | Lunch vs evening changes staffing and pricing.                                                                               |
-    | Guests                    | number, required, prefilled from estimator                                  | Drives the per-person price and whether the minimum applies.                                                                 |
-    | Service style             | select, prefilled                                                           | Drop-off / on-site / pop-up.                                                                                                 |
-    | Event location / ZIP      | text, required                                                              | Sets the travel fee and feasibility.                                                                                         |
-    | Event type                | select: office, birthday, wedding, church/school, brewery, community, other | Helps tailor the quote, and feeds reporting on which segments convert.                                                       |
-    | Budget range              | select: <$500, $500–1k, $1–2k, $2k+, not sure                               | Screens early and signals which package to offer.                                                                            |
-    | Vegetarian option needed  | checkbox; when ticked, shows "How many vegetarian guests?" (number)         | Groups of 40+ almost always include vegetarians. Asking up front lets Billy quote and prep it instead of losing the booking. |
-    | Other dietary needs       | text, e.g. allergies, gluten                                                | Allergy planning.                                                                                                            |
-    | How did you hear about us | select: at a market, Instagram, Facebook, Google, friend, other             | Attribution (§19.5). Especially tells us whether the tent QR works.                                                          |
-    | Anything else             | textarea                                                                    | Catch-all.                                                                                                                   |
-    | _(hidden)_ estimate       | the estimator's range, inputs, and UTM source                               | Billy sees what the buyer already expects before he replies.                                                                 |
+    | Field                     | Type / hint                                                                 | Why                                                                          |
+    | ------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+    | Name                      | text, required                                                              | Basic contact.                                                               |
+    | Company / organization    | text, optional                                                              | Separates corporate from private leads; corporate clients are repeat buyers. |
+    | Phone                     | tel, required                                                               | Catering is closed by phone. This is the fastest route to a deposit.         |
+    | Email                     | email, required                                                             | Where the written quote and Square Invoice go.                               |
+    | Preferred contact         | radio: call / text / email                                                  | Respects the buyer's workday and raises the reply rate.                      |
+    | Event date                | date, required, hint "Saturdays AM unavailable"                             | Billy checks availability first; this avoids a wasted quote.                 |
+    | Start time                | time                                                                        | Lunch vs evening changes staffing and pricing.                               |
+    | Guests                    | number, required, prefilled from estimator                                  | Drives the per-person price and whether the minimum applies.                 |
+    | Service style             | select, prefilled                                                           | Drop-off / on-site / pop-up.                                                 |
+    | Event location / ZIP      | text, required                                                              | Sets the travel fee and feasibility.                                         |
+    | Event type                | select: office, birthday, wedding, church/school, brewery, community, other | Helps tailor the quote, and feeds reporting on which segments convert.       |
+    | Budget range              | select: <$500, $500–1k, $1–2k, $2k+, not sure                               | Screens early and signals which package to offer.                            |
+    | Dietary needs             | text, e.g. allergies, gluten                                                | Allergy planning.                                                            |
+    | How did you hear about us | select: at a market, Instagram, Facebook, Google, friend, other             | Attribution (§19.5). Especially tells us whether the tent QR works.          |
+    | Anything else             | textarea                                                                    | Catch-all.                                                                   |
+    | _(hidden)_ estimate       | the estimator's range, inputs, and UTM source                               | Billy sees what the buyer already expects before he replies.                 |
 
     On success, show: "Thanks — Billy will reply within 24 hours. Need it
     sooner? Call or text 936-900-2705."
@@ -294,7 +293,7 @@ sitemap.
     - The proposal sits at the **low-to-mid** end, on purpose for a first
       season. Raise prices once bookings fill up.
 - **The customer's anchor:** a Regular bowl is $14 including tax at the tent.
-  Drop-off at $17 covers trays, packaging and delivery. On-site at $22 covers
+  Drop-off from $15 covers trays, packaging and delivery. On-site at $22 covers
   the tent crew and the live-grill experience.
 - **Floor rules**, checked against the dashboard before launch:
     - Per-person prices must hold the Profit Calculator's target margin
@@ -383,7 +382,7 @@ derivatives.
 - **`/catering`** follows §3. The proposed §3.2 prices are published (Luke's
   call, still pending Billy's sign-off), and every number lives in
   `CATERING_PRICING` in `src/site/catering/pricing.ts`. Add-ons and travel
-  beyond 25 miles are "quoted separately" rather than priced. The FAQ leaves out
+  beyond 15 miles are "quoted separately" rather than priced. The FAQ leaves out
   tent space/power and permits/insurance until Billy confirms them, and there
   are no testimonials yet.
 - **Prerendering.** `npm run build` ends with `scripts/prerender.ts`, which
@@ -396,6 +395,13 @@ derivatives.
   two carry a `placement`).
 - **Inquiries** reach the business inbox through Web3Forms with every answer
   labeled, the estimate the buyer saw, and the campaign that brought them in.
+- **Update (2026-10-03, Luke):**
+    - Drop-off is $15–$21.25 per person, so 40 guests is $600–$850.
+    - On-site minimums are $800 Mon–Thu and $1,200 Fri–Sun.
+    - Backyard and Office Lunch merged into one package, leaving three. Each
+      lists what it includes and follows the estimator (§3.1 item 3).
+    - Distance bands are ≤15, 16–30 and 31–40 miles.
+    - The vegetarian option is off the page.
 
 1. **`/catering`**, as specified in §3.
 2. **Build-time prerendering** (fixes T1 and T2).
@@ -529,32 +535,32 @@ over month without weekend market revenue falling.
 
 - **Phone:** publish 936-900-2705 site-wide. It takes calls and texts, so offer
   both `tel:` and `sms:` links.
-- **Vegetarian option for groups:** allowed. The catering form lets buyers ask
-  for one (see §3.1 item 9).
+- **Vegetarian option (revised Oct 3):** removed from the catering page — no
+  form field and no FAQ entry. The menu is beef only.
 - **Launch pricing (Sept 22):** `/catering` goes live with the proposed prices
   in decision 1 below, so the page can meet the early-October date. Billy's
   changes are an edit to `CATERING_PRICING`.
-- **Add-ons and travel beyond ~25 miles:** buyers can tick them in the
-  estimator, but they are quoted by Billy, not priced on the site.
+- **Revised prices (Oct 3):** drop-off $15–$21.25 per person; on-site minimums
+  $800 Mon–Thu / $1,200 Fri–Sun; three packages; distance bands of ≤15, 16–30
+  and 31–40 miles.
+- **Add-ons and travel beyond 15 miles:** buyers can tick them in the estimator,
+  but they are quoted by Billy, not priced on the site.
 
 **Still open:**
 
-1. **Catering prices**: $17 drop-off / $22 on-site per person; minimums of
-   $1,000 on weekdays and $1,500 Fri–Sun; the 50% deposit; the 7-day headcount
-   deadline; cancellation terms.
-2. **What the group vegetarian option is and what it costs**, e.g. tofu or
-   veggie bulgogi. The catering form already asks whether one is needed and for
-   how many guests. Billy needs a dish and a price before the first such booking
-   is quoted.
-3. **Saturday rules**: morning blackout confirmed? Afternoons and evenings OK?
-4. **Service radius and travel fee** beyond ~25 miles.
-5. **The pop-up sales guarantee** (proposed $600 floor).
-6. **Testimonials and client names**: whom to ask, and how to get written
+1. **Catering prices**: $15–$21.25 drop-off / $22 on-site per person; on-site
+   minimums of $800 on weekdays and $1,200 Fri–Sun; the 50% deposit; the 7-day
+   headcount deadline; cancellation terms.
+2. **Saturday rules**: morning blackout confirmed? Afternoons and evenings OK?
+3. **Travel fee** for the 16–30 and 31–40 mile bands, and whether to go past 40
+   miles.
+4. **The pop-up sales guarantee** (proposed $600 floor).
+5. **Testimonials and client names**: whom to ask, and how to get written
    permission.
-7. **Photo shoot**: about six excellent shots (fries, tacos, rice bowl, the tent
+6. **Photo shoot**: about six excellent shots (fries, tacos, rice bowl, the tent
    in action, a catered spread, the family). Six great photos beat a gallery of
    average ones.
-8. **Tent footprint and power needs, and permit/insurance status.** The catering
+7. **Tent footprint and power needs, and permit/insurance status.** The catering
    FAQ leaves both questions out until Billy confirms the facts.
 
 ---

@@ -44,9 +44,10 @@ test("the catering page ships its prices in the HTML itself", async () => {
     expect(head).toContain(
         '<link rel="canonical" href="https://www.bulgogibillys.com/catering"/>',
     );
-    expect(body).toContain("From $17/person · 20-guest minimum");
-    expect(body).toContain("$1,320 – $1,585");
-    expect(body).toContain("Is there a vegetarian option?");
+    expect(body).toContain("From $15/person · 20-guest minimum");
+    expect(body).toContain("$600 – $850");
+    expect(body).toContain("Is it gluten-free?");
+    expect(body).not.toMatch(/vegetarian/i);
 });
 
 test("an unknown path renders the not-found page, marked noindex", async () => {

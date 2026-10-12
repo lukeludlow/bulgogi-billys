@@ -27,8 +27,6 @@ const COMPLETE: Record<string, string> = {
     location: "77380",
     eventType: "office",
     budget: "1000_2000",
-    vegetarianNeeded: "yes",
-    vegetarianGuests: "8",
     dietaryNeeds: "One peanut allergy",
     heardFrom: "market",
     notes: "Parking lot setup",
@@ -52,8 +50,6 @@ test("reads and trims every field of a complete form", () => {
         location: "77380",
         eventType: "office",
         budget: "1000_2000",
-        vegetarianNeeded: true,
-        vegetarianGuests: 8,
         dietaryNeeds: "One peanut allergy",
         heardFrom: "market",
         notes: "Parking lot setup",
@@ -68,7 +64,6 @@ test("falls back to safe values for missing or tampered fields", () => {
             style: "catapult",
             eventType: "",
             budget: "constructor",
-            vegetarianGuests: "-3",
             heardFrom: "tv",
         }),
     );
@@ -78,8 +73,6 @@ test("falls back to safe values for missing or tampered fields", () => {
         style: "dropoff",
         eventType: "other",
         budget: "unsure",
-        vegetarianNeeded: false,
-        vegetarianGuests: null,
         heardFrom: "",
     });
 });
@@ -106,8 +99,7 @@ test("labels every answer the way Billy reads it", () => {
         "Event location / ZIP": "77380",
         "Event type": "Office / corporate",
         Budget: "$1,000 – $2,000",
-        "Vegetarian option": "Yes — 8 guests",
-        "Other dietary needs": "One peanut allergy",
+        "Dietary needs": "One peanut allergy",
         "Heard about us from": "At a market",
         "Anything else": "Parking lot setup",
         "Estimate shown": "On-site · 60 guests → $1,320 – $1,585",
@@ -130,20 +122,13 @@ test("leaves blank optional answers and missing attribution out", () => {
     for (const key of [
         "Company",
         "Start time",
-        "Other dietary needs",
+        "Dietary needs",
         "Heard about us from",
         "Anything else",
         "Campaign",
     ]) {
         expect(payload, key).not.toHaveProperty(key);
     }
-});
-
-test("describes the vegetarian answer", () => {
-    const vegetarian = (overrides: Partial<InquiryFields>) =>
-        buildInquiryPayload(fields(overrides), "", null)["Vegetarian option"];
-    expect(vegetarian({ vegetarianNeeded: false })).toBe("No");
-    expect(vegetarian({ vegetarianGuests: null })).toBe("Yes — count TBD");
 });
 
 test("formats dates as calendar days and times on a 12-hour clock", () => {

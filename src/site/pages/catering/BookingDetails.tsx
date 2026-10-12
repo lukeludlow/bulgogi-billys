@@ -1,6 +1,10 @@
 import clsx from "clsx";
 import { Subheading } from "@/shared/catalyst-ui-kit/heading.tsx";
-import { CATERING_PRICING } from "@/site/catering/pricing.ts";
+import {
+    CATERING_PRICING,
+    FREE_TRAVEL_MILES,
+    MAX_TRAVEL_MILES,
+} from "@/site/catering/pricing.ts";
 import { CARD_CLASS } from "@/site/pages/catering/cardStyles.ts";
 
 const DEPOSIT_PERCENT = Math.round(CATERING_PRICING.depositShare * 100);
@@ -10,7 +14,7 @@ const PRICE_FACTORS = [
     "Headcount",
     `Day and time — on-site events have a higher minimum ${CATERING_PRICING.days.weekend}`,
     "Service hours for on-site events",
-    "Travel — free within about 25 miles of The Woodlands and Conroe, quoted beyond",
+    `Travel — free within ${FREE_TRAVEL_MILES} miles of The Woodlands and Conroe, quoted up to ${MAX_TRAVEL_MILES} miles`,
 ];
 
 const BOOKING_STEPS = [

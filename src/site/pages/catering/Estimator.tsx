@@ -27,9 +27,11 @@ import {
     clampGuests,
     DAY_TYPES,
     DISTANCE_BAND_IDS,
+    distanceBandLabel,
     estimateCateringQuote,
     formatEstimate,
     formatPrice,
+    MAX_TRAVEL_MILES,
     minimumNote,
     SERVICE_STYLE_IDS,
     stylePriceLine,
@@ -175,6 +177,10 @@ export default function Estimator({ value, onChange, onRequestQuote }: Props) {
 
                     <Field>
                         <Label>Distance</Label>
+                        <Description>
+                            More than {MAX_TRAVEL_MILES} miles away? Call or
+                            text us.
+                        </Description>
                         <Select
                             value={value.distance}
                             onChange={(event) =>
@@ -186,7 +192,7 @@ export default function Estimator({ value, onChange, onRequestQuote }: Props) {
                         >
                             {DISTANCE_BAND_IDS.map((id) => (
                                 <option key={id} value={id}>
-                                    {CATERING_PRICING.distanceBands[id].label}
+                                    {distanceBandLabel(id)}
                                 </option>
                             ))}
                         </Select>

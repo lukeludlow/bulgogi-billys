@@ -1,3 +1,8 @@
+import {
+    FREE_TRAVEL_MILES,
+    MAX_TRAVEL_MILES,
+} from "@/site/catering/pricing.ts";
+
 export interface FaqEntry {
     question: string;
     answer: string;
@@ -9,10 +14,6 @@ export interface FaqEntry {
  * confirms the facts (§6).
  */
 export const CATERING_FAQ: readonly FaqEntry[] = [
-    {
-        question: "Is there a vegetarian option?",
-        answer: "Yes, for groups. Tick “Vegetarian option needed” on the form and tell us how many guests, and we'll include it in your quote.",
-    },
     {
         question: "Is it gluten-free?",
         answer: "Not as served: our bulgogi marinade contains soy sauce, which contains wheat. Tell us about any gluten or allergy needs on the form and we'll talk through what we can do.",
@@ -27,7 +28,7 @@ export const CATERING_FAQ: readonly FaqEntry[] = [
     },
     {
         question: "Where do you travel?",
-        answer: "Across Greater Houston. Travel is free within about 25 miles of The Woodlands and Conroe; farther events get a travel fee in your quote.",
+        answer: `Across Greater Houston, up to ${MAX_TRAVEL_MILES} miles from The Woodlands and Conroe. Travel is free within ${FREE_TRAVEL_MILES} miles; farther events get a travel fee in your quote.`,
     },
     {
         question: "Can you do Saturday mornings?",

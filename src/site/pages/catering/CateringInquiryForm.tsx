@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from "react";
 import clsx from "clsx";
 import { Button } from "@/shared/catalyst-ui-kit/button.tsx";
-import { Checkbox, CheckboxField } from "@/shared/catalyst-ui-kit/checkbox.tsx";
 import {
     Description,
     Field,
@@ -71,7 +70,6 @@ export default function CateringInquiryForm({
 }: Props) {
     const { status, submit } = useFormSubmission();
     const [eventDate, setEventDate] = useState("");
-    const [vegetarianNeeded, setVegetarianNeeded] = useState(false);
     const guestsInput = useGuestsDraft(estimateInput.guests, (guests) =>
         onEstimateInputChange({ ...estimateInput, guests }),
     );
@@ -108,7 +106,6 @@ export default function CateringInquiryForm({
             });
             form.reset();
             setEventDate("");
-            setVegetarianNeeded(false);
         }
     }
 
@@ -282,29 +279,8 @@ export default function CateringInquiryForm({
                 <Fieldset>
                     <Legend>Food needs</Legend>
                     <div data-slot="control" className="flex flex-col gap-6">
-                        <CheckboxField>
-                            <Checkbox
-                                name="vegetarianNeeded"
-                                value="yes"
-                                color="orange"
-                                checked={vegetarianNeeded}
-                                onChange={setVegetarianNeeded}
-                            />
-                            <Label>Vegetarian option needed</Label>
-                        </CheckboxField>
-                        {vegetarianNeeded && (
-                            <Field className="max-w-60">
-                                <Label>How many vegetarian guests?</Label>
-                                <Input
-                                    name="vegetarianGuests"
-                                    type="number"
-                                    inputMode="numeric"
-                                    min={1}
-                                />
-                            </Field>
-                        )}
                         <Field>
-                            <Label>Other dietary needs</Label>
+                            <Label>Dietary needs</Label>
                             <Input
                                 name="dietaryNeeds"
                                 placeholder="Allergies, gluten, …"

@@ -32,12 +32,12 @@ test("the service styles show their prices from the pricing config", async () =>
     const styles = getByRole("region", { name: "Three ways to book" });
 
     await expect
-        .element(styles.getByText("From $17/person · 20-guest minimum"))
+        .element(styles.getByText("From $15/person · 20-guest minimum"))
         .toBeInTheDocument();
     await expect
         .element(
             styles.getByText(
-                "From $22/person · minimum $1,000 Mon–Thu / $1,500 Fri–Sun",
+                "From $22/person · minimum $800 Mon–Thu / $1,200 Fri–Sun",
             ),
         )
         .toBeInTheDocument();
@@ -50,16 +50,78 @@ test("the service styles show their prices from the pricing config", async () =>
         .toBeInTheDocument();
 });
 
-test("the package cards are priced by the estimator", async () => {
+test("the package cards are priced by the estimator and say what's included", async () => {
     const { getByRole } = await renderWithProviders(<Catering />);
     const packages = getByRole("region", { name: "Packages" });
 
     for (const pkg of CATERING_PACKAGES) {
+        const card = packages.getByRole("listitem", {
+            name: pkg.name,
+            exact: true,
+        });
         const range = formatEstimate(estimateCateringQuote(packageInput(pkg)));
         await expect
-            .element(packages.getByText(range, { exact: true }))
+            .element(card.getByText(range, { exact: true }))
             .toBeInTheDocument();
+        const includes = card.getByRole("list", { name: "Includes" });
+        for (const item of pkg.includes) {
+            await expect
+                .element(includes.getByText(item, { exact: true }))
+                .toBeInTheDocument();
+        }
     }
+});
+
+test("the packages follow the estimator once it's been used", async () => {
+    const { getByRole } = await renderWithProviders(<Catering />);
+    const packages = getByRole("region", { name: "Packages" });
+    const estimator = getByRole("region", { name: "Instant estimate" });
+    const card = (name: string) =>
+        packages.getByRole("listitem", { name, exact: true });
+    const allCards = CATERING_PACKAGES.map((pkg) => card(pkg.name));
+
+    // Untouched, no card is singled out.
+    for (const each of allCards) {
+        await expect.element(each).not.toHaveAttribute("data-selected");
+        await expect.element(each).not.toHaveAttribute("data-dimmed");
+    }
+
+    await estimator
+        .getByRole("radio", { name: "On-site Tent Service" })
+        .click();
+    await expect.element(card("Party")).toHaveAttribute("data-selected");
+    await expect
+        .element(card("Party").getByText("Matches your estimate"))
+        .toBeInTheDocument();
+    await expect
+        .element(card("Office Lunch & Backyard"))
+        .toHaveAttribute("data-dimmed");
+    await expect.element(card("Big Event")).toHaveAttribute("data-dimmed");
+
+    await estimator.getByRole("spinbutton", { name: "Guests" }).fill("100");
+    await expect.element(card("Big Event")).toHaveAttribute("data-selected");
+    await expect.element(card("Party")).toHaveAttribute("data-dimmed");
+
+    await estimator
+        .getByRole("radio", { name: "Employee-Paid Pop-Up" })
+        .click();
+    for (const each of allCards) {
+        await expect.element(each).toHaveAttribute("data-dimmed");
+    }
+    await expect
+        .element(packages.getByText("Matches your estimate"))
+        .not.toBeInTheDocument();
+
+    // A dimmed card can still be chosen.
+    await getByRole("button", {
+        name: "Start with this: Office Lunch & Backyard package",
+    }).click();
+    await expect
+        .element(card("Office Lunch & Backyard"))
+        .toHaveAttribute("data-selected");
+    await expect
+        .element(estimator.getByTestId("estimate-range"))
+        .toHaveTextContent("$600 – $850");
 });
 
 test("the estimator re-prices as the answers change", async () => {
@@ -67,27 +129,27 @@ test("the estimator re-prices as the answers change", async () => {
     const estimator = getByRole("region", { name: "Instant estimate" });
     const range = estimator.getByTestId("estimate-range");
 
-    await expect.element(range).toHaveTextContent("$680 – $820");
+    await expect.element(range).toHaveTextContent("$600 – $850");
 
     await estimator
         .getByRole("radio", { name: "On-site Tent Service" })
         .click();
-    await expect.element(range).toHaveTextContent("$1,000 – $1,200");
-    await expect
-        .element(estimator.getByText("Mon–Thu minimum of $1,000 applied."))
-        .toBeInTheDocument();
+    await expect.element(range).toHaveTextContent("$880 – $1,060");
 
     await estimator.getByRole("radio", { name: "Fri–Sun" }).click();
-    await expect.element(range).toHaveTextContent("$1,500 – $1,800");
+    await expect.element(range).toHaveTextContent("$1,200 – $1,440");
     await expect
-        .element(estimator.getByText("A 50% deposit ($750) holds your date."))
+        .element(estimator.getByText("Fri–Sun minimum of $1,200 applied."))
+        .toBeInTheDocument();
+    await expect
+        .element(estimator.getByText("A 50% deposit ($600) holds your date."))
         .toBeInTheDocument();
 
     await estimator.getByRole("checkbox", { name: "Drinks" }).click();
     await expect
         .element(estimator.getByText("+ add-ons & travel quoted separately"))
         .toBeInTheDocument();
-    await expect.element(range).toHaveTextContent("$1,500 – $1,800");
+    await expect.element(range).toHaveTextContent("$1,200 – $1,440");
 
     // Counted once per page view, not on every change.
     expect(track).toHaveBeenCalledTimes(1);
@@ -105,12 +167,38 @@ test("the guest stepper moves in steps and re-prices", async () => {
     await expect.element(guests).toHaveValue(45);
     await expect
         .element(estimator.getByTestId("estimate-range"))
-        .toHaveTextContent("$765 – $920");
+        .toHaveTextContent("$675 – $960");
 
     await guests.fill("120");
     await expect
         .element(estimator.getByTestId("estimate-range"))
-        .toHaveTextContent("$2,040 – $2,450");
+        .toHaveTextContent("$1,800 – $2,550");
+});
+
+test("distance runs to 40 miles, with travel quoted past 15", async () => {
+    const { getByRole } = await renderWithProviders(<Catering />);
+    const estimator = getByRole("region", { name: "Instant estimate" });
+    const distance = estimator.getByRole("combobox", { name: "Distance" });
+
+    await expect
+        .element(distance)
+        .toHaveAccessibleDescription(
+            "More than 40 miles away? Call or text us.",
+        );
+    const options = (distance.element() as HTMLSelectElement).options;
+    expect(Array.from(options, (option) => option.text)).toEqual([
+        "Within 15 mi of The Woodlands / Conroe",
+        "16–30 mi away",
+        "31–40 mi away",
+    ]);
+    await expect
+        .element(estimator.getByText("+ add-ons & travel quoted separately"))
+        .not.toBeInTheDocument();
+
+    await distance.selectOptions("mid");
+    await expect
+        .element(estimator.getByText("+ add-ons & travel quoted separately"))
+        .toBeInTheDocument();
 });
 
 test("a pop-up shows the host cost instead of a range", async () => {
@@ -182,12 +270,14 @@ test("the FAQ answers only what the business has confirmed", async () => {
     const { getByRole, container } = await renderWithProviders(<Catering />);
     const faq = getByRole("region", { name: "Questions we hear a lot" });
 
-    await faq.getByText("Is there a vegetarian option?").click();
+    await faq.getByText("Where do you travel?").click();
     await expect
-        .element(faq.getByText(/Tick “Vegetarian option needed”/))
+        .element(faq.getByText(/Travel is free within 15 miles/))
         .toBeVisible();
     // Tent footprint and permits/insurance wait for Billy (plan §6).
     expect(container.textContent).not.toMatch(/insur|permit/i);
+    // The vegetarian option came off the page in October 2026.
+    expect(container.textContent).not.toMatch(/vegetarian/i);
 });
 
 test("the viral video credits its creator", async () => {
