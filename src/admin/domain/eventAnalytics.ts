@@ -3,11 +3,12 @@
 // pre-tax sales, and cash contribution per event and per market. Everything
 // here is pure.
 //
-// The market a sale belongs to is derived from its timestamp — the three
-// market schedules never overlap:
+// The market a sale belongs to is derived from its timestamp — the market
+// schedules never overlap:
 //   Saturday          → Grogan's Mill
 //   1st / 3rd Sunday  → New Caney
-//   other Sundays     → Farmers Market at 1488
+//   other Sundays     → Farmers Market at 1488 through Oct 11, 2026, when
+//                       Billy left it; Other after that
 //   any other day     → Other (catering, one-offs)
 // A stored day-level override (Settings.marketOverrides) wins over the
 // schedule when the heuristic got a day wrong.
@@ -50,15 +51,19 @@ export function parseLocalDate(dateKey: string): Date {
     return new Date(year, month - 1, day);
 }
 
+/** Local midnight after Billy's last Farmers Market at 1488 (Sun Oct 11, 2026). */
+const FM_1488_ENDED = new Date(2026, 9, 12);
+
 /** The market whose schedule covers this local calendar day. */
 export function marketForDate(date: Date): Market {
     const weekday = date.getDay();
     if (weekday === 6) return "grogans-mill";
     if (weekday === 0) {
         // 0-based occurrence of this Sunday within the month; 1st and 3rd
-        // are New Caney, every other Sunday (2nd/4th/5th) is 1488.
+        // are New Caney, every other Sunday (2nd/4th/5th) was 1488.
         const occurrence = Math.floor((date.getDate() - 1) / 7);
-        return occurrence === 0 || occurrence === 2 ? "new-caney" : "fm-1488";
+        if (occurrence === 0 || occurrence === 2) return "new-caney";
+        return date.getTime() < FM_1488_ENDED.getTime() ? "fm-1488" : "other";
     }
     return "other";
 }

@@ -36,12 +36,12 @@ describe("marketForDate", () => {
         expect(marketForDate(new Date(2026, 6, 19))).toBe("new-caney");
     });
 
-    test("2nd and 4th Sundays are Farmers Market at 1488", () => {
+    test("2nd and 4th Sundays were Farmers Market at 1488", () => {
         expect(marketForDate(new Date(2026, 6, 12))).toBe("fm-1488");
         expect(marketForDate(new Date(2026, 6, 26))).toBe("fm-1488");
     });
 
-    test("a 5th Sunday counts as an 'other Sunday' → 1488", () => {
+    test("a 5th Sunday counted as an 'other Sunday' → 1488", () => {
         // August 2026 has five Sundays; the 30th is the fifth.
         expect(marketForDate(new Date(2026, 7, 30))).toBe("fm-1488");
     });
@@ -51,6 +51,26 @@ describe("marketForDate", () => {
         expect(marketForDate(new Date(2026, 1, 1))).toBe("new-caney");
         expect(marketForDate(new Date(2026, 1, 8))).toBe("fm-1488");
         expect(marketForDate(new Date(2026, 2, 15))).toBe("new-caney");
+    });
+
+    test("Oct 11, 2026 was Billy's last day at 1488", () => {
+        // October 2026: Sundays fall on the 4th, 11th, 18th, 25th.
+        expect(marketForDate(new Date(2026, 9, 11))).toBe("fm-1488");
+        expect(marketForDate(new Date(2026, 9, 11, 23, 59))).toBe("fm-1488");
+    });
+
+    test("after Billy left 1488, its Sundays are Other", () => {
+        expect(marketForDate(new Date(2026, 9, 25))).toBe("other");
+        // "Add event" passes the current time, not midnight.
+        expect(marketForDate(new Date(2026, 9, 25, 14, 30))).toBe("other");
+        // November 2026: Sundays fall on the 1st, 8th, 15th, 22nd, 29th.
+        expect(marketForDate(new Date(2026, 10, 8))).toBe("other");
+        expect(marketForDate(new Date(2026, 10, 29))).toBe("other");
+    });
+
+    test("New Caney's 1st and 3rd Sundays carry on after 1488 ended", () => {
+        expect(marketForDate(new Date(2026, 10, 1))).toBe("new-caney");
+        expect(marketForDate(new Date(2026, 10, 15))).toBe("new-caney");
     });
 
     test("weekdays are Other", () => {

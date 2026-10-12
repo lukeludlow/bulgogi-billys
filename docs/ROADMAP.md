@@ -42,8 +42,9 @@ per-market hourly rates, and the §17.2 classification badges.
 
 - Auto-assign every imported transaction to a market from its timestamp — the
   schedules don't overlap: **Saturday → Grogan's Mill**, **1st/3rd Sunday → New
-  Caney**, **other Sundays → Farmers Market at 1488**; anything else →
-  "Other/Catering" for manual tagging.
+  Caney**, **other Sundays → Farmers Market at 1488** (through Oct 11, 2026,
+  when Billy left it; later ones → Other); anything else → "Other/Catering" for
+  manual tagging.
 - Add per-event expense entry (market fee, fuel, propane, employee hours, waste,
   Billy's hours) — new `events` table keyed by date+market.
 - Report per event: pre-tax sales − direct costs = **cash contribution**

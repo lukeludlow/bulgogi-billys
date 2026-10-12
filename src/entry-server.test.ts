@@ -50,6 +50,16 @@ test("the catering page ships its prices in the HTML itself", async () => {
     expect(body).not.toMatch(/vegetarian/i);
 });
 
+test.each(["/", "/schedule"])(
+    "%s ships without the 1488 market Billy left",
+    async (path) => {
+        const { head, body } = await render(path);
+
+        expect(head).not.toContain("1488");
+        expect(body).not.toContain("1488");
+    },
+);
+
 test("an unknown path renders the not-found page, marked noindex", async () => {
     const { head, body } = await render("/definitely-not-a-page");
 

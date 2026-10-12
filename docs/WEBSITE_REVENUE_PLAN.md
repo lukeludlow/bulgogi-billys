@@ -152,8 +152,8 @@ through Square Invoices. All of these are in §2.
       Auto-rotating carousels also pull attention away from the calls to action.
 - **T4. The schedule is hardcoded in three places**: `About.tsx`, `Schedule.tsx`
   and `RestaurantStructuredData.tsx`.
-    - They will drift. The JSON-LD already merges two Sunday markets into
-      10:00–15:00.
+    - They drift. Dropping Farmers Market at 1488 and moving Grogan's Mill to
+      9–1 (Oct 2026) meant editing all three by hand.
     - The canonical rule already exists: `marketForDate()` in
       `src/admin/domain/eventAnalytics.ts`.
 - **T5. Alt text.** Every menu photo is alt "Bulgogi Fries" (`MenuItem.tsx`).
@@ -299,8 +299,9 @@ sitemap.
     - Per-person prices must hold the Profit Calculator's target margin
       (`/admin`).
     - An on-site minimum on a market day must beat the **event contribution of
-      the market it displaces** (`/admin/events`). A Sunday booking that earns
-      less than Farmers Market at 1488 isn't worth it.
+      the market it displaces** (`/admin/events`). On a 1st or 3rd Sunday a
+      booking must beat New Caney. Since Billy left Farmers Market at 1488 (Oct
+      2026), 2nd, 4th and 5th Sundays displace no market.
 - **Saturday mornings** are unavailable while Grogan's Mill runs. Saturday
   afternoons and evenings are allowed if staffing works.
 - **The pop-up guarantee.** A host who can't promise ~40 buyers covers the
@@ -455,11 +456,10 @@ derivatives.
       link and website. The admin imports it from there. **One source of truth**
       for the schedule, the home card, the JSON-LD and the event report.
     - `/schedule` leads with **the next two market dates** ("Sat Oct 4 —
-      Grogan's Mill, 9–12"), then the regular pattern.
+      Grogan's Mill, 9–1"), then the regular pattern.
     - Add **add-to-calendar** (.ics) buttons.
     - Emit per-date schema.org `Event` JSON-LD from the same module, which is
-      eligible for Google event results. Fix the merged Sunday hours in
-      `RestaurantStructuredData.tsx`.
+      eligible for Google event results.
     - Leave room for an override list (a cancellation or a one-off pop-up). The
       Phase 4 banner covers weather.
 3. **Viral-video section** on the home page. "Yep, we're _that_ bulgogi guy —

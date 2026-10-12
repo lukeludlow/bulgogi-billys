@@ -138,7 +138,7 @@ export default function About() {
                     <div className="divide-y divide-gray-100 dark:divide-white/5 border-t border-gray-100 dark:border-white/5 mt-2">
                         <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
                             <span className="font-semibold dark:text-white text-base">
-                                Saturdays (9 AM – 12 PM)
+                                Saturdays (9 AM – 1 PM)
                             </span>
                             <Text className="text-base">
                                 Grogan's Mill Farmer's Market (7 Switchbud Pl,
@@ -152,16 +152,6 @@ export default function About() {
                             <Text className="text-base">
                                 New Caney Community Market (21586 Market Place
                                 #200, New Caney, TX)
-                            </Text>
-                        </div>
-                        <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-                            <span className="font-semibold dark:text-white text-base">
-                                Other Sundays (10 AM – 2 PM)
-                            </span>
-                            <Text className="text-base">
-                                Farmers Market at 1488 (16051 Old Conroe Rd,
-                                Conroe, TX — right next to the Xscape Movie
-                                Theater)
                             </Text>
                         </div>
                     </div>

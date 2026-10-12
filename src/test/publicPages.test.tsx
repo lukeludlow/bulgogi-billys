@@ -117,6 +117,35 @@ test("schedule page renders with its title", async () => {
         );
 });
 
+test("the schedule lists Grogan's Mill and New Caney, not the 1488 market", async () => {
+    const { getByRole, container } = await renderWithProviders(<Schedule />);
+
+    await expect
+        .element(
+            getByRole("heading", { name: "Grogan's Mill Farmer's Market" }),
+        )
+        .toBeInTheDocument();
+    await expect
+        .element(getByRole("heading", { name: "New Caney Community Market" }))
+        .toBeInTheDocument();
+    expect(container.textContent).toContain("9am-1pm");
+    expect(container.textContent).not.toContain("1488");
+    expect(
+        document
+            .querySelector('meta[name="description"]')
+            ?.getAttribute("content"),
+    ).not.toContain("1488");
+});
+
+test("the home page's market list matches the schedule", async () => {
+    const { getByText, container } = await renderWithProviders(<Home />);
+
+    await expect
+        .element(getByText("Saturdays (9 AM – 1 PM)"))
+        .toBeInTheDocument();
+    expect(container.textContent).not.toContain("1488");
+});
+
 test("order-now page renders with its title", async () => {
     await renderWithProviders(<OrderNow />);
     await expect

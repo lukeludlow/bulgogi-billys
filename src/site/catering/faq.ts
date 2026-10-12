@@ -32,6 +32,6 @@ export const CATERING_FAQ: readonly FaqEntry[] = [
     },
     {
         question: "Can you do Saturday mornings?",
-        answer: "Not while the Grogan's Mill Farmers Market runs — that's where we are every Saturday from 9 AM to 12 PM. Saturday afternoons and evenings may work, so ask on the form.",
+        answer: "Not while the Grogan's Mill Farmers Market runs — that's where we are every Saturday from 9 AM to 1 PM. Saturday afternoons and evenings may work, so ask on the form.",
     },
 ];

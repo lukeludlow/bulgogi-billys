@@ -29,17 +29,6 @@ const structuredData = {
         },
         {
             "@type": "Place",
-            name: "Farmers Market at 1488",
-            address: {
-                "@type": "PostalAddress",
-                streetAddress: "16051 Old Conroe Rd",
-                addressLocality: "Conroe",
-                addressRegion: "TX",
-                addressCountry: "US",
-            },
-        },
-        {
-            "@type": "Place",
             name: "New Caney Community Market",
             address: {
                 "@type": "PostalAddress",
@@ -55,12 +44,12 @@ const structuredData = {
             "@type": "OpeningHoursSpecification",
             dayOfWeek: "Saturday",
             opens: "09:00",
-            closes: "12:00",
+            closes: "13:00",
         },
         {
             "@type": "OpeningHoursSpecification",
             dayOfWeek: "Sunday",
-            opens: "10:00",
+            opens: "11:00",
             closes: "15:00",
         },
     ],

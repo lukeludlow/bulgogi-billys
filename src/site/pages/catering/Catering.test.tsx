@@ -274,6 +274,10 @@ test("the FAQ answers only what the business has confirmed", async () => {
     await expect
         .element(faq.getByText(/Travel is free within 15 miles/))
         .toBeVisible();
+    await faq.getByText("Can you do Saturday mornings?").click();
+    await expect
+        .element(faq.getByText(/every Saturday from 9 AM to 1 PM/))
+        .toBeVisible();
     // Tent footprint and permits/insurance wait for Billy (plan §6).
     expect(container.textContent).not.toMatch(/insur|permit/i);
     // The vegetarian option came off the page in October 2026.

@@ -15,7 +15,7 @@ export default function Schedule() {
         <div className="flex flex-col gap-6 max-w-4xl mx-auto px-4 py-6">
             <PageMeta
                 title="Find Us | Bulgogi Billy's – The Woodlands, Conroe & New Caney, TX"
-                description="Find Bulgogi Billy's Korean fusion food truck at Grogan's Mill (The Woodlands), Farmers Market at 1488 (Conroe), and New Caney Community Market every weekend."
+                description="Find Bulgogi Billy's Korean fusion food truck at Grogan's Mill (The Woodlands) on Saturdays and New Caney Community Market on 1st and 3rd Sundays."
                 path="/schedule"
             />
 
@@ -40,7 +40,7 @@ export default function Schedule() {
             <ScheduleItem
                 days={"Saturdays"}
                 place={"Grogan's Mill Farmer's Market"}
-                time={"9am-12pm"}
+                time={"9am-1pm"}
                 address={"7 Switchbud Pl, The Woodlands, TX 77380"}
                 mapsLink={"https://maps.app.goo.gl/8wWytb9ojcdMv4d38"}
                 placeLink={"https://www.grogansmill.org/fmabout"}
@@ -52,16 +52,6 @@ export default function Schedule() {
                 address={"21586 Market Place #200, New Caney, TX"}
                 mapsLink={"https://maps.app.goo.gl/QganZZCBLv7AfqtH8"}
                 placeLink={"https://www.newcaneymarket.com"}
-            />
-            <ScheduleItem
-                days={"Other Sundays"}
-                place={"Farmers Market at 1488"}
-                time={"10am-2pm"}
-                address={
-                    "16051 Old Conroe Rd, Conroe, TX (Next to the Xscape Movie Theater)"
-                }
-                mapsLink={"https://maps.app.goo.gl/wXFQdr9vnM7CycVSA"}
-                placeLink={"https://www.instagram.com/farmersmarketat1488/"}
             />
 
             <div className="p-6 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-100 dark:border-orange-900/30 flex flex-col gap-4 text-center">
